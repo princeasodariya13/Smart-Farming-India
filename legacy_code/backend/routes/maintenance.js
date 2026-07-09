@@ -1,0 +1,24 @@
+const express = require('express');
+const router = express.Router();
+const maintenanceController = require('../controllers/maintenanceController');
+const { auth } = require('../middleware/auth');
+
+// All routes require authentication
+router.use(auth);
+
+// Schedule maintenance
+router.post('/schedule', maintenanceController.scheduleMaintenance);
+
+// Get maintenance records for equipment owner
+router.get('/records', maintenanceController.getMaintenanceRecords);
+
+// Update maintenance status
+router.put('/:id/status', maintenanceController.updateMaintenanceStatus);
+
+// Update maintenance record (general update)
+router.put('/:id', maintenanceController.updateMaintenance);
+
+// Delete maintenance record
+router.delete('/:id', maintenanceController.deleteMaintenance);
+
+module.exports = router; 

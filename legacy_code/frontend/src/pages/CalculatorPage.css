@@ -1,0 +1,39 @@
+/* Calculator map area */
+.calc-map-placeholder {
+  height: 440px;
+  background: linear-gradient(135deg, #1a3c2a, #0f4a25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.calc-map-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(34,197,94,0.1) 39px, rgba(34,197,94,0.1) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(34,197,94,0.1) 39px, rgba(34,197,94,0.1) 40px);
+}
+.calc-map-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: #fff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.calc-map-icon {
+  width: 72px; height: 72px;
+  background: rgba(34,197,94,0.2);
+  border: 2px solid rgba(34,197,94,0.4);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-400);
+}
+.calc-map-inner h3 { font-size: 1.25rem; font-weight: 700; }
+.calc-map-inner p { font-size: 0.9rem; color: rgba(255,255,255,0.65); max-width: 320px; line-height: 1.6; }

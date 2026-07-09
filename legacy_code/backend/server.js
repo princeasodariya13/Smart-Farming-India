@@ -1,0 +1,195 @@
+require('dotenv').config({ path: '../.env' });
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const { connectDatabase, mongoose } = require('./config/database');
+const models = require('./models');
+const usersRouter = require('./routes/users');
+const equipmentRouter = require('./routes/equipment');
+const suppliesRouter = require('./routes/supplies');
+const farmsRouter = require('./routes/farms');
+const diseaseRouter = require('./routes/disease');
+const bookingRouter = require('./routes/booking');
+const cropsRouter = require('./routes/crops');
+const costPlanningRouter = require('./routes/cost-planning');
+const maintenanceRouter = require('./routes/maintenance');
+const authRouter = require('./routes/auth');
+
+const app = express();
+
+const mapDbReadyState = (state) => {
+    switch (state) {
+        case 0: return 'disconnected';
+        case 1: return 'connected';
+        case 2: return 'connecting';
+        case 3: return 'disconnecting';
+        default: return 'unknown';
+    }
+};
+
+const buildDbCheckpoint = async () => {
+    const readyState = mongoose.connection.readyState;
+    const checkpoint = {
+        readyState,
+        state: mapDbReadyState(readyState),
+        host: mongoose.connection.host || null,
+        name: mongoose.connection.name || null,
+        timestamp: new Date().toISOString(),
+    };
+
+    if (readyState === 1 && mongoose.connection.db) {
+        const start = Date.now();
+        await mongoose.connection.db.admin().ping();
+        checkpoint.pingMs = Date.now() - start;
+    }
+
+    return checkpoint;
+};
+
+// --- 1. Security and Middleware Configuration ---
+
+// Use Helmet to set various security-related HTTP headers
+app.use(helmet());
+
+// CORS Configuration: This is crucial for cookie-based authentication
+const allowedOrigins = [
+    'http://localhost:8080', // Local frontend (legacy port)
+    'http://localhost:5173', // Vite dev server
+    'http://127.0.0.1:5173', // Explicit loopback for some browsers
+    'http://127.0.0.1:8080', // Explicit loopback for legacy port
+    'https://smart-farmer-three.vercel.app', // Vercel deployed frontend
+    'https://www.smart-farmer-three.vercel.app', // Alternate Vercel domain
+    'https://smart-farmer-cyyz.onrender.com', // Render backend (for direct access/tests)
+];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or Postman)
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        // Check exact match
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        // Allow Vercel preview deployments (e.g., smart-farmer-three-git-branch-username.vercel.app)
+        if (origin.match(/^https:\/\/smart-farmer-three.*\.vercel\.app$/)) {
+            return callback(null, true);
+        }
+
+        console.warn(`CORS: Blocked origin: ${origin}`);
+        callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// Middleware to parse JSON bodies and cookies
+app.use(express.json());
+app.use(cookieParser());
+
+// --- 2. Authentication Middleware ---
+
+/**
+ * Middleware to protect routes. It verifies the JWT from the cookie.
+ */
+const authMiddleware = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+        return res.status(401).json({ message: 'Not authenticated: No token provided.' });
+    }
+
+    try {
+        // Verify the token using the secret key
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Attach user data to the request object for use in other routes
+        req.user = decoded;
+        next();
+    } catch (error) {
+        // Clear the invalid cookie
+        res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
+        return res.status(401).json({ message: 'Not authenticated: Invalid token.' });
+    }
+};
+
+// --- 3. API Routes ---
+
+const apiRouter = express.Router();
+
+/**
+ * Example of a protected route.
+ * Only authenticated users can access this.
+ */
+apiRouter.get('/protected-data', authMiddleware, (req, res) => {
+    res.json({
+        message: `Hello ${req.user.name}! This is protected data.`,
+        user: req.user
+    });
+});
+
+// Mount the API router under the /api path
+app.use('/api', apiRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/equipment', equipmentRouter);
+app.use('/api/supplies', suppliesRouter);
+app.use('/api/farms', farmsRouter);
+app.use('/api/disease', diseaseRouter);
+app.use('/api/booking', bookingRouter);
+app.use('/api/crops', cropsRouter);
+app.use('/api/cost-planning', costPlanningRouter);
+app.use('/api/maintenance', maintenanceRouter);
+
+// --- Database Health Checkpoint ---
+app.get('/api/health/db', async (req, res) => {
+    try {
+        const checkpoint = await buildDbCheckpoint();
+        const healthy = checkpoint.state === 'connected';
+        res.status(healthy ? 200 : 503).json({
+            success: healthy,
+            status: healthy ? 'ok' : 'degraded',
+            checkpoint,
+        });
+    } catch (error) {
+        console.error('DB checkpoint error:', error);
+        res.status(503).json({
+            success: false,
+            status: 'error',
+            message: 'Unable to verify database connectivity',
+            error: error.message,
+        });
+    }
+});
+
+// --- 4. Server Initialization ---
+
+const PORT = process.env.PORT || 5000;
+
+// Start server after database connection
+const startServer = async () => {
+    try {
+        // Connect to MongoDB
+        await connectDatabase();
+        console.log('✅ Database connection established');
+
+        // Start the server
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+            if (!process.env.JWT_SECRET || !process.env.FRONTEND_URL) {
+                console.warn('⚠️ WARNING: JWT_SECRET or FRONTEND_URL is not set in .env file. The application may not work as expected.');
+            }
+        });
+    } catch (err) {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
+};
+
+startServer();
