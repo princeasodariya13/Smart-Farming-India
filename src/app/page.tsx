@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, useMotionValue, useTransform, animate, useInView, AnimatePresence } from 'framer-motion'
 import { 
   Leaf, Menu, X, ArrowRight, CloudSun, TrendingUp, ShieldCheck,
@@ -29,12 +30,19 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Handle scroll for sticky navbar glass effect
+  // Handle scroll for sticky navbar glass effect — passive for max performance
   useEffect(() => {
+    let ticking = false
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 20)
+          ticking = false
+        })
+        ticking = true
+      }
     }
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -121,7 +129,15 @@ export default function LandingPage() {
         
         {/* Background Image & Crisp Overlays */}
         <div className="absolute inset-0 z-0">
-          <img src="/login-bg.png" alt="Farm Sunrise" className="w-full h-full object-cover" />
+          <Image
+            src="/login-bg.png"
+            alt="Farm Sunrise"
+            fill
+            priority
+            quality={85}
+            className="object-cover"
+            sizes="100vw"
+          />
         </div>
         <div className="absolute inset-0 z-0 bg-slate-900/60 mix-blend-multiply" />
         <div className="absolute inset-0 z-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-slate-900/80" />
@@ -234,7 +250,7 @@ export default function LandingPage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                 </div>
                 <div className="w-full h-24 bg-slate-200 rounded-xl overflow-hidden relative">
-                  <img src="/login-bg.png" alt="Scanner demo" className="w-full h-full object-cover opacity-80 grayscale" />
+                  <Image src="/login-bg.png" alt="Scanner demo" fill className="object-cover opacity-80 grayscale" sizes="200px" />
                   <div className="absolute inset-0 border-2 border-green-500 border-dashed m-2 rounded-lg bg-green-500/10" />
                 </div>
               </div>
