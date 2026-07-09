@@ -223,10 +223,11 @@ model Department {
 model User {
   id            String    @id @default(uuid()) @map("_id")
   email         String    @unique
+  name          String?
   emailVerified DateTime?
   password      String?   // Added for Credentials auth
   image         String?
-  companyId     String
+  companyId     String?
   role          UserRole  @default(EMPLOYEE)
   isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
@@ -235,12 +236,18 @@ model User {
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   employee      Employee?
   
   accounts      Account[]
   sessions      Session[]
   notifications Notification[]
+  
+  crops         Crop[]
+  irrigation    IrrigationSystem?
+  
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
 
   @@index([companyId])
 }
@@ -570,3 +577,100 @@ model Notification {
   @@index([userId, isRead])
   @@index([companyId])
 }
+
+// ------------------------------------------------------
+// SMART FARMING INDIA MODELS
+// ------------------------------------------------------
+
+model Crop {
+  id             String    @id @default(uuid()) @map("_id")
+  userId         String
+  name           String
+  area           Float
+  healthScore    Int
+  stage          String
+  harvestDays    Int
+  imageUrl       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MandiPrice {
+  id             String    @id @default(uuid()) @map("_id")
+  cropName       String
+  market         String
+  price          Float
+  unit           String    @default("qtl")
+  trendPercent   Float
+  trendDirection String    @default("UP") // UP or DOWN
+  isLive         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model IrrigationSystem {
+  id             String    @id @default(uuid()) @map("_id")
+  userId         String    @unique
+  status         String    @default("Active")
+  pumpName       String    @default("Pump #1")
+  sector         String    @default("Sector A")
+  waterUsage     Float     @default(0) // Liters
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// MARKETPLACE MODELS
+// ------------------------------------------------------
+
+model MarketplaceProduct {
+  id          String   @id @default(uuid()) @map("_id")
+  name        String
+  seller      String
+  location    String
+  rating      Float
+  price       Float
+  priceUnit   String?
+  type        String   // "buy" or "rental"
+  image       String
+  imageAlt    String
+  category    String
+  stock       String?
+  badge       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  cartItems   CartItem[]
+  wishlists   WishlistItem[]
+}
+
+model CartItem {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  productId   String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model WishlistItem {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  productId   String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+

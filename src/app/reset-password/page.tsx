@@ -58,36 +58,36 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-white p-8 md:p-12 rounded-[2rem] shadow-xl border border-slate-100">
-      <div className="flex justify-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="bg-green-600 p-2.5 rounded-xl text-white shadow-lg group-hover:scale-105 transition-transform">
-            <Leaf size={24} />
+    <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100/80">
+      <div className="flex justify-center mb-6">
+        <Link href="/" className="inline-flex items-center gap-2 group">
+          <div className="bg-green-600 p-2 rounded-xl text-white shadow-lg group-hover:scale-105 transition-transform">
+            <Leaf size={20} />
           </div>
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">Smart Farming.</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">Smart Farming.</span>
         </Link>
       </div>
 
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-2">New Password</h2>
-        <p className="text-slate-500 font-medium">Create a new, strong password for your account.</p>
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 mb-1.5">New Password</h2>
+        <p className="text-slate-500 text-sm font-medium">Create a new, strong password for your account.</p>
       </div>
 
       {status === 'error' && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
           <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
           <p className="text-sm text-red-700 font-medium">{message}</p>
         </motion.div>
       )}
 
       {status === 'success' && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 flex items-start gap-3">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5 p-4 rounded-xl bg-green-50 border border-green-100 flex items-start gap-3">
           <CheckCircle2 size={20} className="text-green-600 shrink-0 mt-0.5" />
           <p className="text-sm text-green-800 font-medium">{message}</p>
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">New Password</label>
           <div className="relative group">
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
               required
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm"
+              className="w-full pl-11 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm"
               placeholder="••••••••••••"
             />
             <button
@@ -123,7 +123,7 @@ function ResetPasswordForm() {
               required
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm"
               placeholder="••••••••••••"
             />
           </div>
@@ -132,7 +132,7 @@ function ResetPasswordForm() {
         <button
           type="submit"
           disabled={status === 'loading' || status === 'success'}
-          className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {status === 'loading' ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -147,7 +147,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex text-slate-900 bg-slate-50 font-sans items-center justify-center p-6">
+    <div className="min-h-screen flex text-slate-900 bg-slate-50/50 font-sans items-center justify-center p-6">
       <Suspense fallback={<div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>}>
         <ResetPasswordForm />
       </Suspense>

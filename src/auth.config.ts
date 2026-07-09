@@ -22,17 +22,25 @@ export default {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         if ((user as any).rememberMe === false) {
           token.strictExpiry = Math.floor(Date.now() / 1000) + (24 * 60 * 60)
         }
+      }
+      // Ensure Google profile picture makes it into the token
+      if (profile && profile.picture) {
+        token.picture = profile.picture as string;
       }
       return token
     },
     async session({ session, token }) {
       if (token.strictExpiry && Math.floor(Date.now() / 1000) > (token.strictExpiry as number)) {
         session.expires = new Date(0).toISOString() as any
+      }
+      // Explicitly map token picture to session user image
+      if (session.user && token.picture) {
+        session.user.image = token.picture as string;
       }
       return session
     }

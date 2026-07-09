@@ -23,6 +23,7 @@ export async function POST(req: Request) {
         name: `${name}'s Farm`,
         users: {
           create: {
+            name,
             email,
             password: hashedPassword,
             role: 'COMPANY_ADMIN'

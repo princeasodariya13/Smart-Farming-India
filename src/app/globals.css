@@ -1,15 +1,9 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 /* ─── Critical Performance CSS ─── */
@@ -33,7 +27,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   /* Force GPU compositing for the whole page */
   transform: translateZ(0);
   -webkit-overflow-scrolling: touch;
@@ -66,4 +60,93 @@ img {
 /* Smooth anchor scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+}
+.bento-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #bfcaba;
+  border-radius: 10px;
+}
+.ticker-animate {
+  animation: ticker 30s linear infinite;
+}
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ─── Gujarati / Google Translate: Safe Typography Enhancement ─── */
+
+/* Apply Gujarati fonts gracefully */
+html.translated-ltr {
+  font-family: 'Hind Vadodara', 'Shruti', 'Noto Sans Gujarati', system-ui, sans-serif !important;
+}
+
+/* Ensure Material Icons remain unaffected */
+html.translated-ltr .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+}
+
+/* Prevent Google Translate <font> elements from creating block formatting contexts */
+html.translated-ltr font {
+  display: inline !important;
+  font-family: inherit !important;
+}
+
+/* Safely scale up specific micro-typography utilities used in the dashboard */
+html.translated-ltr .text-\[9px\] { font-size: 11px !important; line-height: 1.4 !important; }
+html.translated-ltr .text-\[10px\] { font-size: 12px !important; line-height: 1.4 !important; }
+html.translated-ltr .text-\[11px\] { font-size: 13px !important; line-height: 1.4 !important; }
+html.translated-ltr .text-\[12px\] { font-size: 14px !important; line-height: 1.5 !important; }
+html.translated-ltr .text-\[13px\] { font-size: 14px !important; line-height: 1.5 !important; }
+
+/* Scale standard Tailwind text sizes just slightly to improve legibility */
+html.translated-ltr .text-xs { font-size: 13px !important; line-height: 1.5 !important; }
+html.translated-ltr .text-sm { font-size: 15px !important; line-height: 1.5 !important; }
+html.translated-ltr .text-base { font-size: 17px !important; line-height: 1.5 !important; }
+html.translated-ltr .text-lg { font-size: 19px !important; line-height: 1.5 !important; }
+
+/* Dashboard-specific targeted fixes to prevent text overlap in cards */
+html.translated-ltr .bento-card p,
+html.translated-ltr .bento-card span {
+  word-break: break-word; /* Ensure long Gujarati words wrap instead of overflowing */
+  white-space: normal !important; /* Allow wrapping in tight spaces */
+}
+
+/* Fix ticket animation width for translated text (Gujarati is wider) */
+html.translated-ltr .ticker-animate {
+  animation: ticker 45s linear infinite; 
+}
+
+/* Hide Google Translate toolbar cleanly */
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-te-spinner-pos { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
