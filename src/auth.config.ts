@@ -32,7 +32,7 @@ export default {
     },
     async session({ session, token }) {
       if (token.strictExpiry && Math.floor(Date.now() / 1000) > (token.strictExpiry as number)) {
-        session.expires = new Date(0).toISOString()
+        session.expires = new Date(0).toISOString() as any
       }
       return session
     }
