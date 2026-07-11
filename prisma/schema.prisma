@@ -248,6 +248,7 @@ model User {
   
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
+  diseaseScans  DiseaseScan[]
 
   @@index([companyId])
 }
@@ -674,3 +675,34 @@ model WishlistItem {
   @@unique([userId, productId])
 }
 
+
+// ------------------------------------------------------
+// DISEASE SCAN
+// ------------------------------------------------------
+
+model DiseaseScan {
+  id               String   @id @default(uuid()) @map("_id")
+  userId           String
+  imageUrl         String?
+  plantName        String
+  scientificName   String?
+  status           String?
+  diseaseName      String
+  confidenceScore  Float
+  severity         String?
+  symptoms         String[]
+  cause            String?
+  organicTreatment String?
+  recommendedPesticides String[]
+  activeIngredient String?
+  dosePerLitre     String?
+  recommendedFungicideInsecticide String?
+  prevention       String[]
+  irrigationAdvice String?
+  fertilizerAdvice String?
+  expectedRecoveryTime String?
+  treatmentProtocol String[] // Keep this for backward compatibility if needed, or remove it. We'll keep it.
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

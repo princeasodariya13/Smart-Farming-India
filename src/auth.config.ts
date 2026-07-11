@@ -6,8 +6,12 @@ import bcrypt from "bcryptjs"
 
 export default {
   providers: [
-    Google,
-    Facebook,
+    Google({
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Facebook({
+      allowDangerousEmailAccountLinking: true,
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },

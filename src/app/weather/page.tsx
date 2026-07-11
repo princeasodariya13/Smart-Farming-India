@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
@@ -211,33 +211,9 @@ function WeatherContent() {
     return name[0].toUpperCase();
   };
 
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState('en');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    // Read current lang from cookie
-    const cookieLang = document.cookie.match(/googtrans=\/en\/([^;]+)/);
-    if (cookieLang && cookieLang[1]) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentLang(cookieLang[1]);
-    }
 
-    // Close dropdown on click outside
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setLangDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const switchLanguage = (lang: string) => {
-    document.cookie = `googtrans=/en/${lang}; path=/`;
-    document.cookie = `googtrans=/en/${lang}; domain=${window.location.hostname}; path=/`;
-    window.location.reload();
-  };
 
   const [liveWeather, setLiveWeather] = useState(currentWeather);
 
@@ -336,15 +312,31 @@ function WeatherContent() {
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      
       {/* SideNavBar */}
-      <aside className="hidden md:flex flex-col h-full w-48 bg-surface-container-low border-r border-outline-variant p-2.5 gap-2 z-50">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <div className="p-1 rounded-lg bg-primary text-on-primary">
-            <Leaf size={16} strokeWidth={2.5} />
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-full w-64 md:w-48 bg-surface-container-low border-r border-outline-variant p-2.5 gap-2 shadow-2xl md:shadow-none`}>
+        <div className="flex items-center justify-between px-2 py-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded-lg bg-primary text-on-primary">
+              <Leaf size={16} strokeWidth={2.5} />
+            </div>
+            <h1 className="text-[13px] font-extrabold tracking-tight text-on-surface">
+              Smart Farming<span className="text-primary">.</span>
+            </h1>
           </div>
-          <h1 className="text-[13px] font-extrabold tracking-tight text-on-surface">
-            Smart Farming<span className="text-primary">.</span>
-          </h1>
+          <button 
+            className="md:hidden text-on-surface hover:bg-surface-container-high p-1 rounded-lg transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
         <nav data-lenis-prevent="true" className="flex-1 mt-2 space-y-1 overflow-y-auto custom-scrollbar">
           {/* Dashboard Active */}
@@ -356,12 +348,16 @@ function WeatherContent() {
             <span className="material-symbols-outlined text-[18px]">agriculture</span>
             <span className="text-[12px] font-medium">My Farm</span>
           </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
+            <span className="material-symbols-outlined text-[18px]">map</span>
+            <span className="text-[12px] font-medium">GPS Area Calculator</span>
+          </Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/weather"
           >
             <span className="material-symbols-outlined text-[18px]">early_on</span>
             <span className="text-[12px] font-medium">Weather</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/disease-detection">
             <span className="material-symbols-outlined text-[18px]">shutter_speed</span>
             <span className="text-[12px] font-medium">Scanner</span>
           </Link>
@@ -395,6 +391,12 @@ function WeatherContent() {
         <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 z-40 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
           <div className="flex items-center gap-6">
             <div className="flex md:hidden items-center gap-2 mr-2">
+              <button 
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-1.5 -ml-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">menu</span>
+              </button>
               <div className="p-1 rounded-lg bg-primary text-on-primary">
                 <Leaf size={14} strokeWidth={2.5} />
               </div>
@@ -410,30 +412,6 @@ function WeatherContent() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative" ref={dropdownRef}>
-              <button 
-                onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">language</span>
-              </button>
-              {langDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-32 rounded-xl border border-outline-variant bg-white p-1 shadow-lg overflow-hidden">
-                  <button
-                    onClick={() => switchLanguage('en')}
-                    className={`w-full text-left px-3 py-2 text-[12px] rounded-lg transition-colors ${currentLang === 'en' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => switchLanguage('gu')}
-                    className={`w-full text-left px-3 py-2 text-[12px] rounded-lg transition-colors ${currentLang === 'gu' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                  >
-                    ગુજરાતી
-                  </button>
-                </div>
-              )}
-            </div>
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full"></span>
