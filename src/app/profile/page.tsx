@@ -1,13 +1,12 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { Leaf } from 'lucide-react';
-import GPSLayout from "@/components/gps-calculator/GPSLayout";
+import ProfileLayout from "@/components/profile/ProfileLayout";
 
-export default function GPSAreaCalculatorPage() {
+function ProfileContent() {
   const { data: session } = useSession();
 
   const getInitials = (name: string | null | undefined) => {
@@ -50,6 +49,7 @@ export default function GPSAreaCalculatorPage() {
           </button>
         </div>
         <nav data-lenis-prevent="true" className="flex-1 mt-2 space-y-1 overflow-y-auto custom-scrollbar">
+          {/* Dashboard Active */}
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/dashboard">
             <span className="material-symbols-outlined text-[18px]">dashboard</span>
             <span className="text-[12px] font-medium">Dashboard</span>
@@ -58,7 +58,7 @@ export default function GPSAreaCalculatorPage() {
             <span className="material-symbols-outlined text-[18px]">agriculture</span>
             <span className="text-[12px] font-medium">My Farm</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/gps-area-calculator">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
             <span className="material-symbols-outlined text-[18px]">map</span>
             <span className="text-[12px] font-medium">GPS Area Calculator</span>
           </Link>
@@ -73,6 +73,10 @@ export default function GPSAreaCalculatorPage() {
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span className="text-[12px] font-medium">Market</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/profile">
+            <span className="material-symbols-outlined text-[18px]">person</span>
+            <span className="text-[12px] font-medium">Profile</span>
           </Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
@@ -143,13 +147,33 @@ export default function GPSAreaCalculatorPage() {
           </div>
         </header>
 
-        {/* GPS Content */}
-        <main className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col">
-          <div className="flex-1 lg:h-full">
-            <GPSLayout />
-          </div>
-        </main>
-      </div>
+        {/* Content Area */}
+        
+    <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage">
+      <ProfileLayout />
+      <footer className="w-full py-6 px-margin-desktop flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-8">
+            <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
+              <h4 className="font-body-lg text-body-lg font-bold text-primary">Smart Farming India</h4>
+              <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
+            </div>
+            <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
+            </div>
+          </footer>
+        
+    </main>
     </div>
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <SessionProvider>
+      <ProfileContent />
+    </SessionProvider>
   );
 }

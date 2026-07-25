@@ -4,7 +4,120 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+
+  /* Light mode design tokens */
+  --color-primary: #0d631b;
+  --color-primary-container: #2e7d32;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #cbffc2;
+  --color-surface-tint: #1b6d24;
+  --color-secondary: #006e1c;
+  --color-secondary-container: #91f78e;
+  --color-on-secondary-container: #00731e;
+  --color-on-surface: #141b2b;
+  --color-on-surface-variant: #40493d;
+  --color-outline: #707a6c;
+  --color-outline-variant: #bfcaba;
+  --color-background: #f9f9ff;
+  --color-background-sage: #F8FAF7;
+  --color-surface: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f1f3ff;
+  --color-surface-container: #e9edff;
+  --color-surface-container-high: #e1e8fd;
+  --color-surface-container-highest: #dce2f7;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-dim: #d3daef;
+  --color-surface-glass: rgba(255,255,255,0.8);
+  --color-inverse-surface: #293040;
+  --color-inverse-on-surface: #edf0ff;
+  --color-inverse-primary: #88d982;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-tertiary: #774c00;
+  --color-tertiary-container: #986200;
+  --color-tertiary-fixed: #ffddb5;
+  --color-tertiary-fixed-dim: #ffb957;
+  --color-on-tertiary-fixed: #2a1800;
+  --color-on-tertiary-fixed-variant: #643f00;
+  --color-on-tertiary-container: #ffeede;
+  --color-on-background: #141b2b;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #002204;
+  --color-on-secondary-fixed-variant: #005313;
+  --color-secondary-fixed: #94f990;
+  --color-secondary-fixed-dim: #78dc77;
+  --color-primary-fixed: #a3f69c;
+  --color-primary-fixed-dim: #88d982;
+  --color-on-primary-fixed: #002204;
+  --color-on-primary-fixed-variant: #005312;
+  --color-success-soft: #F0FDF4;
+  --color-danger-burnt: #C1440E;
 }
+
+/* ─── Dark Mode Token Overrides — Professional Black & White ─────────────────
+   Inspired by Linear, Vercel, GitHub Dark. True blacks with crisp white type.
+   Surface scale: #09090b → #111113 → #18181b → #1f1f23 → #27272a → #3f3f46
+   ─────────────────────────────────────────────────────────────────────────── */
+html.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+
+  /* Text */
+  --color-on-surface: #fafafa;          /* pure white — primary text */
+  --color-on-surface-variant: #a1a1aa;  /* zinc-400 — secondary text */
+  --color-on-background: #fafafa;
+
+  /* Page & app backgrounds */
+  --color-background: #09090b;          /* zinc-950 — deepest bg */
+  --color-background-sage: #09090b;
+  --color-surface: #111113;             /* zinc-900 approx */
+  --color-surface-dim: #09090b;
+  --color-surface-bright: #1f1f23;
+
+  /* Card / panel surface scale */
+  --color-surface-container-lowest: #09090b;   /* page bg */
+  --color-surface-container-low:    #111113;   /* sidebar bg */
+  --color-surface-container:        #18181b;   /* card bg */
+  --color-surface-container-high:   #1f1f23;   /* elevated card / hover */
+  --color-surface-container-highest: #27272a;  /* overlay / popover */
+
+  /* Glass header */
+  --color-surface-glass: rgba(9,9,11,0.80);
+
+  /* Borders */
+  --color-outline:         #3f3f46;  /* zinc-700 — visible border */
+  --color-outline-variant: #27272a;  /* zinc-800 — subtle divider */
+
+  /* Inverse */
+  --color-inverse-surface:    #fafafa;
+  --color-inverse-on-surface: #18181b;
+
+  /* Brand green — keep primary for accents */
+  --color-secondary-container:    #052e0d;
+  --color-on-secondary-container: #86efac;  /* green-300 */
+
+  /* Amber / tertiary */
+  --color-tertiary-fixed:             #2a1800;
+  --color-on-tertiary-fixed-variant:  #fcd34d;  /* amber-300 */
+  --color-on-tertiary-container:      #fef3c7;
+
+  /* Error */
+  --color-error-container:    #3f0707;
+  --color-on-error-container: #fca5a5;  /* red-300 */
+
+  /* Success */
+  --color-success-soft: #052e16;
+
+  /* Primary fixed shades */
+  --color-primary-fixed:             #14532d;
+  --color-on-primary-fixed:          #bbf7d0;  /* green-200 */
+  --color-on-primary-fixed-variant:  #86efac;  /* green-300 */
+  --color-primary-fixed-dim:         #052e16;
+}
+
 
 /* ─── Critical Performance CSS ─── */
 *,

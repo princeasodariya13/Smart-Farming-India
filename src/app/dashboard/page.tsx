@@ -51,7 +51,19 @@ function DashboardContent() {
     fetchWeather();
   }, []);
   
-  const [dbData, setDbData] = useState<{ mandiPrices: any[]; crops: any[] }>({ mandiPrices: [], crops: [] });
+  const [dbData, setDbData] = useState<{
+    mandiPrices: any[];
+    crops: any[];
+    tasks: any[];
+    soilHealth: any;
+    irrigation: any;
+  }>({
+    mandiPrices: [],
+    crops: [],
+    tasks: [],
+    soilHealth: null,
+    irrigation: null
+  });
   const [loadingDb, setLoadingDb] = useState(true);
 
   useEffect(() => {
@@ -60,7 +72,13 @@ function DashboardContent() {
         const res = await fetch('/api/dashboard');
         const data = await res.json();
         if (data.success) {
-          setDbData({ mandiPrices: data.mandiPrices, crops: data.crops });
+          setDbData({
+            mandiPrices: data.mandiPrices || [],
+            crops: data.crops || [],
+            tasks: data.tasks || [],
+            soilHealth: data.soilHealth || null,
+            irrigation: data.irrigation || null
+          });
         }
       } catch (err) {
         console.error("Failed to fetch dashboard DB data", err);
@@ -71,14 +89,22 @@ function DashboardContent() {
     fetchDbData();
   }, []);
 
-  const [tasks, setTasks] = useState([
-    { id: 1, label: 'Fertilize Sector B with N-P-K', checked: false },
-    { id: 2, label: 'Check Soil Moisture (Acres 4-8)', checked: false },
-    { id: 3, label: 'Schedule Water Pump #2', checked: true },
-  ]);
-
-  const toggleTask = (id: number) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t));
+  const toggleTask = async (id: string) => {
+    // Optimistic UI update
+    setDbData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t)
+    }));
+    
+    try {
+      await fetch('/api/tasks/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+    } catch (err) {
+      console.error("Failed to toggle task", err);
+    }
   };
 
   return (
@@ -135,7 +161,7 @@ function DashboardContent() {
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span className="text-[12px] font-medium">Market</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
           </Link>
@@ -191,13 +217,15 @@ function DashboardContent() {
               <div className="text-right hidden sm:block">
                 <p className="text-[12px] font-bold text-on-surface leading-none">{session?.user?.name || "Farmer"}</p>
               </div>
-              {session?.user?.image ? (
-                <Image width={32} height={32} className="w-8 h-8 rounded-full border border-outline-variant object-cover" alt="Farmer Portrait" src={session.user.image} />
-              ) : (
-                <div className="w-8 h-8 rounded-full border border-outline-variant bg-primary-container text-on-primary-container flex items-center justify-center text-[12px] font-bold tracking-wider">
-                  {getInitials(session?.user?.name)}
-                </div>
-              )}
+              <Link href="/profile" className="block relative cursor-pointer hover:opacity-80 transition-opacity">
+                {session?.user?.image ? (
+                  <Image width={32} height={32} className="w-8 h-8 rounded-full border border-outline-variant object-cover" alt="Farmer Portrait" src={session.user.image} />
+                ) : (
+                  <div className="w-8 h-8 rounded-full border border-outline-variant bg-primary-container text-on-primary-container flex items-center justify-center text-[12px] font-bold tracking-wider">
+                    {getInitials(session?.user?.name)}
+                  </div>
+                )}
+              </Link>
             </div>
           </div>
         </header>
@@ -209,7 +237,7 @@ function DashboardContent() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
               <div>
                 <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Namaste, {session?.user?.name?.split(' ')[0] || "Farmer"}.</h2>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Farm is healthy. <span className="text-primary font-semibold">2 pending actions</span>.</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Farm is healthy. <span className="text-primary font-semibold">{dbData.tasks.filter((t: any) => !t.checked).length} pending actions</span>.</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 bg-success-soft text-secondary px-3 py-1.5 rounded-full text-[12px] font-bold border border-secondary/10">
@@ -252,8 +280,8 @@ function DashboardContent() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant mb-0.5 uppercase tracking-wider">Soil Health (N-P-K)</p>
-                  <h3 className="font-headline-sm text-headline-sm font-bold text-primary">Balanced</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Fertilize in 4 days</p>
+                  <h3 className="font-headline-sm text-headline-sm font-bold text-primary">{dbData.soilHealth?.status || "Loading..."}</h3>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">{dbData.soilHealth?.action || "..."}</p>
                 </div>
                 <span className="material-symbols-outlined text-primary text-2xl">science</span>
               </div>
@@ -261,19 +289,19 @@ function DashboardContent() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-medium">
                     <span>Nitrogen (N)</span>
-                    <span className="text-primary font-bold">82%</span>
+                    <span className="text-primary font-bold">{dbData.soilHealth?.nitrogen || 0}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: "82%" }}></div>
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${dbData.soilHealth?.nitrogen || 0}%` }}></div>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-medium">
                     <span>Phosphorus (P)</span>
-                    <span className="text-primary font-bold">65%</span>
+                    <span className="text-primary font-bold">{dbData.soilHealth?.phosphorus || 0}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: "65%" }}></div>
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${dbData.soilHealth?.phosphorus || 0}%` }}></div>
                   </div>
                 </div>
               </div>
@@ -284,8 +312,10 @@ function DashboardContent() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant mb-0.5 uppercase tracking-wider">Smart Irrigation</p>
-                  <h3 className="font-headline-sm text-headline-sm font-bold text-primary">Active</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Pump #4 • Sector A-12</p>
+                  <h3 className="font-headline-sm text-headline-sm font-bold text-primary">{dbData.irrigation?.status || "Loading..."}</h3>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    {dbData.irrigation?.pumpName || "Pump"} • {dbData.irrigation?.sector || "Sector"}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center animate-pulse">
                   <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
@@ -295,7 +325,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
                     <p className="text-[10px] text-on-surface-variant">Water Usage Today</p>
-                    <p className="text-[18px] font-bold text-on-surface">1,240L</p>
+                    <p className="text-[18px] font-bold text-on-surface">{dbData.irrigation?.waterUsage?.toLocaleString() || 0}L</p>
                   </div>
                   <button className="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-lg text-[12px] font-bold hover:bg-secondary-container/80 transition-colors">
                     Shut Off
@@ -401,7 +431,7 @@ function DashboardContent() {
                 <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Today's Tasks</h4>
               </div>
               <div className="space-y-2">
-                {tasks.map(task => (
+                {dbData.tasks.length > 0 ? dbData.tasks.map(task => (
                   <label key={task.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer group">
                     <input
                       className="w-4 h-4 rounded-md border-outline text-primary focus:ring-primary"
@@ -413,7 +443,11 @@ function DashboardContent() {
                       {task.label}
                     </span>
                   </label>
-                ))}
+                )) : loadingDb ? (
+                   <p className="text-sm text-gray-500 py-2">Loading tasks...</p>
+                ) : (
+                   <p className="text-sm text-gray-500 py-2">No tasks assigned.</p>
+                )}
               </div>
               <button className="mt-4 w-full text-center py-1.5 text-[12px] font-bold text-primary hover:bg-primary/5 rounded-lg">
                 + Add New Task

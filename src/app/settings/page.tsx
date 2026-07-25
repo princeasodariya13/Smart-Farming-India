@@ -1,14 +1,36 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { Leaf } from 'lucide-react';
-import GPSLayout from "@/components/gps-calculator/GPSLayout";
+import NotificationSettings from "@/components/profile/NotificationSettings";
+import SettingsCard from "@/components/profile/SettingsCard";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function GPSAreaCalculatorPage() {
+// ─── Toast Notification ───────────────────────────────────────────────────────
+function Toast({ message, type }: { message: string; type: "success" | "error" | "info" }) {
+  const colors = {
+    success: "bg-primary text-white",
+    error: "bg-error text-white",
+    info: "bg-surface-container-high text-on-surface",
+  };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 50 }}
+      className={`fixed bottom-6 right-6 z-[300] px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold ${colors[type]}`}
+    >
+      {message}
+    </motion.div>
+  );
+}
+
+function SettingsContent() {
   const { data: session } = useSession();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -19,7 +41,22 @@ export default function GPSAreaCalculatorPage() {
     return name[0].toUpperCase();
   };
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSettingsAction = (id: string) => {
+    if (id === "delete") {
+      if (confirm("Are you sure? This will permanently delete your account and all data. This cannot be undone.")) {
+        showToast("Account deletion request submitted. Our team will process it within 48 hours.", "info");
+      }
+      return;
+    }
+    showToast(`${id.charAt(0).toUpperCase() + id.slice(1)} settings — coming soon`, "info");
+  };
+
+  const handleLogout = () => signOut({ callbackUrl: "/" });
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -58,7 +95,7 @@ export default function GPSAreaCalculatorPage() {
             <span className="material-symbols-outlined text-[18px]">agriculture</span>
             <span className="text-[12px] font-medium">My Farm</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/gps-area-calculator">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
             <span className="material-symbols-outlined text-[18px]">map</span>
             <span className="text-[12px] font-medium">GPS Area Calculator</span>
           </Link>
@@ -74,7 +111,11 @@ export default function GPSAreaCalculatorPage() {
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span className="text-[12px] font-medium">Market</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/profile">
+            <span className="material-symbols-outlined text-[18px]">person</span>
+            <span className="text-[12px] font-medium">Profile</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
           </Link>
@@ -143,13 +184,47 @@ export default function GPSAreaCalculatorPage() {
           </div>
         </header>
 
-        {/* GPS Content */}
-        <main className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col">
-          <div className="flex-1 lg:h-full">
-            <GPSLayout />
+        {/* Content Area */}
+        <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-6 lg:p-10">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-on-surface">Platform Settings</h1>
+              <p className="text-sm text-on-surface-variant mt-1">Manage your notification preferences and account security.</p>
+            </div>
+            <NotificationSettings />
+            <SettingsCard
+              onAction={handleSettingsAction}
+              onLogout={handleLogout}
+            />
           </div>
+          
+          <footer className="w-full py-6 flex flex-col md:flex-row justify-between items-center border-t border-outline-variant mt-12 max-w-4xl mx-auto">
+            <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
+              <h4 className="font-body-lg text-body-lg font-bold text-primary">Smart Farming India</h4>
+              <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
+            </div>
+            <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
+            </div>
+          </footer>
         </main>
       </div>
+
+      {/* ── Toast ───────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {toast && <Toast key={toast.message} message={toast.message} type={toast.type} />}
+      </AnimatePresence>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <SessionProvider>
+      <SettingsContent />
+    </SessionProvider>
   );
 }

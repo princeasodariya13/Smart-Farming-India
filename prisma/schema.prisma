@@ -249,6 +249,8 @@ model User {
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
   diseaseScans  DiseaseScan[]
+  farmerTasks   FarmerTask[]
+  soilHealth    SoilHealth?
 
   @@index([companyId])
 }
@@ -622,6 +624,30 @@ model IrrigationSystem {
   updatedAt      DateTime  @updatedAt
 
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FarmerTask {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  label       String
+  checked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SoilHealth {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String   @unique
+  nitrogen    Int      @default(82)
+  phosphorus  Int      @default(65)
+  status      String   @default("Balanced")
+  action      String   @default("Fertilize in 4 days")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ------------------------------------------------------

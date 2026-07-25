@@ -5,6 +5,9 @@ export async function GET() {
   try {
     let mandiPrices = await prisma.mandiPrice.findMany();
     let crops = await prisma.crop.findMany();
+    let tasks = await prisma.farmerTask.findMany();
+    let irrigation = await prisma.irrigationSystem.findFirst();
+    let soilHealth = await prisma.soilHealth.findFirst();
     
     // Seed Mandi Prices if empty
     if (mandiPrices.length === 0) {
@@ -36,7 +39,51 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ success: true, mandiPrices, crops });
+    if (tasks.length === 0) {
+      const firstUser = await prisma.user.findFirst();
+      if (firstUser) {
+        await prisma.farmerTask.createMany({
+          data: [
+            { userId: firstUser.id, label: 'Fertilize Sector B with N-P-K', checked: false },
+            { userId: firstUser.id, label: 'Check Soil Moisture (Acres 4-8)', checked: false },
+            { userId: firstUser.id, label: 'Schedule Water Pump #2', checked: true },
+          ]
+        });
+        tasks = await prisma.farmerTask.findMany();
+      }
+    }
+
+    if (!irrigation) {
+      const firstUser = await prisma.user.findFirst();
+      if (firstUser) {
+        irrigation = await prisma.irrigationSystem.create({
+          data: {
+            userId: firstUser.id,
+            status: "Active",
+            pumpName: "Pump #4",
+            sector: "Sector A-12",
+            waterUsage: 1240
+          }
+        });
+      }
+    }
+
+    if (!soilHealth) {
+      const firstUser = await prisma.user.findFirst();
+      if (firstUser) {
+        soilHealth = await prisma.soilHealth.create({
+          data: {
+            userId: firstUser.id,
+            nitrogen: 82,
+            phosphorus: 65,
+            status: "Balanced",
+            action: "Fertilize in 4 days"
+          }
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, mandiPrices, crops, tasks, irrigation, soilHealth });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch dashboard data' }, { status: 500 });

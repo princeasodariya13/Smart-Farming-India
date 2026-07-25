@@ -9,8 +9,8 @@ export async function GET() {
       const initialProducts = [
         {
           name: "John Deere 5050 D",
-          seller: "AgriRent Punjab",
-          location: "Ludhiana, Punjab",
+          seller: "AgriRent Gujarat",
+          location: "Ahmedabad, Gujarat",
           rating: 4.9,
           price: 2500,
           priceUnit: "/ day",
@@ -39,7 +39,7 @@ export async function GET() {
         {
           name: "Multi-Crop Seed Drill",
           seller: "FarmTech Rentals",
-          location: "Amritsar, Punjab",
+          location: "Rajkot, Gujarat",
           rating: 4.5,
           price: 1200,
           priceUnit: "/ day",
@@ -61,8 +61,7 @@ export async function GET() {
           type: "buy",
           stock: "10kg Packs",
           category: "seeds",
-          image:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuDU6Yf4WrVp0IzCxvzTteTJvYjLuD6fzbUR4oZf0HKJu2mde-W6bUHg3VLRSm7kooJtpbefXo5iKuAJMnEDFSFZsNgce5Ro-fJE7evsXV6sOnAtx3ct88Y7aVAZeTNPkz9ZycCD3a81jRI6zv5kuUYbcIaOcCE3iZVcA_UhTqjpTY0_NtUne0M-GVu2BK2DSmpPVmZT8VBFiXIZhxLhQGUqy_AEUGzqe9Lc8T6Ef1Fi2PjPJTHyMQmVSH9jxlW4YAvwToswTBFXg",
+          image: "/images/wheat.png",
           imageAlt: "High-yield wheat seeds in bowl",
         },
         {
@@ -82,7 +81,7 @@ export async function GET() {
         {
           name: "Combine Harvester (Pro-X)",
           seller: "HarvestPro Rentals",
-          location: "Chandigarh",
+          location: "Surat, Gujarat",
           rating: 4.2,
           price: 4800,
           priceUnit: "/ day",

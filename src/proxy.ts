@@ -14,6 +14,8 @@ export default auth((req) => {
     pathname === '/forgot-password' || 
     pathname === '/reset-password'
     
+  const isPublicRoute = pathname === '/' || isAuthRoute
+    
   const isDashboardRoute = pathname.startsWith('/dashboard')
   
   // If the user is logged in and tries to access login/signup pages, redirect to dashboard
@@ -21,8 +23,13 @@ export default auth((req) => {
     return Response.redirect(new URL('/dashboard', req.nextUrl))
   }
 
-  // If the user is NOT logged in and tries to access the dashboard, redirect to login
-  if (isDashboardRoute && !isLoggedIn) {
+  // If the user is logged in and hits the root page, redirect to dashboard
+  if (pathname === '/' && isLoggedIn) {
+    return Response.redirect(new URL('/dashboard', req.nextUrl))
+  }
+
+  // If the user is NOT logged in and tries to access ANY page other than public routes, redirect to login
+  if (!isPublicRoute && !isLoggedIn && !pathname.startsWith('/api') && !pathname.match(/\.(.*)$/)) {
     return Response.redirect(new URL('/login', req.nextUrl))
   }
 })

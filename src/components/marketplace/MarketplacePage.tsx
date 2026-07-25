@@ -50,16 +50,17 @@ export default function MarketplacePage() {
   }, [activeCategory, sortBy, dbProducts]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background-sage text-on-surface">
+    <div className="flex h-screen flex-col bg-background-sage text-on-surface overflow-hidden">
       <Header />
 
-      <div className="mx-auto flex w-full max-w-container-max flex-1">
+      <div className="mx-auto flex w-full max-w-container-max flex-1 overflow-hidden relative">
         <FilterSidebar
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
         />
 
-        <main className="flex-1 p-margin-desktop">
+        <main data-lenis-prevent="true" className="flex-1 p-margin-desktop overflow-y-auto custom-scrollbar flex flex-col relative">
+          <div className="flex-1">
           <MarketplaceHeader
             productCount={products.length}
             sortBy={sortBy}
@@ -75,22 +76,23 @@ export default function MarketplacePage() {
             <ProductGrid products={products} viewMode={viewMode} onQuickView={setSelectedProduct} />
           )}
           <PromoBanner />
+          </div>
+
+          {/* Compact Dashboard Footer */}
+          <footer className="w-full py-6 flex flex-col md:flex-row justify-between items-center border-t border-outline-variant mt-12">
+            <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
+              <h4 className="font-body-lg text-body-lg font-bold text-primary">Smart Farming India</h4>
+              <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
+            </div>
+            <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
+            </div>
+          </footer>
         </main>
       </div>
-
-      {/* Compact Dashboard Footer */}
-      <footer className="w-full py-6 px-margin-desktop flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-auto z-10 relative">
-        <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
-          <h4 className="font-body-lg text-body-lg font-bold text-primary">Smart Farming India</h4>
-          <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
-        </div>
-        <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
-          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
-          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
-          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
-          <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
-        </div>
-      </footer>
 
       {/* FAB */}
       <motion.button

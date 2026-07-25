@@ -10,7 +10,7 @@ export default function FilterSidebar({ activeCategory, onCategoryChange }: Prop
   return (
     <aside
       data-lenis-prevent="true"
-      className="hidden w-64 shrink-0 flex-col gap-8 border-r border-outline-variant bg-surface-container-low p-6 md:flex sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar"
+      className="hidden w-64 shrink-0 flex-col gap-8 border-r border-outline-variant bg-surface-container-low p-6 md:flex h-full overflow-y-auto custom-scrollbar"
     >
       {/* Categories */}
       <FilterSection title="Categories">
@@ -77,10 +77,11 @@ export default function FilterSidebar({ activeCategory, onCategoryChange }: Prop
             aria-label="Filter by location"
             className="w-full appearance-none rounded-xl border border-outline-variant bg-surface-container-lowest py-2 pl-10 pr-4 text-body-md outline-none focus:ring-1 focus:ring-primary"
           >
-            <option>Punjab, IN</option>
-            <option>Haryana, IN</option>
-            <option>Maharashtra, IN</option>
-            <option>Karnataka, IN</option>
+            <option>All Gujarat</option>
+            <option>Ahmedabad, GJ</option>
+            <option>Surat, GJ</option>
+            <option>Rajkot, GJ</option>
+            <option>Vadodara, GJ</option>
           </select>
         </div>
       </FilterSection>

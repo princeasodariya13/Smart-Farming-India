@@ -365,7 +365,7 @@ function WeatherContent() {
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span className="text-[12px] font-medium">Market</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
           </Link>
@@ -421,13 +421,15 @@ function WeatherContent() {
               <div className="text-right hidden sm:block">
                 <p className="text-[12px] font-bold text-on-surface leading-none">{session?.user?.name || "Farmer"}</p>
               </div>
-              {session?.user?.image ? (
-                <Image width={32} height={32} className="w-8 h-8 rounded-full border border-outline-variant object-cover" alt="Farmer Portrait" src={session.user.image} />
-              ) : (
-                <div className="w-8 h-8 rounded-full border border-outline-variant bg-primary-container text-on-primary-container flex items-center justify-center text-[12px] font-bold tracking-wider">
-                  {getInitials(session?.user?.name)}
-                </div>
-              )}
+              <Link href="/profile" className="block relative cursor-pointer hover:opacity-80 transition-opacity">
+                {session?.user?.image ? (
+                  <Image width={32} height={32} className="w-8 h-8 rounded-full border border-outline-variant object-cover" alt="Farmer Portrait" src={session.user.image} />
+                ) : (
+                  <div className="w-8 h-8 rounded-full border border-outline-variant bg-primary-container text-on-primary-container flex items-center justify-center text-[12px] font-bold tracking-wider">
+                    {getInitials(session?.user?.name)}
+                  </div>
+                )}
+              </Link>
             </div>
           </div>
         </header>

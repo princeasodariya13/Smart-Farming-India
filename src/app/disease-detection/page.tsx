@@ -249,7 +249,7 @@ function DiseaseDetectionContent() {
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span className="text-[12px] font-medium">Market</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
           </Link>
@@ -301,11 +301,13 @@ function DiseaseDetectionContent() {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
             </button>
             <div className="w-7 h-7 rounded-full bg-surface-container-high border border-primary flex items-center justify-center overflow-hidden shrink-0 ml-1 shadow-sm">
-              {session?.user?.image ? (
-                <Image src={session.user.image} alt="Profile" width={28} height={28} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-[12px] font-bold text-primary">{getInitials(session?.user?.name)}</span>
-              )}
+              <Link href="/profile" className="block relative cursor-pointer hover:opacity-80 transition-opacity">
+                {session?.user?.image ? (
+                  <Image src={session.user.image} alt="Profile" width={28} height={28} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[12px] font-bold text-primary">{getInitials(session?.user?.name)}</span>
+                )}
+              </Link>
             </div>
           </div>
         </header>

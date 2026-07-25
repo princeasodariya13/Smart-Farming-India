@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@tailwindcss/forms": "^0.5.11",
     "@turf/turf": "^7.3.5",
