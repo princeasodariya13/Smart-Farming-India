@@ -13,17 +13,28 @@ const LAYERS: { key: MapLayer; label: string; icon: typeof Satellite }[] = [
   { key: "temperature", label: "Temperature Layer", icon: Thermometer },
 ];
 
+import dynamic from "next/dynamic";
+
+const MapComponent = dynamic(() => import("./WeatherMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-72 w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-outline-variant bg-surface-container-low text-on-surface-variant">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <p className="text-sm font-medium">Loading live satellite data...</p>
+    </div>
+  ),
+});
+
 /**
- * Placeholder for the interactive weather map. No map logic — this is a
- * visual shell with layer toggles ready to wire up to a real map provider.
+ * Interactive weather map with OpenWeatherMap tile integration.
  */
 export default function WeatherMapCard() {
   const [layer, setLayer] = useState<MapLayer>("satellite");
 
   return (
-    <section className="space-y-6 rounded-[20px] border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-xl md:p-8">
+    <section className="space-y-6 rounded-[20px] border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-xl md:p-8 relative z-0">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <h3 className="text-xl font-semibold text-on-surface">Interactive Weather Map</h3>
+        <h3 className="text-xl font-semibold text-on-surface">Live Weather Radar</h3>
         <div role="tablist" aria-label="Map layer" className="flex flex-wrap gap-1 rounded-xl bg-surface-container-low p-1">
           {LAYERS.map(({ key, label, icon: Icon }) => (
             <button
@@ -43,11 +54,8 @@ export default function WeatherMapCard() {
         </div>
       </div>
 
-      <div className="flex h-72 w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-outline-variant bg-surface-container-low text-on-surface-variant">
-        <MapPinned size={40} className="text-primary" aria-hidden="true" />
-        <p className="text-sm">
-          {LAYERS.find((l) => l.key === layer)?.label} — map integration connects here
-        </p>
+      <div data-lenis-prevent="true" className="h-96 w-full overflow-hidden rounded-2xl border border-outline-variant/30 shadow-inner relative z-0">
+        <MapComponent layer={layer} />
       </div>
     </section>
   );

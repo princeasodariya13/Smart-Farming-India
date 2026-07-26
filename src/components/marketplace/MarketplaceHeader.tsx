@@ -8,6 +8,7 @@ interface Props {
   viewMode: ViewMode;
   onSortChange: (s: SortOption) => void;
   onViewModeChange: (v: ViewMode) => void;
+  onAddPost: () => void;
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -23,6 +24,7 @@ export default function MarketplaceHeader({
   viewMode,
   onSortChange,
   onViewModeChange,
+  onAddPost,
 }: Props) {
   return (
     <header className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
@@ -38,7 +40,16 @@ export default function MarketplaceHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/* Add Post Button */}
+        <button
+          onClick={onAddPost}
+          className="flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-label-md font-bold text-white transition hover:brightness-110 shadow-sm"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          Add Post
+        </button>
+
         {/* Sort */}
         <div className="relative flex items-center gap-2 rounded-full border border-outline-variant px-4 py-2 text-label-md hover:bg-surface-container-high">
           <SlidersHorizontal size={16} className="text-on-surface-variant" aria-hidden />

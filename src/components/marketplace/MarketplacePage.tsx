@@ -9,6 +9,10 @@ import PromoBanner from "./PromoBanner";
 import ProductModal from "./ProductModal";
 import Link from "next/link";
 
+import AddProductModal from "./AddProductModal";
+import MarketplaceNotifications from "./MarketplaceNotifications";
+import MyBookings from "./MyBookings";
+
 import type { Product, SortOption, ViewMode } from "./types";
 
 export default function MarketplacePage() {
@@ -16,6 +20,7 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState<SortOption>("popular");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,12 +66,14 @@ export default function MarketplacePage() {
 
         <main data-lenis-prevent="true" className="flex-1 p-margin-desktop overflow-y-auto custom-scrollbar flex flex-col relative">
           <div className="flex-1">
+          <MarketplaceNotifications />
           <MarketplaceHeader
             productCount={products.length}
             sortBy={sortBy}
             viewMode={viewMode}
             onSortChange={setSortBy}
             onViewModeChange={setViewMode}
+            onAddPost={() => setIsAddModalOpen(true)}
           />
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -76,6 +83,8 @@ export default function MarketplacePage() {
             <ProductGrid products={products} viewMode={viewMode} onQuickView={setSelectedProduct} />
           )}
           <PromoBanner />
+          
+          <MyBookings />
           </div>
 
           {/* Compact Dashboard Footer */}
@@ -116,6 +125,13 @@ export default function MarketplacePage() {
 
       {/* Quick View Modal */}
       <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+
+      {/* Add Product Modal */}
+      <AddProductModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSuccess={(newProduct) => setDbProducts([newProduct, ...dbProducts])} 
+      />
     </div>
   );
 }

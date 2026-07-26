@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { X, ShoppingCart, CalendarDays, MessageSquare, Plus, Minus } from "lucide-react";
+import { X, ShoppingCart, CalendarDays, MessageSquare, Plus, Minus, CheckCircle, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "./types";
 import RatingStars from "./RatingStars";
+import { subscribeBookingStatus, getBookingStatusMap } from "./MarketplaceNotifications";
+import BookingCalendar from "./BookingCalendar";
 
 interface Props {
   product: Product | null;
@@ -15,6 +17,38 @@ export default function ProductModal({ product, onClose }: Props) {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [bookingStatusMap, setBookingStatusMap] = useState<Record<string, string>>(
+    () => getBookingStatusMap()
+  );
+  
+  // Date selection states
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [bookedDates, setBookedDates] = useState<{start: string, end: string}[]>([]);
+
+  // Fetch booked dates for this product
+  useEffect(() => {
+    if (product?.type === "rental") {
+      fetch(`/api/marketplace/availability?productId=${product.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setBookedDates(data.bookings.map((b: any) => ({
+              start: new Date(b.startDate).toISOString().split('T')[0],
+              end: new Date(b.endDate).toISOString().split('T')[0]
+            })));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [product]);
+
+  // Subscribe to live booking status updates from the SSE notification system
+  useEffect(() => {
+    return subscribeBookingStatus(setBookingStatusMap);
+  }, []);
+
+  const bookingStatus = product ? bookingStatusMap[product.id] : undefined;
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -32,6 +66,55 @@ export default function ProductModal({ product, onClose }: Props) {
       } else {
         if (data.error === 'Unauthorized') alert('Please login to add items to cart');
         else alert(data.error || 'Failed to add to cart');
+      }
+    } catch (err) {
+      alert('Network error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBookNow = async () => {
+    if (!product) return;
+    if (!startDate) {
+      alert("Please select a start date.");
+      return;
+    }
+    
+    // If no end date is selected, assume it's a 1-day rental
+    const finalEndDate = endDate || startDate;
+
+    if (new Date(startDate) > new Date(finalEndDate)) {
+      alert("End date cannot be before start date.");
+      return;
+    }
+    
+    // Check overlap client-side
+    const start = new Date(startDate);
+    const end = new Date(finalEndDate);
+    for (const b of bookedDates) {
+      const bStart = new Date(b.start);
+      const bEnd = new Date(b.end);
+      if ((start <= bEnd) && (end >= bStart)) {
+        alert("The selected dates overlap with an existing booking. Please choose different dates.");
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/marketplace/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, startDate, endDate: finalEndDate })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Booking request sent successfully! The farmer has been notified.');
+        onClose();
+      } else {
+        if (data.error === 'Unauthorized') alert('Please login to book items');
+        else alert(data.error || 'Failed to book');
       }
     } catch (err) {
       alert('Network error');
@@ -74,11 +157,12 @@ export default function ProductModal({ product, onClose }: Props) {
             aria-label={`Quick view: ${product.name}`}
             ref={dialogRef}
             tabIndex={-1}
+            data-lenis-prevent="true"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed inset-x-4 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-[28px] bg-surface-container-lowest p-6 shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px]"
+            className="fixed inset-x-4 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto custom-scrollbar rounded-t-[28px] bg-surface-container-lowest p-6 shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px]"
             onKeyDown={(e) => e.key === "Escape" && onClose()}
           >
             {/* Close */}
@@ -118,7 +202,7 @@ export default function ProductModal({ product, onClose }: Props) {
                     <RatingStars rating={product.rating} />
                   </div>
                   <p className="text-label-sm text-on-surface-variant">
-                    {product.seller} • {product.location}
+                    {product.seller.split('||')[0]} • {product.location}
                   </p>
                 </div>
 
@@ -168,18 +252,74 @@ export default function ProductModal({ product, onClose }: Props) {
                   </div>
                 )}
 
+                {/* Date Picker for Rentals */}
+                {product.type === "rental" && (
+                  <div className="flex flex-col gap-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-label-md text-on-surface">Select Rental Dates</span>
+                    </div>
+                    <BookingCalendar
+                      bookedDates={bookedDates}
+                      startDate={startDate}
+                      endDate={endDate}
+                      onChange={(start, end) => {
+                        setStartDate(start);
+                        setEndDate(end);
+                      }}
+                    />
+                    
+                    {startDate && (
+                      <div className="flex justify-between items-center bg-primary/5 border border-primary/20 rounded-lg p-3 mt-2">
+                        <div className="text-sm">
+                          <span className="text-on-surface-variant font-medium">Selected Date:</span>{" "}
+                          <span className="font-bold text-primary">{new Date(startDate).toLocaleDateString()}</span>
+                        </div>
+                        {endDate && endDate !== startDate && (
+                          <div className="text-sm">
+                            <span className="text-on-surface-variant font-medium">To:</span>{" "}
+                            <span className="font-bold text-primary">{new Date(endDate).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex flex-col gap-2 pt-2">
+                  {/* Live booking status badge */}
+                  {bookingStatus && (
+                    <div
+                      className={`flex items-center justify-center gap-2 rounded-xl py-2.5 font-bold text-sm ${
+                        bookingStatus === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : bookingStatus === "rejected"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {bookingStatus === "approved" ? (
+                        <><CheckCircle size={16} /> Booking Approved</>
+                      ) : bookingStatus === "rejected" ? (
+                        <><XCircle size={16} /> Booking Rejected</>
+                      ) : (
+                        <><CalendarDays size={16} /> Booking Pending…</>
+                      )}
+                    </div>
+                  )}
+
                   <button
                     type="button"
-                    onClick={handleAddToCart}
-                    disabled={loading}
+                    onClick={product.type === "rental" ? handleBookNow : handleAddToCart}
+                    disabled={loading || bookingStatus === "approved" || bookingStatus === "pending"}
                     className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white transition-all ${
-                      loading ? "opacity-70 cursor-not-allowed bg-surface-container-highest text-on-surface-variant" : "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/20"
+                      loading || bookingStatus === "approved" || bookingStatus === "pending"
+                        ? "opacity-60 cursor-not-allowed bg-surface-container-highest text-on-surface-variant"
+                        : "bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/20"
                     }`}
                   >
-                    {product.type === "rental" ? (
-                      <><CalendarDays size={18} /> Rent Now</>
+                    {loading ? "Processing..." : product.type === "rental" ? (
+                      <><CalendarDays size={18} /> {bookingStatus === "approved" ? "Booked" : "Rent Now"}</>
                     ) : (
                       <><ShoppingCart size={18} /> Add to Cart</>
                     )}

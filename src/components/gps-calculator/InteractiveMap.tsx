@@ -144,9 +144,29 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
   const handleZoomIn = () => mapInstance?.zoomIn();
   const handleZoomOut = () => mapInstance?.zoomOut();
   const handleLocate = () => {
-    mapInstance?.locate().on("locationfound", (e) => {
-      mapInstance.flyTo(e.latlng, 16);
-    });
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    
+    // Use native API with high accuracy for farming use case
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (mapInstance) {
+          mapInstance.flyTo([latitude, longitude], 18, { animate: true, duration: 1.5 });
+        }
+      },
+      (error) => {
+        console.error("GPS Error:", error);
+        alert("Could not find your location. Please ensure location services are enabled in your browser/device settings.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);

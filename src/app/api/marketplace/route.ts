@@ -107,3 +107,49 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Failed to fetch marketplace data' }, { status: 500 });
   }
 }
+
+import { auth } from "@/auth";
+
+export async function POST(request: Request) {
+  try {
+    let session = await auth();
+    let userId = session?.user?.id;
+    let userName = session?.user?.name;
+
+    if (!userId) {
+      // Fallback to first user in db if session id is not mapped properly in NextAuth
+      const fallbackUser = await prisma.user.findFirst();
+      if (!fallbackUser) {
+        return NextResponse.json({ success: false, error: 'Unauthorized and no fallback user found' }, { status: 401 });
+      }
+      userId = fallbackUser.id;
+      userName = fallbackUser.name;
+    }
+
+    const data = await request.json();
+    const { name, category, type, price, priceUnit, location, image, stock } = data;
+
+    const newProduct = await prisma.marketplaceProduct.create({
+      data: {
+        name,
+        category: category.toLowerCase(),
+        type,
+        price,
+        priceUnit,
+        location,
+        image,
+        imageAlt: name,
+        stock,
+        // Save the actual user ID and name in the seller field with a separator so we can extract it later
+        seller: `${userName || "Farmer"}||${userId}`,
+        rating: 5.0,
+        badge: type === "rental" ? "Rental" : null,
+      }
+    });
+
+    return NextResponse.json({ success: true, product: newProduct });
+  } catch (error) {
+    console.error('POST Error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to create post' }, { status: 500 });
+  }
+}

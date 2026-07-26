@@ -50,7 +50,7 @@ function DashboardContent() {
     };
     fetchWeather();
   }, []);
-  
+
   const [dbData, setDbData] = useState<{
     mandiPrices: any[];
     crops: any[];
@@ -70,6 +70,7 @@ function DashboardContent() {
     const fetchDbData = async () => {
       try {
         const res = await fetch('/api/dashboard');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         if (data.success) {
           setDbData({
@@ -95,7 +96,7 @@ function DashboardContent() {
       ...prev,
       tasks: prev.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t)
     }));
-    
+
     try {
       await fetch('/api/tasks/toggle', {
         method: 'POST',
@@ -116,7 +117,7 @@ function DashboardContent() {
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
-      
+
       {/* SideNavBar */}
       <aside className={`fixed md:static inset-y-0 left-0 z-50 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-full w-64 md:w-48 bg-surface-container-low border-r border-outline-variant p-2.5 gap-2 shadow-2xl md:shadow-none`}>
         <div className="flex items-center justify-between px-2 py-3">
@@ -141,10 +142,7 @@ function DashboardContent() {
             <span className="material-symbols-outlined text-[18px]">dashboard</span>
             <span className="text-[12px] font-medium">Dashboard</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
-            <span className="material-symbols-outlined text-[18px]">agriculture</span>
-            <span className="text-[12px] font-medium">My Farm</span>
-          </Link>
+
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
             <span className="material-symbols-outlined text-[18px]">map</span>
             <span className="text-[12px] font-medium">GPS Area Calculator</span>
@@ -157,10 +155,9 @@ function DashboardContent() {
             <span className="material-symbols-outlined text-[18px]">shutter_speed</span>
             <span className="text-[12px] font-medium">Scanner</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
-            <span className="material-symbols-outlined text-[18px]">storefront</span>
-            <span className="text-[12px] font-medium">Market</span>
-          </Link>
+
+
+
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
@@ -235,8 +232,8 @@ function DashboardContent() {
           {/* Welcome Header */}
           <div className="max-w-container-max mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
-              <div>
-                <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Namaste, {session?.user?.name?.split(' ')[0] || "Farmer"}.</h2>
+              <div className="min-w-0">
+                <h2 className="font-headline-md text-headline-md font-bold text-on-surface truncate">Namaste, {session?.user?.name?.split(' ')[0] || "Farmer"}.</h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Farm is healthy. <span className="text-primary font-semibold">{dbData.tasks.filter((t: any) => !t.checked).length} pending actions</span>.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -493,11 +490,11 @@ function DashboardContent() {
               <div className="bg-white p-3 rounded-xl border border-primary/10 mb-3">
                 <h5 className="text-[13px] font-bold text-primary">PM Kisan Samman Nidhi</h5>
                 <p className="text-[11px] text-on-surface-variant mt-0.5">Application deadline near.</p>
-                <button className="mt-2 w-full py-1.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold">Apply Now</button>
+                <button onClick={() => router.push('/schemes')} className="mt-2 w-full py-1.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold">Apply Now</button>
               </div>
               <div className="flex items-center justify-between px-1">
                 <p className="text-[11px] text-on-surface-variant">3 more schemes</p>
-                <span className="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+                <Link href="/schemes" className="material-symbols-outlined text-primary text-[16px]">arrow_forward</Link>
               </div>
             </div>
           </div>

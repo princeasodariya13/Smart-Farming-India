@@ -673,6 +673,7 @@ model MarketplaceProduct {
   
   cartItems   CartItem[]
   wishlists   WishlistItem[]
+  bookings    EquipmentBooking[]
 }
 
 model CartItem {
@@ -699,6 +700,26 @@ model WishlistItem {
   product     MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+}
+
+// ------------------------------------------------------
+// EQUIPMENT BOOKING
+// ------------------------------------------------------
+
+model EquipmentBooking {
+  id          String   @id @default(uuid()) @map("_id")
+  productId   String
+  buyerId     String
+  buyerName   String
+  sellerId    String
+  status      String   @default("pending")  // pending | approved | rejected
+  productName String
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product     MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 

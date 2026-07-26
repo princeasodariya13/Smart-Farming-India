@@ -229,10 +229,7 @@ function DiseaseDetectionContent() {
             <span className="material-symbols-outlined text-[18px]">dashboard</span>
             <span className="text-[12px] font-medium">Dashboard</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
-            <span className="material-symbols-outlined text-[18px]">agriculture</span>
-            <span className="text-[12px] font-medium">My Farm</span>
-          </Link>
+          
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
             <span className="material-symbols-outlined text-[18px]">map</span>
             <span className="text-[12px] font-medium">GPS Area Calculator</span>
@@ -245,10 +242,7 @@ function DiseaseDetectionContent() {
             <span className="material-symbols-outlined text-[18px]">shutter_speed</span>
             <span className="text-[12px] font-medium">Disease Detection</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
-            <span className="material-symbols-outlined text-[18px]">storefront</span>
-            <span className="text-[12px] font-medium">Market</span>
-          </Link>
+          
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
