@@ -522,15 +522,20 @@ function DashboardContent() {
       </div>
 
       {/* Live Market Ticker */}
-      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-secondary-fixed-dim z-[60] flex items-center overflow-hidden whitespace-nowrap border-t border-white/5 pointer-events-none md:left-64">
+      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-[60] flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none md:left-64">
         <div className="flex ticker-animate font-label-sm text-[11px] tracking-wide gap-12 items-center">
           {dbData.mandiPrices.length > 0 ? (
             // Duplicate the array a few times to ensure the ticker spans the whole screen
             [...dbData.mandiPrices, ...dbData.mandiPrices, ...dbData.mandiPrices, ...dbData.mandiPrices].map((price, index) => (
-              <span key={index}>{price.cropName.toUpperCase()}: ₹{price.price.toLocaleString('en-IN')} ({price.trendDirection === 'UP' ? '+' : ''}{price.trendPercent}%)</span>
+              <span key={index} className="shrink-0 font-medium">
+                {price.cropName.toUpperCase()}: <span className="text-primary-container font-bold">₹{price.price.toLocaleString('en-IN')}</span> 
+                <span className={price.trendDirection === 'UP' ? 'text-green-400' : 'text-red-400'}>
+                  {' '}({price.trendDirection === 'UP' ? '+' : ''}{price.trendPercent}%)
+                </span>
+              </span>
             ))
           ) : (
-            <span>Loading live market data...</span>
+            <span className="shrink-0 text-on-surface-variant">Loading live market data...</span>
           )}
         </div>
       </div>
