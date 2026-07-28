@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { Leaf } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 import PageLoader from '@/components/PageLoader';
 
 interface AnalysisResult {
@@ -31,9 +32,7 @@ interface AnalysisResult {
 function DiseaseDetectionContent() {
   const { data: session, status } = useSession();
 
-  if (status === "loading") {
-    return <PageLoader />;
-  }
+  
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -260,7 +259,7 @@ function DiseaseDetectionContent() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -271,9 +270,7 @@ function DiseaseDetectionContent() {
           </Link>
         </nav>
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
@@ -651,12 +648,18 @@ function DiseaseDetectionContent() {
 }
 
 export default function DiseaseDetectionPage() {
+  
+  if (status === "loading") {
+    return <PageLoader />;
+  }
+
   return (
     <SessionProvider>
       <DiseaseDetectionContent />
     </SessionProvider>
   );
 }
+
 
 
 

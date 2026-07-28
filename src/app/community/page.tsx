@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useSession, signOut, SessionProvider } from "next-auth/react";
 import { Leaf } from "lucide-react";
 import PageLoader from '@/components/PageLoader';
+import NotificationBell from '@/components/NotificationBell';
 
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { StatsOverview } from "@/components/community/StatsOverview";
@@ -40,13 +41,90 @@ import type { FeedTabKey } from "@/types/community";
 
 function CommunityContent() {
   const { data: session, status } = useSession();
+  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<FeedTabKey>("for-you");
+  const [isLoading, setIsLoading] = useState(true);
+  const [realPosts, setRealPosts] = useState<any[]>([]);
+
+  // Fetch real data
+  useEffect(() => {
+    fetch('/api/community')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.posts) {
+          setRealPosts(data.posts);
+        }
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const handleCreatePost = async (payload: { text: string; crop: string | null; mode: string }) => {
+    try {
+      const res = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: payload.text,
+          type: payload.mode,
+          tags: payload.crop ? [payload.crop] : []
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.post) {
+        setRealPosts(prev => [data.post, ...prev]);
+      }
+    } catch (err) {
+      console.error("Failed to post:", err);
+    }
+  };
+
+  const allPosts = useMemo(() => {
+    const formattedReal = realPosts.map(p => ({
+      id: p.id,
+      author: {
+        name: p.user?.name || "Farmer",
+        role: "Community Member",
+        avatar: p.user?.image || "https://i.pravatar.cc/100?img=12",
+        verified: false,
+      },
+      content: p.content,
+      images: p.images || [],
+      likes: p.likes || 0,
+      comments: p.comments?.length || 0,
+      shares: 0,
+      timeAgo: "Just now",
+      tags: p.tags || [],
+      type: p.type || "post",
+    }));
+    return [...formattedReal, ...communityPosts];
+  }, [realPosts]);
+
+  const visiblePosts = useMemo(() => {
+    switch (activeTab) {
+      case "questions":
+        return allPosts.filter((p) => p.type === "question");
+      case "photos":
+        return allPosts.filter((p) => p.type === "photo" || (p.images && p.images.length > 0));
+      case "videos":
+        return allPosts.filter((p) => p.type === "video");
+      default:
+        return allPosts;
+    }
+  }, [activeTab, allPosts]);
+
+  const categoryByKey = useMemo(
+    () => Object.fromEntries(cropCategories.map((c) => [c.key, c])),
+    []
+  );
 
   if (status === "loading") {
     return <PageLoader />;
   }
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<FeedTabKey>("for-you");
-  const [isLoading, setIsLoading] = useState(true);
 
   const farmerName = session?.user?.name?.split(" ")[0] ?? "Farmer";
   const avatarUrl = session?.user?.image ?? "https://i.pravatar.cc/100?img=12";
@@ -57,30 +135,6 @@ function CommunityContent() {
     if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return name[0].toUpperCase();
   };
-
-  // Simulated initial fetch — replace with real data loading.
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 700);
-    return () => clearTimeout(t);
-  }, []);
-
-  const visiblePosts = useMemo(() => {
-    switch (activeTab) {
-      case "questions":
-        return communityPosts.filter((p) => p.type === "question");
-      case "photos":
-        return communityPosts.filter((p) => p.type === "photo" || (p.images && p.images.length > 0));
-      case "videos":
-        return communityPosts.filter((p) => p.type === "video");
-      default:
-        return communityPosts;
-    }
-  }, [activeTab]);
-
-  const categoryByKey = useMemo(
-    () => Object.fromEntries(cropCategories.map((c) => [c.key, c])),
-    []
-  );
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -149,7 +203,7 @@ function CommunityContent() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -161,9 +215,7 @@ function CommunityContent() {
         </nav>
 
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
@@ -199,10 +251,7 @@ function CommunityContent() {
             </div>
                       </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full" />
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1" />
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">
@@ -250,10 +299,11 @@ function CommunityContent() {
               {/* Main feed column */}
               <div className="flex flex-col gap-6 lg:col-span-8">
                 <CreatePost
-                  authorAvatarUrl={avatarUrl}
-                  authorName={farmerName}
-                  categories={cropCategories}
-                />
+                authorName={farmerName}
+                authorAvatarUrl={avatarUrl}
+                categories={cropCategories}
+                onSubmit={handleCreatePost}
+              />
 
                 <FeedTabs active={activeTab} onChange={setActiveTab} />
 
@@ -329,6 +379,7 @@ export default function CommunityPage() {
     </SessionProvider>
   );
 }
+
 
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Info } from "lucide-react";
 
@@ -35,7 +35,7 @@ export default function GPSLayout({
   currentLocation,
   gpsStatus,
   stats,
-  fields,
+  fields: initialFields,
   analytics,
   measurements,
 }: GPSLayoutProps) {
@@ -44,6 +44,68 @@ export default function GPSLayout({
   const [searchBBox, setSearchBBox] = useState<[number, number, number, number] | undefined>();
   const [currentLocName, setCurrentLocName] = useState(currentLocation || "Gujarat, India");
   const [liveStats, setLiveStats] = useState<FieldStats | undefined>(stats);
+  const [realFields, setRealFields] = useState<SavedField[]>(initialFields || []);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/gps')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.fields) {
+          const mapped = data.fields.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            areaAcres: f.totalAreaAcres,
+            date: new Date(f.createdAt).toLocaleDateString(),
+            color: "border-primary/50 bg-primary/10",
+          }));
+          setRealFields(mapped);
+        }
+      })
+      .catch(err => console.error("Failed to fetch fields:", err));
+  }, []);
+
+  const handleSaveField = async () => {
+    if (!liveStats || liveStats.totalAreaAcres === 0) {
+      alert("Please draw a field boundary on the map first.");
+      return;
+    }
+    const name = prompt("Enter a name for this field (e.g. North Plot):", "New Field");
+    if (!name) return;
+
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/gps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          totalAreaAcres: liveStats.totalAreaAcres,
+          totalAreaHectares: liveStats.totalAreaHectares,
+          perimeterMeters: liveStats.perimeterMeters,
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.field) {
+        const newField = {
+          id: data.field.id,
+          name: data.field.name,
+          areaAcres: data.field.totalAreaAcres,
+          date: new Date(data.field.createdAt).toLocaleDateString(),
+          color: "border-primary/50 bg-primary/10",
+        };
+        setRealFields(prev => [newField, ...prev]);
+        alert("Field saved successfully!");
+      } else {
+        alert(data.error || "Failed to save field");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving field.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleLocationSelect = (lat: number, lon: number, displayName: string, bbox?: [number, number, number, number]) => {
     setMapCenter([lat, lon]);
@@ -97,7 +159,7 @@ export default function GPSLayout({
 
         {/* Map wrapper - creates a padded "card" around the map */}
         <div className="w-full lg:flex-1 p-4 lg:p-6 lg:min-h-0 flex flex-col items-center justify-center relative overflow-y-auto lg:overflow-hidden bg-[#f4f7f4]">
-          <div className="w-full h-[280px] lg:h-full lg:max-h-[75vh] max-w-5xl rounded-3xl overflow-hidden shadow-sm border border-outline-variant/60 relative flex flex-col shrink-0">
+          <div className="w-full h-[350px] min-h-[350px] lg:h-full lg:min-h-[500px] lg:max-h-[75vh] max-w-5xl rounded-3xl overflow-hidden shadow-sm border border-outline-variant/60 relative flex flex-col shrink-0">
             <MapContainer
               activeTool={activeTool}
               onToolChange={setActiveTool}
@@ -122,10 +184,10 @@ export default function GPSLayout({
             </div>
 
             <StatisticsCard stats={liveStats} />
-            <ExportMenu />
+            <ExportMenu onSave={handleSaveField} />
           </div>
 
-          <SavedFields fields={fields} />
+          <SavedFields fields={realFields} />
 
           <div className="px-4 pt-4 pb-12 lg:pb-4 space-y-4 border-t border-outline-variant/50">
             <MeasurementCard measurements={measurements} />

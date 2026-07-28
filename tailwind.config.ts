@@ -98,4 +98,8 @@ const config: Config = {
   plugins: [require("@tailwindcss/forms")],
 };
 
+config.darkMode = "class";
+config.darkMode = "class";
+config.darkMode = "class";
+config.darkMode = "class";
 export default config;

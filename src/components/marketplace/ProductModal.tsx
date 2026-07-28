@@ -7,6 +7,7 @@ import type { Product } from "./types";
 import RatingStars from "./RatingStars";
 import { subscribeBookingStatus, getBookingStatusMap } from "./MarketplaceNotifications";
 import BookingCalendar from "./BookingCalendar";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface Props {
   product: Product | null;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function ProductModal({ product, onClose }: Props) {
+  const { addNotification } = useNotification();
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -110,6 +112,11 @@ export default function ProductModal({ product, onClose }: Props) {
       });
       const data = await res.json();
       if (data.success) {
+        addNotification({
+          title: 'Equipment Booked Successfully',
+          message: `Your booking for ${product.name} from ${startDate} to ${finalEndDate} is confirmed.`,
+          type: 'marketplace'
+        });
         alert('Booking request sent successfully! The farmer has been notified.');
         onClose();
       } else {

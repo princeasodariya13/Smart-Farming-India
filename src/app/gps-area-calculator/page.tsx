@@ -6,14 +6,12 @@ import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import PageLoader from '@/components/PageLoader';
 import { Leaf } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 import GPSLayout from "@/components/gps-calculator/GPSLayout";
 
 export default function GPSAreaCalculatorPage() {
   const { data: session, status } = useSession();
 
-  if (status === "loading") {
-    return <PageLoader />;
-  }
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -25,6 +23,10 @@ export default function GPSAreaCalculatorPage() {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -131,10 +133,7 @@ export default function GPSAreaCalculatorPage() {
             </div>
                       </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full"></span>
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">

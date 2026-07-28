@@ -221,6 +221,10 @@ model Department {
 // ------------------------------------------------------
 
 model User {
+  notificationSettings Json?
+  savedFields       SavedField[]
+  communityPosts    CommunityPost[]
+  communityComments CommunityComment[]
   id            String    @id @default(uuid()) @map("_id")
   email         String    @unique
   name          String?
@@ -753,3 +757,42 @@ model DiseaseScan {
 
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model CommunityPost {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // 'question', 'photo', 'video', 'post'
+  content   String
+  images    String[]
+  tags      String[]
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comments  CommunityComment[]
+}
+
+model CommunityComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+
+model SavedField {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id])
+  name              String
+  totalAreaAcres    Float
+  totalAreaHectares Float
+  perimeterMeters   Float
+  coordinates       String?  // stringified coordinates array
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+

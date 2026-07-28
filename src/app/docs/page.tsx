@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { Leaf, BookOpen, Layers, Zap, Search, ShieldCheck } from 'lucide-react';
 import PageLoader from '@/components/PageLoader';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function DocumentationPage() {
   const { data: session, status } = useSession();
@@ -88,7 +89,7 @@ export default function DocumentationPage() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -99,9 +100,7 @@ export default function DocumentationPage() {
         </nav>
 
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
@@ -133,9 +132,7 @@ export default function DocumentationPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">
@@ -311,3 +308,4 @@ export default function DocumentationPage() {
     </div>
   );
 }
+

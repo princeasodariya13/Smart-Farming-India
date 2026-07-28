@@ -6,11 +6,46 @@ import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { Leaf, Search, Phone, Mail, FileText, ChevronDown, MessageSquare, AlertCircle } from 'lucide-react';
 import PageLoader from '@/components/PageLoader';
+import NotificationBell from '@/components/NotificationBell';
+import { useNotification } from '@/contexts/NotificationContext';
 
 export default function SupportPage() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { addNotification } = useNotification();
+  
+  // Form State
+  const [issueCategory, setIssueCategory] = useState("Bug / Technical Glitch");
+  const [urgency, setUrgency] = useState("Low (General Inquiry)");
+  const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!description.trim()) return;
+
+    setIsSubmitting(true);
+    
+    // Simulate API submission
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitSuccess(true);
+      
+      addNotification({
+        title: 'Support Ticket Submitted',
+        message: `We've received your report regarding "${issueCategory}". Our team will contact you soon.`,
+        type: 'support'
+      });
+
+      setIssueCategory("Bug / Technical Glitch");
+      setUrgency("Low (General Inquiry)");
+      setDescription("");
+
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    }, 1500);
+  };
 
   if (status === "loading") {
     return <PageLoader />;
@@ -105,7 +140,7 @@ export default function SupportPage() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -117,9 +152,7 @@ export default function SupportPage() {
         </nav>
 
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           {/* Support Active */}
           <Link className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
@@ -153,9 +186,7 @@ export default function SupportPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">
@@ -181,16 +212,7 @@ export default function SupportPage() {
             {/* Header Section */}
             <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-b from-primary/10 to-transparent rounded-3xl border border-primary/10 text-center">
               <h2 className="font-headline-md text-headline-md md:text-3xl font-bold text-on-surface mb-2 tracking-tight">Help & Support</h2>
-              <p className="text-on-surface-variant font-body-sm max-w-lg mb-6">Find answers to your questions, explore detailed guides, or contact our team directly for assistance.</p>
-              
-              <div className="relative w-full max-w-md px-4">
-                <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search for topics, guides, or issues..." 
-                  className="w-full pl-10 pr-4 py-3 rounded-full bg-surface text-on-surface border border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all"
-                />
-              </div>
+              <p className="text-on-surface-variant font-body-sm max-w-lg">Find answers to your questions, explore detailed guides, or contact our team directly for assistance.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -261,16 +283,29 @@ export default function SupportPage() {
                 </div>
 
                 {/* Report Issue Form */}
-                <div className="bg-surface-glass border border-outline-variant/60 rounded-2xl p-6 shadow-sm">
+                <div className="bg-surface-glass border border-outline-variant/60 rounded-2xl p-6 shadow-sm relative overflow-hidden">
                   <h3 className="font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
                     <AlertCircle size={20} className="text-error" />
                     Report an Issue
                   </h3>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  
+                  {submitSuccess && (
+                    <div className="mb-4 p-3 bg-success-soft border border-success/30 rounded-xl text-success font-medium text-[13px] flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                      <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      Your ticket has been submitted successfully! We will contact you soon.
+                    </div>
+                  )}
+
+                  <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Issue Category</label>
-                        <select className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <select 
+                          value={issueCategory}
+                          onChange={(e) => setIssueCategory(e.target.value)}
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                        >
                           <option>Bug / Technical Glitch</option>
                           <option>Account / Billing</option>
                           <option>Feature Request</option>
@@ -279,7 +314,12 @@ export default function SupportPage() {
                       </div>
                       <div>
                         <label className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Urgency</label>
-                        <select className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <select 
+                          value={urgency}
+                          onChange={(e) => setUrgency(e.target.value)}
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                        >
                           <option>Low (General Inquiry)</option>
                           <option>Medium (Feature broken)</option>
                           <option>High (Platform down)</option>
@@ -290,13 +330,28 @@ export default function SupportPage() {
                       <label className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Description</label>
                       <textarea 
                         rows={4}
+                        required
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        disabled={isSubmitting}
                         placeholder="Please describe the issue in detail..."
-                        className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                        className="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-[13px] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none disabled:opacity-50"
                       ></textarea>
                     </div>
                     <div className="flex justify-end">
-                      <button type="submit" className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm">
-                        Submit Ticket
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting || !description.trim()}
+                        className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Ticket'
+                        )}
                       </button>
                     </div>
                   </form>
@@ -311,3 +366,4 @@ export default function SupportPage() {
     </div>
   );
 }
+

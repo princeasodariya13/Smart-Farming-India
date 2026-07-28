@@ -7,13 +7,10 @@ import { useSession, signOut, SessionProvider } from "next-auth/react";
 import { Leaf } from "lucide-react";
 import PageLoader from '@/components/PageLoader';
 import SchemesLayout from "@/components/schemes/SchemesLayout";
+import NotificationBell from '@/components/NotificationBell';
 
 function SchemesContent() {
   const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return <PageLoader />;
-  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getInitials = (name: string | null | undefined) => {
@@ -22,6 +19,10 @@ function SchemesContent() {
     if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return name[0].toUpperCase();
   };
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -112,7 +113,7 @@ function SchemesContent() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -127,9 +128,7 @@ function SchemesContent() {
         </nav>
 
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           <Link
             className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all"
             href="/support"
@@ -168,10 +167,7 @@ function SchemesContent() {
             </div>
                       </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full"></span>
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">
@@ -230,6 +226,7 @@ export default function SchemesPage() {
     </SessionProvider>
   );
 }
+
 
 
 

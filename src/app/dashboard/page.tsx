@@ -6,6 +6,7 @@ import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Leaf } from 'lucide-react';
 import PageLoader from '@/components/PageLoader';
+import NotificationBell from '@/components/NotificationBell';
 
 function DashboardContent() {
   const { data: session } = useSession();
@@ -235,7 +236,7 @@ function DashboardContent() {
             <span className="material-symbols-outlined text-[18px]">forum</span>
             <span className="text-[12px] font-medium">Community</span>
           </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
             <span className="material-symbols-outlined text-[18px]">insights</span>
             <span className="text-[12px] font-medium">Analytics</span>
           </Link>
@@ -246,9 +247,7 @@ function DashboardContent() {
           </Link>
         </nav>
         <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
-            Consult Expert
-          </button>
+          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">Consult Expert</Link>
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
@@ -281,10 +280,7 @@ function DashboardContent() {
             </div>
                       </div>
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-error rounded-full"></span>
-            </button>
+            <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
             <div className="flex items-center gap-2 pl-1">
               <div className="text-right hidden sm:block">
@@ -430,7 +426,7 @@ function DashboardContent() {
             <div className="lg:col-span-6 bento-card p-4 flex flex-col">
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Active Crops</h4>
-                <Link className="text-primary text-[12px] font-bold hover:underline" href="#">View History</Link>
+                <Link className="text-primary text-[12px] font-bold hover:underline" href="/analytics">View History</Link>
               </div>
               <div className="space-y-2 flex-1">
                 {dbData.crops.length > 0 ? dbData.crops.map((crop, index) => (
@@ -662,6 +658,7 @@ export default function Dashboard() {
     </SessionProvider>
   );
 }
+
 
 
 

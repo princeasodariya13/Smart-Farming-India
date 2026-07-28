@@ -203,9 +203,6 @@ const gujaratDistricts = [
 function WeatherContent() {
   const { data: session, status } = useSession();
 
-  if (status === "loading") {
-    return <PageLoader />;
-  }
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -221,6 +218,28 @@ function WeatherContent() {
 
 
   const [liveWeather, setLiveWeather] = useState(currentWeather);
+  const [liveMetrics, setLiveMetrics] = useState(metrics);
+  const [liveHourly, setLiveHourly] = useState(hourly);
+  const [liveSevenDay, setLiveSevenDay] = useState(sevenDay);
+
+  const getIconComponent = (name) => {
+    switch(name) {
+      case 'Sun': return Sun;
+      case 'CloudSun': return CloudSun;
+      case 'Cloud': return Cloud;
+      case 'CloudRain': return CloudRain;
+      case 'CloudSnow': return CloudSnow;
+      case 'CloudLightning': return Radar;
+      case 'CloudFog': return Cloud;
+      case 'Droplets': return Droplets;
+      case 'Wind': return Wind;
+      case 'Gauge': return Gauge;
+      case 'Eye': return Eye;
+      case 'Thermometer': return Thermometer;
+      case 'Sprout': return Sprout;
+      default: return Sun;
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -314,6 +333,10 @@ function WeatherContent() {
   }, []);
 
 
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -445,7 +468,7 @@ function WeatherContent() {
         </header>
 
         {/* Content Area */}
-        <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-4 md:p-6 pb-24">
+        <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-4 md:p-6 pb-24 lg:pb-24">
   <div className="max-w-container-max mx-auto space-y-6">
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-container-low p-4 rounded-2xl border border-outline-variant">
@@ -460,7 +483,7 @@ function WeatherContent() {
             placeholder="Search city in India..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 md:w-64 bg-surface text-on-surface border border-outline rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="flex-1 md:w-64 bg-surface text-on-surface border border-outline rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
           />
           <button 
             type="submit" 
@@ -475,16 +498,16 @@ function WeatherContent() {
       <WeatherHero data={liveWeather} />
 
       <section aria-label="Weather metrics" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((metric) => (
+        {liveMetrics.map((metric) => (
           <WeatherMetricCard key={metric.id} metric={metric} />
         ))}
       </section>
 
-      <HourlyForecast items={hourly} />
+      <HourlyForecast items={liveHourly} />
 
       <RainfallChart data={rainfallData} />
 
-      <SevenDayForecast days={sevenDay} />
+      <SevenDayForecast days={liveSevenDay} />
 
       <FarmingAdvisoryCard advisory={advisory} />
 
