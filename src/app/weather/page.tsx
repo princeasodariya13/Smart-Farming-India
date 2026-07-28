@@ -222,7 +222,7 @@ function WeatherContent() {
   const [liveHourly, setLiveHourly] = useState(hourly);
   const [liveSevenDay, setLiveSevenDay] = useState(sevenDay);
 
-  const getIconComponent = (name) => {
+  const getIconComponent = (name: string) => {
     switch(name) {
       case 'Sun': return Sun;
       case 'CloudSun': return CloudSun;

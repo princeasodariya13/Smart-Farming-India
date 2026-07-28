@@ -93,6 +93,11 @@ export default function GPSLayout({
           areaAcres: data.field.totalAreaAcres,
           date: new Date(data.field.createdAt).toLocaleDateString(),
           color: "border-primary/50 bg-primary/10",
+          cropName: "Unknown",
+          location: "Mapped Area",
+          tags: [],
+          status: "active",
+          imageUrl: ""
         };
         setRealFields(prev => [newField, ...prev]);
         alert("Field saved successfully!");

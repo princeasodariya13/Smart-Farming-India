@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { NotificationPreference } from "@/types/profile";
 
 interface NotificationSettingsProps {

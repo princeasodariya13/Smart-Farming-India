@@ -87,10 +87,12 @@ function CommunityContent() {
     const formattedReal = realPosts.map(p => ({
       id: p.id,
       author: {
+        id: p.userId || "user1",
         name: p.user?.name || "Farmer",
         role: "Community Member",
-        avatar: p.user?.image || "https://i.pravatar.cc/100?img=12",
+        avatarUrl: p.user?.image || "https://i.pravatar.cc/100?img=12",
         verified: false,
+        location: "Local Farm"
       },
       content: p.content,
       images: p.images || [],
@@ -100,6 +102,10 @@ function CommunityContent() {
       timeAgo: "Just now",
       tags: p.tags || [],
       type: p.type || "post",
+      postedAt: p.createdAt || new Date().toISOString(),
+      description: p.content,
+      crop: p.tags?.[0] || undefined,
+      expertAnswer: undefined
     }));
     return [...formattedReal, ...communityPosts];
   }, [realPosts]);
