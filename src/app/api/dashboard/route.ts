@@ -18,17 +18,33 @@ export async function GET() {
     let irrigation = await prisma.irrigationSystem.findFirst({ where: { userId } });
     let soilHealth = await prisma.soilHealth.findFirst({ where: { userId } });
     
-    // Seed Mandi Prices if empty
-    if (mandiPrices.length === 0) {
+    // Seed Mandi Prices if missing or incomplete
+    if (mandiPrices.length < 15) {
+      await prisma.mandiPrice.deleteMany({}); // Clear existing to prevent duplicates during re-seeding
       const initialPrices = [
-        { cropName: 'Groundnut', market: 'Gondal', price: 5500, unit: 'qtl', trendPercent: 2.4, trendDirection: 'UP' },
-        { cropName: 'Cotton', market: 'Gondal', price: 7200, unit: 'qtl', trendPercent: -0.8, trendDirection: 'DOWN' },
-        { cropName: 'Jeera', market: 'Gondal', price: 28500, unit: 'qtl', trendPercent: 1.2, trendDirection: 'UP' },
+        { cropName: 'Groundnut (Peanut)', market: 'Gondal', price: 6200, unit: 'qtl', trendPercent: 2.4, trendDirection: 'UP' },
+        { cropName: 'Cotton (Kapas)', market: 'Gondal', price: 7350, unit: 'qtl', trendPercent: -0.8, trendDirection: 'DOWN' },
+        { cropName: 'Jeera (Cumin)', market: 'Gondal', price: 28500, unit: 'qtl', trendPercent: 1.2, trendDirection: 'UP' },
+        { cropName: 'Wheat (Lokwan)', market: 'Gondal', price: 2600, unit: 'qtl', trendPercent: 0.5, trendDirection: 'UP' },
+        { cropName: 'Garlic (Lahsun)', market: 'Gondal', price: 14500, unit: 'qtl', trendPercent: -3.2, trendDirection: 'DOWN' },
+        { cropName: 'Onion (Red)', market: 'Gondal', price: 1850, unit: 'qtl', trendPercent: 5.4, trendDirection: 'UP' },
+        { cropName: 'Sesame (White)', market: 'Gondal', price: 15200, unit: 'qtl', trendPercent: -1.1, trendDirection: 'DOWN' },
+        { cropName: 'Castor Seed', market: 'Gondal', price: 5800, unit: 'qtl', trendPercent: 0.2, trendDirection: 'UP' },
+        { cropName: 'Mustard (Sarson)', market: 'Gondal', price: 5400, unit: 'qtl', trendPercent: 1.5, trendDirection: 'UP' },
+        { cropName: 'Coriander (Dhania)', market: 'Gondal', price: 7100, unit: 'qtl', trendPercent: -0.5, trendDirection: 'DOWN' },
+        { cropName: 'Soybean', market: 'Gondal', price: 4600, unit: 'qtl', trendPercent: 2.1, trendDirection: 'UP' },
+        { cropName: 'Green Gram (Moong)', market: 'Gondal', price: 8200, unit: 'qtl', trendPercent: 0.8, trendDirection: 'UP' },
+        { cropName: 'Black Gram (Urad)', market: 'Gondal', price: 8900, unit: 'qtl', trendPercent: 1.4, trendDirection: 'UP' },
+        { cropName: 'Chickpea (Chana)', market: 'Gondal', price: 6100, unit: 'qtl', trendPercent: -1.8, trendDirection: 'DOWN' },
+        { cropName: 'Turmeric (Haldi)', market: 'Gondal', price: 13500, unit: 'qtl', trendPercent: 4.2, trendDirection: 'UP' },
+        { cropName: 'Pearl Millet (Bajra)', market: 'Gondal', price: 2300, unit: 'qtl', trendPercent: 0.3, trendDirection: 'UP' },
+        { cropName: 'Sorghum (Jowar)', market: 'Gondal', price: 2750, unit: 'qtl', trendPercent: -0.4, trendDirection: 'DOWN' },
+        { cropName: 'Red Chilli (Dry)', market: 'Gondal', price: 19500, unit: 'qtl', trendPercent: 2.9, trendDirection: 'UP' },
+        { cropName: 'Fennel (Saunf)', market: 'Gondal', price: 12200, unit: 'qtl', trendPercent: -2.1, trendDirection: 'DOWN' },
+        { cropName: 'Fenugreek (Methi)', market: 'Gondal', price: 6500, unit: 'qtl', trendPercent: 0.7, trendDirection: 'UP' },
       ];
       
-      for (const price of initialPrices) {
-        await prisma.mandiPrice.create({ data: price });
-      }
+      await prisma.mandiPrice.createMany({ data: initialPrices });
       mandiPrices = await prisma.mandiPrice.findMany();
     }
 
@@ -73,13 +89,20 @@ export async function GET() {
           userId,
           nitrogen: 82,
           phosphorus: 65,
+          potassium: 45,
           status: "Balanced",
           action: "Fertilize in 4 days"
         }
       });
     }
 
-    return NextResponse.json({ success: true, mandiPrices, crops, tasks, irrigation, soilHealth });
+    // Ensure potassium exists for backward compatibility with old DB records
+    const normalizedSoilHealth = soilHealth ? {
+      ...soilHealth,
+      potassium: (soilHealth as any).potassium ?? 45
+    } : null;
+
+    return NextResponse.json({ success: true, mandiPrices, crops, tasks, irrigation, soilHealth: normalizedSoilHealth });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch dashboard data' }, { status: 500 });

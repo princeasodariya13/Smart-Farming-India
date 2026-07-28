@@ -18,6 +18,7 @@ export interface FieldStats {
   totalAreaVar: number;
   perimeterMeters: number;
   vertexCount: number;
+  points?: any[];
 }
 
 export interface SavedField {
@@ -30,6 +31,7 @@ export interface SavedField {
   tags: string[];
   status: FieldStatus;
   imageUrl: string;
+  coordinates?: string;
 }
 
 export interface AnalyticsSummary {

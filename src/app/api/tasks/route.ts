@@ -5,7 +5,11 @@ import { auth } from "@/auth";
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    const userId = session?.user?.id || "6681023d537f09f5bc91b10a"; // Fallback for testing
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     
     const { label } = await req.json();
     if (!label) {
@@ -30,7 +34,11 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const session = await auth();
-    const userId = session?.user?.id || "6681023d537f09f5bc91b10a";
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

@@ -21,14 +21,16 @@ interface MapContainerProps {
   onAreaCalculated?: (stats: FieldStats | null) => void;
   center?: [number, number];
   searchBBox?: [number, number, number, number];
+  initialPoints?: any[];
 }
 
 export default function MapContainer({
-  activeTool = "polygon",
+  activeTool = "marker",
   onToolChange,
   onAreaCalculated,
   center,
   searchBBox,
+  initialPoints,
 }: MapContainerProps) {
   const [currentStats, setCurrentStats] = useState<FieldStats | null>(null);
 
@@ -53,6 +55,7 @@ export default function MapContainer({
           onAreaChange={handleAreaChange} 
           center={center}
           searchBBox={searchBBox}
+          initialPoints={initialPoints}
         />
       </motion.div>
 

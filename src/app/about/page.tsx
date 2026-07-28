@@ -4,7 +4,7 @@ import { ArrowLeft, Leaf, Target, Users, Globe } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-slate-50/50 font-sans relative" data-lenis-prevent>
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
         <Link href="/" className="inline-flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition-colors mb-8 md:mb-10">
           <ArrowLeft size={18} /> Back to Home

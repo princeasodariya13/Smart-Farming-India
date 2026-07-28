@@ -104,14 +104,14 @@ export default function FloatingControls({
       </div>
 
       {/* Zoom / layers - bottom right */}
-      <div className="absolute bottom-6 right-4 flex flex-col gap-2 z-20">
-        <div className="bg-surface-glass backdrop-blur-xl border border-white/30 p-1.5 rounded-xl flex flex-col gap-1 shadow-lg">
+      <div className="absolute bottom-12 right-4 flex flex-col gap-2 z-20">
+        <div className="bg-surface-glass backdrop-blur-xl border border-white/30 p-1 rounded-xl flex flex-col gap-0.5 shadow-lg">
           <button
             type="button"
             title="Zoom in"
             aria-label="Zoom in"
             onClick={onZoomIn}
-            className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
           >
             <Plus size={16} />
           </button>
@@ -120,18 +120,18 @@ export default function FloatingControls({
             title="Zoom out"
             aria-label="Zoom out"
             onClick={onZoomOut}
-            className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
           >
             <Minus size={16} />
           </button>
         </div>
-        <div className="bg-surface-glass backdrop-blur-xl border border-white/30 p-1.5 rounded-xl flex flex-col gap-1 shadow-lg relative">
+        <div className="bg-surface-glass backdrop-blur-xl border border-white/30 p-1 rounded-xl flex flex-col gap-0.5 shadow-lg relative">
           <button
             type="button"
             title="Toggle Map View"
             aria-label="Toggle map view"
             onClick={onLayersToggle}
-            className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
           >
             <Layers size={16} />
           </button>
@@ -140,7 +140,7 @@ export default function FloatingControls({
             title="My location"
             aria-label="Go to my location"
             onClick={onMyLocation}
-            className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
           >
             <LocateFixed size={16} />
           </button>
@@ -149,7 +149,7 @@ export default function FloatingControls({
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             aria-label="Toggle fullscreen"
             onClick={onFullscreen}
-            className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors flex justify-center"
           >
             {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
           </button>

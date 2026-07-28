@@ -25,6 +25,7 @@ interface InteractiveMapProps {
   onAreaChange?: (stats: FieldStats | null) => void;
   center?: [number, number];
   searchBBox?: [number, number, number, number];
+  initialPoints?: L.LatLng[];
 }
 
 function MapUpdater({ center, searchBBox }: { center?: [number, number], searchBBox?: [number, number, number, number] }) {
@@ -43,12 +44,23 @@ function MapUpdater({ center, searchBBox }: { center?: [number, number], searchB
   return null;
 }
 
-export default function InteractiveMap({ activeTool, onToolChange, onAreaChange, center, searchBBox }: InteractiveMapProps) {
+export default function InteractiveMap({ activeTool, onToolChange, onAreaChange, center, searchBBox, initialPoints }: InteractiveMapProps) {
   const [points, setPoints] = useState<L.LatLng[]>([]);
   const [redoStack, setRedoStack] = useState<L.LatLng[]>([]);
   const [mousePos, setMousePos] = useState<L.LatLng | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [mapLayer, setMapLayer] = useState<"y" | "m">("y"); // y=hybrid, m=roadmap
+
+  useEffect(() => {
+    if (initialPoints && initialPoints.length > 0) {
+      // Rehydrate plain JSON objects back into true Leaflet LatLng instances
+      const leafletPoints = initialPoints.map(p => L.latLng(p.lat, p.lng));
+      setPoints(leafletPoints);
+      if (mapInstance) {
+        mapInstance.flyTo(leafletPoints[0], 17, { animate: true, duration: 1.5 });
+      }
+    }
+  }, [initialPoints, mapInstance]);
 
   // Calculate area whenever points change
   useEffect(() => {
@@ -78,7 +90,8 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
           totalAreaSqFt: totalAreaSqFt,
           totalAreaVar: totalAreaVar,
           perimeterMeters: Math.round(perimeterMeters),
-          vertexCount: points.length
+          vertexCount: points.length,
+          points: points
         });
       }
     } else {

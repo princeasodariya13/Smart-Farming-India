@@ -23,12 +23,12 @@ function DashboardContent() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const [weather, setWeather] = useState({ temp: '32°C', condition: 'Humid', humidity: '68%', wind: '12 km/h', rain: '15%' });
+  const [weather, setWeather] = useState({ temp: '32°C', condition: 'Humid', humidity: '68%', wind: '12 km/h', rain: '15%', location: 'Gujarat' });
 
   useEffect(() => {
-    const fetchWeather = async () => {
+    const fetchWeather = async (lat = 23.0225, lon = 72.5714, locName = "Gujarat") => {
       try {
-        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=23.0225&longitude=72.5714&current=temperature_2m,wind_speed_10m,relative_humidity_2m,weather_code");
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,relative_humidity_2m,weather_code`);
         const data = await res.json();
 
         const code = data.current.weather_code;
@@ -36,21 +36,43 @@ function DashboardContent() {
         let rain = "0%";
         if (code >= 1 && code <= 3) condition = "Cloudy";
         else if (code >= 51 && code <= 67) { condition = "Rain"; rain = "80%"; }
+        else if (code >= 71 && code <= 77) { condition = "Snow"; rain = "0%"; }
         else if (code >= 80) { condition = "Showers"; rain = "90%"; }
+        else if (code >= 95) { condition = "Storm"; rain = "100%"; }
 
         setWeather({
           temp: `${Math.round(data.current.temperature_2m)}°C`,
           wind: `${Math.round(data.current.wind_speed_10m)} km/h`,
           humidity: `${Math.round(data.current.relative_humidity_2m)}%`,
           condition,
-          rain
+          rain,
+          location: locName
         });
       } catch (err) {
         // Silently fall back to default mock data if the API is blocked (e.g. by adblockers or offline)
         console.warn("Weather API unavailable, using local fallback data.");
       }
     };
-    fetchWeather();
+
+    if (typeof window !== 'undefined' && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`);
+            const geoData = await geoRes.json();
+            const locName = geoData.city || geoData.locality || geoData.principalSubdivision || "Current Location";
+            fetchWeather(position.coords.latitude, position.coords.longitude, locName);
+          } catch (e) {
+            fetchWeather(position.coords.latitude, position.coords.longitude, "Current Location");
+          }
+        },
+        (error) => {
+          fetchWeather(); // Fallback to Gujarat if denied
+        }
+      );
+    } else {
+      fetchWeather();
+    }
   }, []);
 
   const [dbData, setDbData] = useState<{
@@ -108,6 +130,27 @@ function DashboardContent() {
     } catch (err) {
       console.error("Failed to toggle task", err);
     }
+  };
+
+  const [isTogglingIrrigation, setIsTogglingIrrigation] = useState(false);
+  const toggleIrrigation = async () => {
+    if (!dbData.irrigation || isTogglingIrrigation) return;
+    setIsTogglingIrrigation(true);
+    const isCurrentlyActive = dbData.irrigation.status === "Active";
+    const newStatus = isCurrentlyActive ? "Off" : "Active";
+    
+    // Optimistic UI update
+    setDbData(prev => ({
+      ...prev,
+      irrigation: {
+        ...prev.irrigation,
+        status: newStatus
+      }
+    }));
+    
+    // Simulate network delay for effect (assuming no real API exists yet)
+    await new Promise(r => setTimeout(r, 600));
+    setIsTogglingIrrigation(false);
   };
 
   const [newTaskLabel, setNewTaskLabel] = useState("");
@@ -173,6 +216,83 @@ function DashboardContent() {
   if (loadingDb) {
     return <PageLoader />;
   }
+
+  // Derive dynamic, real notifications from the current live database state
+  const getDynamicNotifications = () => {
+    if (!dbData) return [];
+    
+    const notifs = [];
+    
+    // 1. Irrigation Alert
+    if (dbData.irrigation?.status === 'Active') {
+      notifs.push({
+        id: 'irrigation_active',
+        type: 'info',
+        icon: 'water_drop',
+        title: 'Irrigation Currently Active',
+        desc: `Pump running in ${dbData.irrigation.sector}. Using ${dbData.irrigation.waterUsage}L.`,
+        time: 'Just now',
+        colorClass: 'bg-primary-container text-on-primary-container'
+      });
+    }
+
+    // 2. Soil Health Alert
+    if (dbData.soilHealth && dbData.soilHealth.status !== 'Balanced') {
+      notifs.push({
+        id: 'soil_health',
+        type: 'warning',
+        icon: 'science',
+        title: 'Soil Nutrient Imbalance',
+        desc: `Action needed: ${dbData.soilHealth.action}`,
+        time: 'Today',
+        colorClass: 'bg-error-container text-on-error-container'
+      });
+    } else if (dbData.soilHealth) {
+      notifs.push({
+        id: 'soil_health',
+        type: 'success',
+        icon: 'verified',
+        title: 'Soil Health Optimal',
+        desc: 'N-P-K levels are perfectly balanced.',
+        time: 'Today',
+        colorClass: 'bg-primary/20 text-primary'
+      });
+    }
+
+    // 3. Task Alert
+    const pendingTasks = dbData.tasks.filter((t: any) => !t.checked);
+    if (pendingTasks.length > 0) {
+      notifs.push({
+        id: 'tasks_pending',
+        type: 'warning',
+        icon: 'assignment',
+        title: 'Pending Tasks',
+        desc: `You have ${pendingTasks.length} uncompleted task(s) remaining for today.`,
+        time: '2 hours ago',
+        colorClass: 'bg-amber-100 text-amber-700'
+      });
+    }
+
+    // 4. Market Alert (Find highest trend)
+    if (dbData.mandiPrices.length > 0) {
+      const highestSpike = [...dbData.mandiPrices].sort((a, b) => b.trendPercent - a.trendPercent)[0];
+      if (highestSpike && highestSpike.trendPercent > 1) {
+        notifs.push({
+          id: 'market_spike',
+          type: 'success',
+          icon: 'trending_up',
+          title: 'Market Spike Alert',
+          desc: `${highestSpike.cropName} prices surged by ${highestSpike.trendPercent}% today!`,
+          time: '4 hours ago',
+          colorClass: 'bg-success-container text-on-success-container'
+        });
+      }
+    }
+    
+    return notifs; 
+  };
+
+  const dynamicNotifications = getDynamicNotifications();
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -300,13 +420,19 @@ function DashboardContent() {
         </header>
 
         {/* Content Area */}
-        <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-4 md:p-6 space-y-4 pb-24">
+        <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-4 md:p-6 space-y-4 pb-10">
           {/* Welcome Header */}
           <div className="max-w-container-max mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="font-headline-md text-headline-md font-bold text-on-surface truncate">Namaste, {session?.user?.name?.split(' ')[0] || "Farmer"}.</h2>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Farm is healthy. <span className="text-primary font-semibold">{dbData.tasks.filter((t: any) => !t.checked).length} pending actions</span>.</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                  {dbData.soilHealth && dbData.soilHealth.status !== 'Balanced' ? 'Action required for soil health.' : 'Farm is healthy.'} <span className="text-primary font-semibold">
+                    {dbData.tasks.filter((t: any) => !t.checked).length === 0 
+                      ? "All caught up today" 
+                      : `${dbData.tasks.filter((t: any) => !t.checked).length} pending action${dbData.tasks.filter((t: any) => !t.checked).length === 1 ? '' : 's'}`}
+                  </span>.
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 bg-success-soft text-secondary px-3 py-1.5 rounded-full text-[12px] font-bold border border-secondary/10">
@@ -324,7 +450,7 @@ function DashboardContent() {
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant mb-0.5 uppercase tracking-wider">Weather Forecast</p>
                   <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">{weather.temp} <span className="text-title-md font-normal text-on-surface-variant">/ {weather.condition}</span></h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Live: Gujarat</p>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Live: {weather.location}</p>
                 </div>
                 <span className="material-symbols-outlined text-tertiary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>early_on</span>
               </div>
@@ -373,6 +499,15 @@ function DashboardContent() {
                     <div className="h-full bg-primary rounded-full" style={{ width: `${dbData.soilHealth?.phosphorus || 0}%` }}></div>
                   </div>
                 </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-medium">
+                    <span>Potassium (K)</span>
+                    <span className="text-primary font-bold">{dbData.soilHealth?.potassium || 0}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${dbData.soilHealth?.potassium || 0}%` }}></div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -381,13 +516,17 @@ function DashboardContent() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold text-on-surface-variant mb-0.5 uppercase tracking-wider">Smart Irrigation</p>
-                  <h3 className="font-headline-sm text-headline-sm font-bold text-primary">{dbData.irrigation?.status || "Loading..."}</h3>
+                  <h3 className={`font-headline-sm text-headline-sm font-bold ${dbData.irrigation?.status === 'Active' ? 'text-primary' : 'text-on-surface-variant'}`}>
+                    {dbData.irrigation?.status || "Loading..."}
+                  </h3>
                   <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
                     {dbData.irrigation?.pumpName || "Pump"} • {dbData.irrigation?.sector || "Sector"}
                   </p>
                 </div>
-                <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center animate-pulse">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dbData.irrigation?.status === 'Active' ? 'bg-primary/10 text-primary animate-pulse' : 'bg-surface-container-high text-on-surface-variant'}`}>
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {dbData.irrigation?.status === 'Active' ? 'water_drop' : 'water'}
+                  </span>
                 </div>
               </div>
               <div className="mt-4">
@@ -396,8 +535,16 @@ function DashboardContent() {
                     <p className="text-[10px] text-on-surface-variant">Water Usage Today</p>
                     <p className="text-[18px] font-bold text-on-surface">{dbData.irrigation?.waterUsage?.toLocaleString() || 0}L</p>
                   </div>
-                  <button className="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-lg text-[12px] font-bold hover:bg-secondary-container/80 transition-colors">
-                    Shut Off
+                  <button 
+                    onClick={toggleIrrigation}
+                    disabled={isTogglingIrrigation}
+                    className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${
+                      dbData.irrigation?.status === 'Active' 
+                        ? 'bg-error-container text-on-error-container hover:bg-error-container/80' 
+                        : 'bg-primary text-on-primary hover:bg-primary/90'
+                    }`}
+                  >
+                    {isTogglingIrrigation ? '...' : (dbData.irrigation?.status === 'Active' ? 'Shut Off' : 'Turn On')}
                   </button>
                 </div>
               </div>
@@ -426,33 +573,60 @@ function DashboardContent() {
             <div className="lg:col-span-6 bento-card p-4 flex flex-col">
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Active Crops</h4>
-                <Link className="text-primary text-[12px] font-bold hover:underline" href="/analytics">View History</Link>
+                <Link className="text-primary text-[12px] font-bold hover:bg-primary/10 px-2 py-1 rounded transition-colors" href="/analytics">View History</Link>
               </div>
-              <div className="space-y-2 flex-1">
+              <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1 max-h-[300px]">
                 {dbData.crops.length > 0 ? dbData.crops.map((crop, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors group">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container-highest shrink-0 relative">
+                  <Link href={`/analytics?cropId=${crop.id}`} key={index} className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all hover:scale-[1.02] cursor-pointer group border border-transparent hover:border-outline-variant/30">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface-container-highest shrink-0 relative shadow-sm">
                       {crop.imageUrl ? (
-                        <Image fill className="object-cover" alt={crop.name} src={crop.imageUrl} sizes="64px" />
+                        <Image fill className="object-cover group-hover:scale-110 transition-transform duration-500" alt={crop.name} src={crop.imageUrl} sizes="64px" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-green-100 text-green-700 font-bold">{crop.name.charAt(0)}</div>
+                        <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-bold text-xl">{crop.name.charAt(0)}</div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h5 className="font-label-md text-label-md font-bold text-on-surface">{crop.name}</h5>
-                        <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">{crop.stage}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <h5 className="font-label-md text-[14px] font-bold text-on-surface truncate">{crop.name}</h5>
+                        <div className="flex items-center gap-1 bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant font-medium shrink-0">
+                          <span className="material-symbols-outlined text-[12px]">calendar_month</span> {crop.harvestDays}d
+                        </div>
                       </div>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">Area: {crop.area} Acres • Health: {crop.healthScore}%</p>
-                      <div className="mt-2 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: `${crop.healthScore}%` }}></div>
+                      <p className="font-label-sm text-[11px] text-on-surface-variant mt-0.5 truncate">
+                        {crop.area} Acres • Stage: <span className="text-on-surface font-medium">{crop.stage}</span>
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 bg-surface-container-highest rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-1000 ${crop.healthScore > 80 ? 'bg-primary' : crop.healthScore > 50 ? 'bg-amber-500' : 'bg-error'}`} 
+                            style={{ width: `${crop.healthScore}%` }}
+                          ></div>
+                        </div>
+                        <span className={`text-[10px] font-bold ${crop.healthScore > 80 ? 'text-primary' : crop.healthScore > 50 ? 'text-amber-500' : 'text-error'}`}>
+                          {crop.healthScore}%
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 )) : loadingDb ? (
-                   <p className="text-sm text-gray-500 py-4 text-center">Loading crops...</p>
+                   <div className="space-y-3">
+                     {[1, 2].map((skeleton) => (
+                       <div key={skeleton} className="flex gap-3 p-3 rounded-2xl bg-surface-container-low animate-pulse">
+                         <div className="w-14 h-14 rounded-xl bg-surface-container-high shrink-0"></div>
+                         <div className="flex-1 space-y-2 py-1">
+                           <div className="h-3 w-1/2 bg-surface-container-high rounded-full"></div>
+                           <div className="h-2 w-3/4 bg-surface-container-high rounded-full"></div>
+                           <div className="h-1.5 w-full bg-surface-container-high rounded-full mt-2"></div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
                 ) : (
-                   <p className="text-sm text-gray-500 py-4 text-center">No active crops found.</p>
+                   <div className="flex flex-col items-center justify-center py-8 text-on-surface-variant">
+                     <span className="material-symbols-outlined text-4xl mb-2 opacity-50">psychiatry</span>
+                     <p className="text-sm">No active crops tracked.</p>
+                     <Link href="/analytics" className="mt-3 text-primary text-xs font-bold hover:underline">Add a Crop</Link>
+                   </div>
                 )}
               </div>
             </div>
@@ -466,10 +640,10 @@ function DashboardContent() {
                 </span>
               </div>
               <div className="space-y-4 flex-1 relative z-10">
-                {dbData.mandiPrices.length > 0 ? dbData.mandiPrices.map((price, index) => (
+                {dbData.mandiPrices.length > 0 ? dbData.mandiPrices.slice(0, 4).map((price, index) => (
                   <div key={index} className="flex justify-between items-center pb-3 border-b border-outline-variant/40 last:border-0 last:pb-0">
                     <div>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant text-[11px]">{price.cropName} ({price.market})</p>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant text-[11px] truncate w-[100px] sm:w-[150px] md:w-auto">{price.cropName} ({price.market})</p>
                       <p className="font-label-lg text-label-lg font-bold text-on-surface mt-0.5">₹{price.price.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">/ {price.unit}</span></p>
                     </div>
                     <div className={`flex items-center gap-0.5 px-1.5 py-1 rounded-md ${price.trendDirection === 'UP' ? 'text-primary bg-primary/10' : 'text-error bg-error/10'}`}>
@@ -484,9 +658,7 @@ function DashboardContent() {
                 )}
               </div>
               <div className="mt-4 pt-3 text-center relative z-10 border-t border-outline-variant/20">
-                <button onClick={() => router.push('/market')} className="font-label-sm text-[11px] font-bold text-primary hover:text-primary-container transition-colors flex items-center justify-center gap-1 mx-auto uppercase tracking-wide">
-                  Market Insights <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
-                </button>
+                <Link href="/market-insights" className="text-primary text-[12px] font-bold hover:underline">View Market Insights</Link>
               </div>
             </div>
           </div>
@@ -494,29 +666,29 @@ function DashboardContent() {
           {/* Bottom Row */}
           <div className="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Today's Tasks */}
-            <div className="bento-card p-4">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bento-card p-4 flex flex-col h-[320px]">
+              <div className="flex items-center gap-2 mb-4 shrink-0">
                 <span className="material-symbols-outlined text-primary text-[20px]">assignment_turned_in</span>
                 <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Today's Tasks</h4>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1" data-lenis-prevent>
                 {dbData.tasks.length > 0 ? dbData.tasks.map(task => (
                   <label key={task.id} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer group">
                     <div className="flex items-center gap-2">
                       <input
-                        className="w-4 h-4 rounded-md border-outline text-primary focus:ring-primary"
+                        className="w-4 h-4 rounded-md border-outline text-primary focus:ring-primary shrink-0"
                         type="checkbox"
                         checked={task.checked}
                         onChange={() => toggleTask(task.id)}
                       />
-                      <span className={`font-body-sm text-body-sm text-on-surface transition-all ${task.checked ? 'line-through opacity-50' : ''}`}>
+                      <span className={`font-body-sm text-[13px] text-on-surface transition-all ${task.checked ? 'line-through opacity-50' : ''}`}>
                         {task.label}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={(e) => handleDeleteTask(task.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-error hover:bg-error-container rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-error hover:bg-error-container rounded transition-all shrink-0"
                       title="Delete task"
                     >
                       <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -528,6 +700,7 @@ function DashboardContent() {
                    <p className="text-sm text-gray-500 py-2">No tasks assigned.</p>
                 )}
               </div>
+              <div className="shrink-0 mt-2 pt-2 border-t border-outline-variant/20">
               {isAddingTask ? (
                 <form onSubmit={handleAddTask} className="mt-4 flex items-center gap-2">
                   <input
@@ -561,52 +734,87 @@ function DashboardContent() {
                   + Add New Task
                 </button>
               )}
+              </div>
             </div>
 
             {/* Recent Notifications */}
-            <div className="bento-card p-4">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bento-card p-4 flex flex-col h-[320px]">
+              <div className="flex items-center gap-2 mb-4 shrink-0">
                 <span className="material-symbols-outlined text-primary text-[20px]">notifications_active</span>
-                <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Notifications</h4>
+                <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Live Notifications</h4>
               </div>
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 shrink-0 bg-error-container text-on-error-container rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[16px]">warning</span>
+              <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-1" data-lenis-prevent>
+                {dynamicNotifications.length > 0 ? (
+                  dynamicNotifications.map((notif) => (
+                    <div key={notif.id} className="flex gap-3 items-start animate-fade-in">
+                      <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${notif.colorClass}`}>
+                        <span className="material-symbols-outlined text-[16px]">{notif.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-on-surface leading-tight">{notif.title}</p>
+                        <p className="text-[11px] text-on-surface-variant leading-snug mt-1">{notif.desc}</p>
+                        <span className="text-[9px] font-bold text-primary opacity-80 mt-1 block uppercase tracking-wider">{notif.time}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-on-surface-variant opacity-60">
+                    <span className="material-symbols-outlined text-3xl mb-2">done_all</span>
+                    <p className="text-xs">You're all caught up!</p>
                   </div>
-                  <div>
-                    <p className="text-[13px] font-bold">Pest Warning (Aphids)</p>
-                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5">Detected nearby. Inspect mustard.</p>
-                    <span className="text-[9px] text-on-surface-variant opacity-60">2 hours ago</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 shrink-0 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[16px]">payments</span>
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-bold">Subsidy Credited</p>
-                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5">₹15,000 credited to account.</p>
-                    <span className="text-[9px] text-on-surface-variant opacity-60">Yesterday</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Government Scheme alerts */}
-            <div className="bento-card p-4 bg-surface-container-high border border-primary/20">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">gavel</span>
-                <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Schemes For You</h4>
+            <div className="bento-card p-4 bg-surface-container-high border border-primary/20 flex flex-col h-[320px]">
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+                  <h4 className="font-label-lg text-label-lg font-bold text-on-surface">Govt. Schemes</h4>
+                </div>
+                <span className="text-[10px] font-bold bg-primary text-on-primary px-2 py-0.5 rounded-full">4 Active</span>
               </div>
-              <div className="bg-white p-3 rounded-xl border border-primary/10 mb-3">
-                <h5 className="text-[13px] font-bold text-primary">PM Kisan Samman Nidhi</h5>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">Application deadline near.</p>
-                <button onClick={() => router.push('/schemes')} className="mt-2 w-full py-1.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold">Apply Now</button>
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <p className="text-[11px] text-on-surface-variant">3 more schemes</p>
-                <Link href="/schemes" className="material-symbols-outlined text-primary text-[16px]">arrow_forward</Link>
+              <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1" data-lenis-prevent>
+                {/* PM-KISAN */}
+                <div className="bg-white p-3 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors group">
+                  <div className="flex justify-between items-start mb-1">
+                    <h5 className="text-[13px] font-bold text-primary group-hover:underline cursor-pointer">PM-KISAN</h5>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-md">₹6,000/yr</span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5 mb-2 leading-tight">Direct income support for farmer families.</p>
+                  <button onClick={() => router.push('/schemes')} className="w-full py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface rounded-lg text-[11px] font-bold transition-colors">Apply / Check Status</button>
+                </div>
+
+                {/* PMFBY */}
+                <div className="bg-white p-3 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors group">
+                  <div className="flex justify-between items-start mb-1">
+                    <h5 className="text-[13px] font-bold text-primary group-hover:underline cursor-pointer">PM Fasal Bima</h5>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-md">Insurance</span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5 mb-2 leading-tight">Comprehensive crop insurance coverage.</p>
+                  <button onClick={() => router.push('/schemes')} className="w-full py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface rounded-lg text-[11px] font-bold transition-colors">Apply for Kharif</button>
+                </div>
+
+                {/* Kisan Credit Card */}
+                <div className="bg-white p-3 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors group">
+                  <div className="flex justify-between items-start mb-1">
+                    <h5 className="text-[13px] font-bold text-primary group-hover:underline cursor-pointer">Kisan Credit Card</h5>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">Loan</span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5 mb-2 leading-tight">Low-interest credit up to ₹3 Lakh.</p>
+                  <button onClick={() => router.push('/schemes')} className="w-full py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface rounded-lg text-[11px] font-bold transition-colors">Check Eligibility</button>
+                </div>
+                
+                {/* Soil Health Card */}
+                <div className="bg-white p-3 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors group">
+                  <div className="flex justify-between items-start mb-1">
+                    <h5 className="text-[13px] font-bold text-primary group-hover:underline cursor-pointer">Soil Health Card</h5>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-md">Testing</span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5 mb-2 leading-tight">Subsidized N-P-K soil testing kits.</p>
+                  <button onClick={() => router.push('/schemes')} className="w-full py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface rounded-lg text-[11px] font-bold transition-colors">Request Test</button>
+                </div>
               </div>
             </div>
           </div>
@@ -620,7 +828,7 @@ function DashboardContent() {
             <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/support">Contact Us</Link>
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
             </div>
           </footer>

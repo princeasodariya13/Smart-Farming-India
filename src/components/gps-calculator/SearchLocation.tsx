@@ -35,6 +35,7 @@ export default function SearchLocation({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,6 +47,10 @@ export default function SearchLocation({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [suggestions, query]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -72,6 +77,7 @@ export default function SearchLocation({
   const handleSelect = (s: Suggestion) => {
     setQuery(s.display_name);
     setShowSuggestions(false);
+    setSelectedIndex(-1);
     if (onLocationSelect) {
       let bbox: [number, number, number, number] | undefined = undefined;
       if (s.boundingbox && s.boundingbox.length === 4) {
@@ -83,6 +89,23 @@ export default function SearchLocation({
         ];
       }
       onLocationSelect(parseFloat(s.lat), parseFloat(s.lon), s.display_name, bbox);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : 0)); // Don't go below 0
+    } else if (e.key === "Enter" && selectedIndex >= 0 && selectedIndex < suggestions.length) {
+      e.preventDefault();
+      handleSelect(suggestions[selectedIndex]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
     }
   };
 
@@ -106,23 +129,27 @@ export default function SearchLocation({
             setShowSuggestions(true);
           }}
           onFocus={() => setShowSuggestions(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search field location..."
           className="pl-10 pr-4 py-2.5 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-primary/30 w-64 md:w-80 text-sm outline-none"
         />
         
         {/* Suggestions Dropdown */}
         {showSuggestions && (query.trim().length > 0) && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-outline-variant rounded-xl shadow-xl z-[500] max-h-64 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-outline-variant rounded-xl shadow-xl z-[9999] max-h-64 overflow-y-auto custom-scrollbar">
             {loading ? (
               <div className="px-4 py-3 text-sm text-on-surface-variant text-center">Searching...</div>
             ) : suggestions.length > 0 ? (
               <ul>
-                {suggestions.map((s) => (
+                {suggestions.map((s, index) => (
                   <li key={s.place_id}>
                     <button
                       type="button"
                       onClick={() => handleSelect(s)}
-                      className="w-full text-left px-4 py-2 hover:bg-surface-container-low transition-colors flex items-start gap-2 border-b border-outline-variant/30 last:border-0"
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      className={`w-full text-left px-4 py-2 transition-colors flex items-start gap-2 border-b border-outline-variant/30 last:border-0 ${
+                        index === selectedIndex ? 'bg-surface-container-high' : 'hover:bg-surface-container-low'
+                      }`}
                     >
                       <MapPin size={16} className="mt-1 flex-shrink-0 text-primary" />
                       <span className="text-sm text-on-surface line-clamp-2">{s.display_name}</span>

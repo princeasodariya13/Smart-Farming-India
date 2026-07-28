@@ -6,7 +6,7 @@ import Footer from "@/components/landing/Footer";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans relative">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-slate-50/50 font-sans relative" data-lenis-prevent>
       <Header />
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 pt-32">
         <Link 

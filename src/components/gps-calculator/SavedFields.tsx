@@ -7,7 +7,7 @@ interface SavedFieldsProps {
   fields?: SavedField[];
   total?: number;
   onSelect?: (id: string) => void;
-  onMenu?: (id: string) => void;
+  onMenuAction?: (id: string, action: "rename" | "edit" | "delete") => void;
 }
 
 const defaultFields: SavedField[] = [
@@ -51,16 +51,18 @@ const defaultFields: SavedField[] = [
 
 export default function SavedFields({
   fields = defaultFields,
-  total = 8,
+  total,
   onSelect,
-  onMenu,
+  onMenuAction,
 }: SavedFieldsProps) {
+  const displayTotal = total ?? fields.length;
+
   return (
     <div className="border-t border-outline-variant/50 flex flex-col">
       <div className="px-4 py-3 flex justify-between items-center bg-surface-container-lowest/50">
         <h3 className="font-bold text-sm text-on-surface">Saved Fields</h3>
         <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold">
-          {total} TOTAL
+          {displayTotal} TOTAL
         </span>
       </div>
       {fields.length === 0 ? (
@@ -71,9 +73,9 @@ export default function SavedFields({
           </p>
         </div>
       ) : (
-        <div className="px-3 pb-4 pt-2 space-y-2">
+        <div className="px-3 pb-4 pt-2 space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
           {fields.map((field) => (
-            <FieldCard key={field.id} field={field} onSelect={onSelect} onMenu={onMenu} />
+            <FieldCard key={field.id} field={field} onSelect={onSelect} onMenuAction={onMenuAction} />
           ))}
         </div>
       )}

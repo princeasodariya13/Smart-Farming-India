@@ -39,20 +39,6 @@ export default function ExportMenu({
         </button>
         <button
           type="button"
-          onClick={onExportKml}
-          className="flex items-center justify-center gap-2 py-2 bg-white border border-outline-variant rounded-lg font-semibold text-xs hover:bg-surface-container-low transition-colors"
-        >
-          <MapIcon size={16} /> KML File
-        </button>
-        <button
-          type="button"
-          onClick={onExportGeoJson}
-          className="flex items-center justify-center gap-2 py-2 bg-white border border-outline-variant rounded-lg font-semibold text-xs hover:bg-surface-container-low transition-colors"
-        >
-          <FileJson size={16} /> GeoJSON
-        </button>
-        <button
-          type="button"
           onClick={onShare}
           className="flex items-center justify-center gap-2 py-2 bg-white border border-outline-variant rounded-lg font-semibold text-xs hover:bg-surface-container-low transition-colors"
         >

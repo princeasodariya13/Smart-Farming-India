@@ -646,6 +646,7 @@ model SoilHealth {
   userId      String   @unique
   nitrogen    Int      @default(82)
   phosphorus  Int      @default(65)
+  potassium   Int      @default(45)
   status      String   @default("Balanced")
   action      String   @default("Fertilize in 4 days")
   createdAt   DateTime @default(now())
@@ -760,7 +761,7 @@ model DiseaseScan {
 
 model CommunityPost {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   type      String   // 'question', 'photo', 'video', 'post'
   content   String
@@ -776,7 +777,7 @@ model CommunityComment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   postId    String   @db.ObjectId
   post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    String   @db.ObjectId
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   content   String
   createdAt DateTime @default(now())
@@ -785,7 +786,7 @@ model CommunityComment {
 
 model SavedField {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String   @db.ObjectId
+  userId            String
   user              User     @relation(fields: [userId], references: [id])
   name              String
   totalAreaAcres    Float

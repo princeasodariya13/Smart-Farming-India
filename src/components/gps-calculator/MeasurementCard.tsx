@@ -21,17 +21,23 @@ export default function MeasurementCard({
       <h3 className="font-bold text-xs text-on-surface mb-3 flex items-center gap-2">
         <Ruler size={14} className="text-primary" /> Recent Measurements
       </h3>
-      <ol className="relative border-l border-outline-variant/60 pl-4 space-y-3">
-        {measurements.map((m) => (
-          <li key={m.id} className="relative">
-            <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-primary" />
-            <p className="text-xs font-semibold text-on-surface">{m.fieldName}</p>
-            <p className="text-[10px] text-on-surface-variant mt-0.5">
-              {m.areaAcres} Acres · {m.timestamp}
-            </p>
-          </li>
-        ))}
-      </ol>
+      <div className="max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
+        <ol className="relative border-l border-outline-variant/60 pl-4 space-y-3">
+          {measurements.length > 0 ? (
+            measurements.map((m) => (
+              <li key={m.id} className="relative">
+                <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-primary" />
+                <p className="text-xs font-semibold text-on-surface">{m.fieldName}</p>
+                <p className="text-[10px] text-on-surface-variant mt-0.5">
+                  {m.areaAcres} Acres · {m.timestamp}
+                </p>
+              </li>
+            ))
+          ) : (
+            <li className="text-xs text-on-surface-variant italic">No recent measurements.</li>
+          )}
+        </ol>
+      </div>
     </div>
   );
 }
