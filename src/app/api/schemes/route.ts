@@ -23,8 +23,8 @@ export async function GET(request: Request) {
         const data = await response.json();
         console.log("[LOG] data.gov.in integration successful. Retrieved records:", data?.records?.length);
       }
-    } catch (err: any) {
-      console.error("[LOG] data.gov.in fetch error:", err.message);
+    } catch (err: unknown) {
+      console.error("[LOG] data.gov.in fetch error:", err instanceof Error ? err.message : "Unknown error");
       apiValidationStatus = "error";
     }
 
@@ -112,8 +112,8 @@ export async function GET(request: Request) {
       state: stateParam,
       schemes: fetchedData.records 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[LOG] schemes route error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }

@@ -649,9 +649,7 @@ function DiseaseDetectionContent() {
 
 export default function DiseaseDetectionPage() {
   
-  if (status === "loading") {
-    return <PageLoader />;
-  }
+  // Loading is handled by content component
 
   return (
     <SessionProvider>

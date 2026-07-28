@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     ];
 
     // MAP HOURLY FORECAST (Next 8 entries = 24 hours)
-    const hourly = forecastData.list.slice(0, 8).map((item: any) => {
+    const hourly = forecastData.list.slice(0, 8).map((item: { dt: number; main: { temp: number }; weather: { id: number }[]; pop?: number; wind: { speed: number } }) => {
       const date = new Date(item.dt * 1000);
       return {
         time: date.getHours() === new Date().getHours() ? "Now" : date.toLocaleTimeString([], { hour: 'numeric' }),
@@ -91,9 +91,9 @@ export async function GET(req: Request) {
         sevenDay,
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Weather API error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }
 

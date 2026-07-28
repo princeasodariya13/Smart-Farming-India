@@ -112,7 +112,7 @@ import { auth } from "@/auth";
 
 export async function POST(request: Request) {
   try {
-    let session = await auth();
+    const session = await auth();
     let userId = session?.user?.id;
     let userName = session?.user?.name;
 

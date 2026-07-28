@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function GET(request: Request) {
   try {
-    let session = await auth();
+    const session = await auth();
     let userId = session?.user?.id;
 
     if (!userId) {

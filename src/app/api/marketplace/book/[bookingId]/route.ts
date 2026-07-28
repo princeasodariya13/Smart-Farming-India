@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
   try {
-    let session = await auth();
+    const session = await auth();
     let userId = session?.user?.id;
 
     if (!userId) {

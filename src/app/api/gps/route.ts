@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -15,9 +15,9 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ success: true, fields });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Fetch GPS fields error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }
 
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, field: savedField });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Save GPS field error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }

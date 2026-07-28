@@ -176,9 +176,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   
-  if (status === "loading") {
-    return <PageLoader />;
-  }
+  // Loading is handled by content component
 
   return (
     <SessionProvider>

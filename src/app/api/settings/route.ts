@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -15,9 +15,10 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ success: true, settings: user?.notificationSettings || null });
-  } catch (error: any) {
-    console.error("Fetch settings error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Settings error:", error);
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -40,8 +41,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Save settings error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

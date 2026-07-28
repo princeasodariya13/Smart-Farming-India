@@ -87,12 +87,11 @@ export default function GPSLayout({
       });
       const data = await res.json();
       if (data.success && data.field) {
-        const newField = {
+        const newField: SavedField = {
           id: data.field.id,
           name: data.field.name,
           areaAcres: data.field.totalAreaAcres,
           date: new Date(data.field.createdAt).toLocaleDateString(),
-          color: "border-primary/50 bg-primary/10",
           cropName: "Unknown",
           location: "Mapped Area",
           tags: [],

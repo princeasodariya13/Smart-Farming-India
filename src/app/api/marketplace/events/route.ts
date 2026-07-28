@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  let session = await auth();
+  const session = await auth();
   let userId = session?.user?.id;
 
   if (!userId) {

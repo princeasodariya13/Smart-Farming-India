@@ -226,11 +226,6 @@ function SettingsContent() {
 }
 
 export default function SettingsPage() {
-  
-  if (status === "loading") {
-    return <PageLoader />;
-  }
-
   return (
     <SessionProvider>
       <SettingsContent />
