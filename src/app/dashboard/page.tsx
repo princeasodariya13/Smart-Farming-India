@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Leaf } from 'lucide-react';
+import PageLoader from '@/components/PageLoader';
 
 function DashboardContent() {
   const { data: session } = useSession();
@@ -108,12 +109,76 @@ function DashboardContent() {
     }
   };
 
+  const [newTaskLabel, setNewTaskLabel] = useState("");
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskLabel.trim()) return;
+    
+    setIsSubmittingTask(true);
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: newTaskLabel })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDbData(prev => ({
+          ...prev,
+          tasks: [...prev.tasks, data.task]
+        }));
+        setNewTaskLabel("");
+        setIsAddingTask(false);
+      } else {
+        alert(data.error || "Failed to add task");
+      }
+    } catch (err) {
+      console.error("Failed to add task", err);
+    } finally {
+      setIsSubmittingTask(false);
+    }
+  };
+
+  const handleDeleteTask = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Optimistic delete
+    const previousTasks = [...dbData.tasks];
+    setDbData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(t => t.id !== id)
+    }));
+
+    try {
+      const res = await fetch(`/api/tasks?id=${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!data.success) {
+        // Revert on failure
+        setDbData(prev => ({ ...prev, tasks: previousTasks }));
+        alert(data.error || "Failed to delete task");
+      }
+    } catch (err) {
+      console.error("Failed to delete task", err);
+      setDbData(prev => ({ ...prev, tasks: previousTasks }));
+    }
+  };
+
+  if (loadingDb) {
+    return <PageLoader />;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay — above header (z-30) but below sidebar (z-50) */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm" 
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -158,6 +223,23 @@ function DashboardContent() {
 
 
 
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            <span className="text-[12px] font-medium">Marketplace</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/schemes">
+            <span className="material-symbols-outlined text-[18px]">article</span>
+            <span className="text-[12px] font-medium">Schemes</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/community">
+            <span className="material-symbols-outlined text-[18px]">forum</span>
+            <span className="text-[12px] font-medium">Community</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+            <span className="material-symbols-outlined text-[18px]">insights</span>
+            <span className="text-[12px] font-medium">Analytics</span>
+          </Link>
+
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
@@ -167,7 +249,7 @@ function DashboardContent() {
           <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
             Consult Expert
           </button>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
           </Link>
@@ -181,7 +263,7 @@ function DashboardContent() {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-8 md:pb-0">
         {/* TopNavBar */}
-        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 z-40 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
+        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 shrink-0 z-30 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
           <div className="flex items-center gap-6">
             <div className="flex md:hidden items-center gap-2 mr-2">
               <button 
@@ -197,13 +279,7 @@ function DashboardContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-            <div className="hidden lg:flex items-center gap-5">
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market">Marketplace</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/schemes">Schemes</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/community">Community</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</Link>
-            </div>
-          </div>
+                      </div>
           <div className="flex items-center gap-3">
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -429,16 +505,26 @@ function DashboardContent() {
               </div>
               <div className="space-y-2">
                 {dbData.tasks.length > 0 ? dbData.tasks.map(task => (
-                  <label key={task.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer group">
-                    <input
-                      className="w-4 h-4 rounded-md border-outline text-primary focus:ring-primary"
-                      type="checkbox"
-                      checked={task.checked}
-                      onChange={() => toggleTask(task.id)}
-                    />
-                    <span className={`font-body-sm text-body-sm text-on-surface transition-all ${task.checked ? 'line-through opacity-50' : ''}`}>
-                      {task.label}
-                    </span>
+                  <label key={task.id} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="w-4 h-4 rounded-md border-outline text-primary focus:ring-primary"
+                        type="checkbox"
+                        checked={task.checked}
+                        onChange={() => toggleTask(task.id)}
+                      />
+                      <span className={`font-body-sm text-body-sm text-on-surface transition-all ${task.checked ? 'line-through opacity-50' : ''}`}>
+                        {task.label}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteTask(task.id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-error hover:bg-error-container rounded transition-all"
+                      title="Delete task"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
                   </label>
                 )) : loadingDb ? (
                    <p className="text-sm text-gray-500 py-2">Loading tasks...</p>
@@ -446,9 +532,39 @@ function DashboardContent() {
                    <p className="text-sm text-gray-500 py-2">No tasks assigned.</p>
                 )}
               </div>
-              <button className="mt-4 w-full text-center py-1.5 text-[12px] font-bold text-primary hover:bg-primary/5 rounded-lg">
-                + Add New Task
-              </button>
+              {isAddingTask ? (
+                <form onSubmit={handleAddTask} className="mt-4 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newTaskLabel}
+                    onChange={(e) => setNewTaskLabel(e.target.value)}
+                    placeholder="E.g. Check irrigation pipes..."
+                    className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    autoFocus
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingTask || !newTaskLabel.trim()}
+                    className="p-1.5 bg-primary text-on-primary rounded-lg disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsAddingTask(false)}
+                    className="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-lg"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                </form>
+              ) : (
+                <button 
+                  onClick={() => setIsAddingTask(true)}
+                  className="mt-4 w-full text-center py-1.5 text-[12px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                >
+                  + Add New Task
+                </button>
+              )}
             </div>
 
             {/* Recent Notifications */}
@@ -514,15 +630,11 @@ function DashboardContent() {
           </footer>
         </main>
 
-        {/* Floating Action Button for AI Detection (Mobile) */}
-        <button className="md:hidden fixed bottom-12 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary-container transition-colors">
-          <span className="material-symbols-outlined">camera</span>
-        </button>
 
       </div>
 
       {/* Live Market Ticker */}
-      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-[60] flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none md:left-64">
+      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-30 flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none md:left-64">
         <div className="flex ticker-animate font-label-sm text-[11px] tracking-wide gap-12 items-center">
           {dbData.mandiPrices.length > 0 ? (
             // Duplicate the array a few times to ensure the ticker spans the whole screen
@@ -550,3 +662,8 @@ export default function Dashboard() {
     </SessionProvider>
   );
 }
+
+
+
+
+

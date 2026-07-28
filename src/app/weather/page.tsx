@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
 
 import { Leaf } from 'lucide-react';
+import PageLoader from '@/components/PageLoader';
 import {
   Sun,
   CloudSun,
@@ -200,7 +201,11 @@ const gujaratDistricts = [
 ];
 
 function WeatherContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -315,7 +320,7 @@ function WeatherContent() {
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm" 
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -359,6 +364,23 @@ function WeatherContent() {
             <span className="text-[12px] font-medium">Scanner</span>
           </Link>
           
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            <span className="text-[12px] font-medium">Marketplace</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/schemes">
+            <span className="material-symbols-outlined text-[18px]">article</span>
+            <span className="text-[12px] font-medium">Schemes</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/community">
+            <span className="material-symbols-outlined text-[18px]">forum</span>
+            <span className="text-[12px] font-medium">Community</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+            <span className="material-symbols-outlined text-[18px]">insights</span>
+            <span className="text-[12px] font-medium">Analytics</span>
+          </Link>
+
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
@@ -368,7 +390,7 @@ function WeatherContent() {
           <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
             Consult Expert
           </button>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
           </Link>
@@ -382,7 +404,7 @@ function WeatherContent() {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-8 md:pb-0">
         {/* TopNavBar */}
-        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 z-40 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
+        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 shrink-0 z-30 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
           <div className="flex items-center gap-6">
             <div className="flex md:hidden items-center gap-2 mr-2">
               <button 
@@ -398,13 +420,7 @@ function WeatherContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-            <div className="hidden lg:flex items-center gap-5">
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market">Marketplace</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/schemes">Schemes</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/community">Community</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</Link>
-            </div>
-          </div>
+                      </div>
           <div className="flex items-center gap-3">
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -552,3 +568,14 @@ export default function Weather() {
     </SessionProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
+

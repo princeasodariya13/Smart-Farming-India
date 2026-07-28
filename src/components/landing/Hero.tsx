@@ -54,20 +54,22 @@ export default function Hero() {
             </Link>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <div className="mt-16 flex flex-wrap justify-center md:justify-start gap-3 lg:gap-4">
             {STATS.map((stat, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/70 backdrop-blur-md p-6 shadow-sm"
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/70 backdrop-blur-md p-3 lg:p-4 shadow-sm flex-1 min-w-[160px]"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700">
                   <stat.icon size={24} />
                 </div>
                 <div className="text-left">
                   <p className="text-xl font-bold text-slate-900">{stat.value}</p>
-                  <p className="text-xs font-semibold text-slate-500">
-                    {stat.label}
-                  </p>
+                  <div className="text-xs font-semibold text-slate-500">
+                    {stat.label.split(' ').map((word, i) => (
+                      <span key={i} className="block">{word}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}

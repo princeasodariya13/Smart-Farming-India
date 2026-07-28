@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut, SessionProvider } from "next-auth/react";
 import { Leaf } from "lucide-react";
+import PageLoader from '@/components/PageLoader';
 
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { StatsOverview } from "@/components/community/StatsOverview";
@@ -38,7 +39,11 @@ import {
 import type { FeedTabKey } from "@/types/community";
 
 function CommunityContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FeedTabKey>("for-you");
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +87,7 @@ function CommunityContent() {
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -132,6 +137,23 @@ function CommunityContent() {
 
           {/* Community — active */}
 
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            <span className="text-[12px] font-medium">Marketplace</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/schemes">
+            <span className="material-symbols-outlined text-[18px]">article</span>
+            <span className="text-[12px] font-medium">Schemes</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/community">
+            <span className="material-symbols-outlined text-[18px]">forum</span>
+            <span className="text-[12px] font-medium">Community</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+            <span className="material-symbols-outlined text-[18px]">insights</span>
+            <span className="text-[12px] font-medium">Analytics</span>
+          </Link>
+
           <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span className="text-[12px] font-medium">Settings</span>
@@ -142,7 +164,7 @@ function CommunityContent() {
           <button className="w-full mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
             Consult Expert
           </button>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
           </Link>
@@ -175,13 +197,7 @@ function CommunityContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-            <div className="hidden lg:flex items-center gap-5">
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market">Marketplace</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/schemes">Schemes</Link>
-              <Link className="text-[12px] font-semibold text-primary transition-colors" href="/community">Community</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</Link>
-            </div>
-          </div>
+                      </div>
           <div className="flex items-center gap-3">
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -313,3 +329,15 @@ export default function CommunityPage() {
     </SessionProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

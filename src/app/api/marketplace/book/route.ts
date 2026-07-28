@@ -54,19 +54,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Save a FarmerTask notification for backward compat / dashboard
-    if (sellerId) {
-      await prisma.farmerTask.create({
-        data: {
-          userId: sellerId,
-          label: `Booking request: ${userName || "A farmer"} wants to ${
-            product.type === "rental" ? "rent" : "buy"
-          } your ${product.name}.`,
-          checked: false,
-        },
-      });
-    }
-
     // 🔴 Push live SSE event to the seller
     if (sellerId) {
       emitToUser(sellerId, {

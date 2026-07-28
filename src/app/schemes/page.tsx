@@ -5,10 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut, SessionProvider } from "next-auth/react";
 import { Leaf } from "lucide-react";
+import PageLoader from '@/components/PageLoader';
 import SchemesLayout from "@/components/schemes/SchemesLayout";
 
 function SchemesContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getInitials = (name: string | null | undefined) => {
@@ -23,7 +28,7 @@ function SchemesContent() {
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -86,6 +91,34 @@ function SchemesContent() {
 
           <Link
             className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all"
+            href="/market"
+          >
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            <span className="text-[12px] font-medium">Marketplace</span>
+          </Link>
+
+          <Link
+            className="flex items-center gap-2 px-3 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg transition-all"
+            href="/schemes"
+          >
+            <span className="material-symbols-outlined text-[18px]">article</span>
+            <span className="text-[12px] font-medium">Schemes</span>
+          </Link>
+
+          <Link
+            className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all"
+            href="/community"
+          >
+            <span className="material-symbols-outlined text-[18px]">forum</span>
+            <span className="text-[12px] font-medium">Community</span>
+          </Link>
+          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+            <span className="material-symbols-outlined text-[18px]">insights</span>
+            <span className="text-[12px] font-medium">Analytics</span>
+          </Link>
+
+          <Link
+            className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all"
             href="/settings"
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
@@ -99,7 +132,7 @@ function SchemesContent() {
           </button>
           <Link
             className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all"
-            href="#"
+            href="/support"
           >
             <span className="material-symbols-outlined text-[18px]">help</span>
             <span className="text-[12px] font-medium">Support</span>
@@ -133,13 +166,7 @@ function SchemesContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-            <div className="hidden lg:flex items-center gap-5">
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market">Marketplace</Link>
-              <Link className="text-[12px] font-semibold text-primary transition-colors" href="/schemes">Schemes</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="/community">Community</Link>
-              <Link className="text-[12px] font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</Link>
-            </div>
-          </div>
+                      </div>
           <div className="flex items-center gap-3">
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -203,3 +230,15 @@ export default function SchemesPage() {
     </SessionProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

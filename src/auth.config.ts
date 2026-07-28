@@ -42,9 +42,13 @@ export default {
       if (token.strictExpiry && Math.floor(Date.now() / 1000) > (token.strictExpiry as number)) {
         session.expires = new Date(0).toISOString() as any
       }
-      // Explicitly map token picture to session user image
-      if (session.user && token.picture) {
-        session.user.image = token.picture as string;
+      // Explicitly map token picture and sub to session user
+      if (session.user) {
+        session.user = {
+          ...session.user,
+          image: token.picture ? (token.picture as string) : session.user.image,
+          id: token.sub ? (token.sub as string) : (session.user as any).id,
+        } as any;
       }
       return session
     }

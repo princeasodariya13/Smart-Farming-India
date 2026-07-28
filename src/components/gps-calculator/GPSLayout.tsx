@@ -76,7 +76,7 @@ export default function GPSLayout({
       className="flex flex-col lg:h-full"
     >
       {/* Header */}
-      <header className="relative z-50 px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-outline-variant/60 bg-white/60 backdrop-blur-sm">
+      <header className="relative z-10 px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-outline-variant/60 bg-white/60 backdrop-blur-sm">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight">
             GPS Area Calculator
@@ -97,7 +97,7 @@ export default function GPSLayout({
 
         {/* Map wrapper - creates a padded "card" around the map */}
         <div className="w-full lg:flex-1 p-4 lg:p-6 lg:min-h-0 flex flex-col items-center justify-center relative overflow-y-auto lg:overflow-hidden bg-[#f4f7f4]">
-          <div className="w-full h-[500px] lg:h-full lg:max-h-[75vh] max-w-5xl rounded-3xl overflow-hidden shadow-sm border border-outline-variant/60 relative flex flex-col shrink-0">
+          <div className="w-full h-[280px] lg:h-full lg:max-h-[75vh] max-w-5xl rounded-3xl overflow-hidden shadow-sm border border-outline-variant/60 relative flex flex-col shrink-0">
             <MapContainer
               activeTool={activeTool}
               onToolChange={setActiveTool}
