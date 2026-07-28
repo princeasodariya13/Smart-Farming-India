@@ -52,12 +52,16 @@ export default function GPSLayout({
       .then(res => res.json())
       .then(data => {
         if (data.success && data.fields) {
-          const mapped = data.fields.map((f: any) => ({
+          const mapped: SavedField[] = data.fields.map((f: any) => ({
             id: f.id,
             name: f.name,
             areaAcres: f.totalAreaAcres,
             date: new Date(f.createdAt).toLocaleDateString(),
-            color: "border-primary/50 bg-primary/10",
+            cropName: "Unknown",
+            location: "Mapped Area",
+            tags: [],
+            status: "active" as const,
+            imageUrl: ""
           }));
           setRealFields(mapped);
         }
@@ -95,7 +99,7 @@ export default function GPSLayout({
           cropName: "Unknown",
           location: "Mapped Area",
           tags: [],
-          status: "active",
+          status: "active" as const,
           imageUrl: ""
         };
         setRealFields(prev => [newField, ...prev]);
