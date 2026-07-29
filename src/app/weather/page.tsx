@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
-
+import { useNotification } from '@/contexts/NotificationContext';
 import { Leaf } from 'lucide-react';
 import PageLoader from '@/components/PageLoader';
 import {
@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Download,
   Radar,
-  ClipboardList
+  ClipboardList,
+  X
 } from "lucide-react";
 import WeatherHero from "@/components/weather/WeatherHero";
 import WeatherMetricCard from "@/components/weather/WeatherMetricCard";
@@ -50,7 +51,7 @@ import type {
 /* ---------------------------------------------------------------------- */
 
 const currentWeather: CurrentWeather = {
-  location: { city: "Ahmedabad", state: "Gujarat", lastUpdated: "Updating..." },
+  location: { city: "Ahmedabad", state: "Gujarat", lastUpdated: "Updating...", lat: 23.0225, lon: 72.5714 },
   temperatureC: 31,
   feelsLikeC: 34,
   highC: 34,
@@ -214,6 +215,7 @@ function WeatherContent() {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { addNotification } = useNotification();
 
 
 
@@ -221,6 +223,17 @@ function WeatherContent() {
   const [liveMetrics, setLiveMetrics] = useState(metrics);
   const [liveHourly, setLiveHourly] = useState(hourly);
   const [liveSevenDay, setLiveSevenDay] = useState(sevenDay);
+  const [liveRainfall, setLiveRainfall] = useState(rainfallData);
+  const [liveAdvisory, setLiveAdvisory] = useState<FarmingAdvisory>(advisory);
+  const [liveAlerts, setLiveAlerts] = useState<WeatherAlert[]>(alerts);
+  const [liveCropImpacts, setLiveCropImpacts] = useState<CropWeatherImpact[]>(cropImpacts);
+  
+  const [irrigationPlan, setIrrigationPlan] = useState<{
+    et: number;
+    rain: number;
+    isDeficit: boolean;
+    amount: string;
+  } | null>(null);
 
   const getIconComponent = (name: string) => {
     switch(name) {
@@ -243,16 +256,70 @@ function WeatherContent() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+
+  const [liveSuggestions, setLiveSuggestions] = useState<Array<{name: string, lat: number, lon: number, subtitle: string}>>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!searchQuery.trim() || searchQuery.length < 3) {
+        setLiveSuggestions([]);
+        return;
+      }
+      try {
+        // Using Geoapify for highly accurate village/taluka/district autocomplete
+        const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || "38d8652905324ef49e93358b6ac82f40";
+        const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(searchQuery)}&apiKey=${apiKey}&format=json&filter=countrycode:in&limit=10`);
+        const data = await res.json();
+        
+        if (data && data.results && Array.isArray(data.results)) {
+          const formatted = data.results.map((item: any) => {
+            const mainName = item.name || item.city || item.county || item.address_line1 || "Unknown Location";
+            const subName = item.address_line2 || [item.state, item.country].filter(Boolean).join(', ');
+            return {
+              name: mainName,
+              subtitle: subName,
+              lat: parseFloat(item.lat),
+              lon: parseFloat(item.lon)
+            };
+          });
+          setLiveSuggestions(formatted);
+        }
+      } catch (err) {
+        console.error("Autocomplete fetch error", err);
+      }
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const fetchWeatherByCoords = async (lat: number, lon: number, locName: string) => {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || "02785a68098150e0254c7a9e7321daac";
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
-      const data = await res.json();
-      if (data && data.weather && data.weather.length > 0) {
-        const code = data.weather[0].icon;
-        const condition = data.weather[0].main;
-        let icon = Sun;
+      const owmApiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || "02785a68098150e0254c7a9e7321daac";
+      const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,shortwave_radiation_sum,et0_fao_evapotranspiration,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max&hourly=temperature_2m,relative_humidity_2m,soil_temperature_0cm,soil_temperature_6cm,soil_temperature_18cm,soil_temperature_54cm,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_speed_180m,wind_direction_10m,wind_direction_80m,wind_direction_120m,wind_direction_180m,wind_gusts_10m,temperature_80m,temperature_120m,temperature_180m,visibility,cloud_cover_high,cloud_cover_low,cloud_cover,weather_code,evapotranspiration,vapour_pressure_deficit,et0_fao_evapotranspiration,cloud_cover_mid,surface_pressure,pressure_msl&timezone=auto&past_days=28&forecast_days=14`;
+      
+      const [owmRes, owmForecastRes, meteoRes] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+        fetch(meteoUrl)
+      ]);
+
+      const owmData = await owmRes.json();
+      const owmForecast = await owmForecastRes.json();
+      const meteoData = await meteoRes.json();
+
+      // Get current hour index for meteo
+      const now = new Date();
+      let currentHourIndex = meteoData?.hourly?.time?.findIndex((t: string) => new Date(t).getTime() > now.getTime()) - 1;
+      if (currentHourIndex < 0 || isNaN(currentHourIndex)) currentHourIndex = 0;
+
+      // OWM Icons
+      let icon = Sun;
+      let condition = "Clear";
+      if (owmData?.weather?.length > 0) {
+        const code = owmData.weather[0].icon;
+        condition = owmData.weather[0].main;
         if (code.startsWith("01")) icon = Sun;
         else if (code.startsWith("02")) icon = CloudSun;
         else if (code.startsWith("03") || code.startsWith("04")) icon = Cloud;
@@ -260,20 +327,303 @@ function WeatherContent() {
         else if (code.startsWith("11")) icon = CloudRain;
         else if (code.startsWith("13")) icon = CloudSnow;
         else icon = Cloud;
-
-        setLiveWeather(prev => ({
-          ...prev,
-          location: { ...prev.location, city: locName, state: "", lastUpdated: new Date().toLocaleTimeString() },
-          temperatureC: Math.round(data.main.temp),
-          feelsLikeC: Math.round(data.main.feels_like),
-          highC: Math.round(data.main.temp_max),
-          lowC: Math.round(data.main.temp_min),
-          condition,
-          icon
-        }));
       }
+
+      setLiveWeather(prev => ({
+        ...prev,
+        location: { city: locName.split(',')[0], state: locName.split(',')[1]?.trim() || '', lastUpdated: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), lat, lon },
+        temperatureC: owmData?.main?.temp ? Math.round(owmData.main.temp) : 0,
+        feelsLikeC: owmData?.main?.feels_like ? Math.round(owmData.main.feels_like) : 0,
+        highC: owmData?.main?.temp_max ? Math.round(owmData.main.temp_max) : 0,
+        lowC: owmData?.main?.temp_min ? Math.round(owmData.main.temp_min) : 0,
+        condition,
+        icon
+      }));
+
+      setLiveMetrics(prev => {
+        const updated = [...prev];
+        // OWM: Humidity, Wind, Pressure, Visibility
+        updated[0] = { ...updated[0], value: owmData?.main?.humidity ?? "N/A" };
+        updated[1] = { ...updated[1], value: owmData?.wind?.speed ? Math.round(owmData.wind.speed * 3.6) : "N/A" };
+        updated[2] = { ...updated[2], value: owmData?.main?.pressure ?? "N/A" };
+        updated[4] = { ...updated[4], value: owmData?.visibility ? Number((owmData.visibility / 1000).toFixed(1)) : "N/A" };
+        
+        // OWM: UV Index & Dew Point (Not natively in free OWM, calc dew point)
+        updated[3] = { ...updated[3], value: "N/A", status: { label: "OWM N/A", tone: "info" } };
+        const dp = owmData?.main?.temp && owmData?.main?.humidity ? Math.round(owmData.main.temp - ((100 - owmData.main.humidity) / 5)) : "N/A";
+        updated[5] = { ...updated[5], value: dp };
+        
+        // Open-Meteo: Soil Moisture & ET0
+        let sm = meteoData?.hourly?.soil_moisture_9_to_27cm?.[currentHourIndex];
+        updated[6] = { ...updated[6], value: sm !== undefined ? Math.round(sm * 100) : "N/A" };
+        let et0 = meteoData?.daily?.et0_fao_evapotranspiration?.[0];
+        updated[7] = { ...updated[7], value: et0 !== undefined ? Number(et0.toFixed(1)) : "N/A" };
+        
+        return updated;
+      });
+
+      // OWM: Hourly Forecast
+      if (owmForecast && owmForecast.list) {
+        const newHourly = owmForecast.list.slice(0, 7).map((item: any, idx: number) => {
+          const dt = new Date(item.dt * 1000);
+          let timeStr = dt.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+          if (idx === 0) timeStr = "Now";
+          
+          let hrIcon = Sun;
+          if (item.weather?.[0]) {
+            const code = item.weather[0].icon;
+            if (code.startsWith("01")) hrIcon = Sun;
+            else if (code.startsWith("02")) hrIcon = CloudSun;
+            else if (code.startsWith("03") || code.startsWith("04")) hrIcon = Cloud;
+            else if (code.startsWith("09") || code.startsWith("10")) hrIcon = CloudRain;
+            else if (code.startsWith("11")) hrIcon = CloudRain;
+            else if (code.startsWith("13")) hrIcon = CloudSnow;
+            else hrIcon = Cloud;
+          }
+          
+          return {
+            time: timeStr,
+            icon: hrIcon,
+            temperatureC: Math.round(item.main.temp),
+            rainChance: Math.round((item.pop || 0) * 100),
+            windKmh: Math.round(item.wind.speed * 3.6)
+          };
+        });
+        setLiveHourly(newHourly);
+      }
+
+      // OWM: Daily Forecast
+      if (owmForecast && owmForecast.list) {
+        const dailyMap = new Map();
+        owmForecast.list.forEach((item: any) => {
+          const dateStr = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+          if (!dailyMap.has(dateStr)) {
+            dailyMap.set(dateStr, { min: item.main.temp_min, max: item.main.temp_max, pop: item.pop || 0, icon: item.weather[0]?.icon });
+          } else {
+            const existing = dailyMap.get(dateStr);
+            existing.min = Math.min(existing.min, item.main.temp_min);
+            existing.max = Math.max(existing.max, item.main.temp_max);
+            existing.pop = Math.max(existing.pop, item.pop || 0);
+          }
+        });
+        
+        const newSevenDay = Array.from(dailyMap.entries()).slice(0, 7).map(([day, val], idx) => {
+          let dIcon = Sun;
+          if (val.icon) {
+            const code = val.icon;
+            if (code.startsWith("01")) dIcon = Sun;
+            else if (code.startsWith("02")) dIcon = CloudSun;
+            else if (code.startsWith("03") || code.startsWith("04")) dIcon = Cloud;
+            else if (code.startsWith("09") || code.startsWith("10")) dIcon = CloudRain;
+            else if (code.startsWith("11")) dIcon = CloudRain;
+            else if (code.startsWith("13")) dIcon = CloudSnow;
+            else dIcon = Cloud;
+          }
+          return {
+            day: idx === 0 ? "Today" : day,
+            icon: dIcon,
+            highC: Math.round(val.max),
+            lowC: Math.round(val.min),
+            rainChance: Math.round(val.pop * 100)
+          };
+        });
+        setLiveSevenDay(newSevenDay);
+      }
+
+      // Open-Meteo: Rainfall Forecast & Historical
+      if (meteoData && meteoData.daily && meteoData.daily.time) {
+        // Today is index 28 (0-27 are past 28 days)
+        const todayIdx = 28;
+        
+        // 1. Weekly (Past 3 days, Today, Next 3 days)
+        const newWeeklyRain = [];
+        for (let i = todayIdx - 3; i <= todayIdx + 3; i++) {
+          const dt = new Date(meteoData.daily.time[i]);
+          const day = i === todayIdx ? "Today" : dt.toLocaleDateString('en-US', { weekday: 'short' });
+          const val = meteoData.daily.precipitation_sum[i] || 0;
+          
+          let actual: number | null = null;
+          let forecast: number | null = null;
+          
+          if (i < todayIdx) {
+            actual = Number(val.toFixed(1));
+            // Create a seamless anchor for Recharts so the dashed line connects perfectly to the last solid bar
+            if (i === todayIdx - 1) {
+              forecast = Number(val.toFixed(1));
+            }
+          } else {
+            forecast = Number(val.toFixed(1));
+          }
+
+          newWeeklyRain.push({
+            label: day,
+            actualMm: actual,
+            forecastMm: forecast
+          });
+        }
+        
+        // 2. Monthly (Past 4 Weeks)
+        const newMonthlyRain = [];
+        for (let w = 0; w < 4; w++) {
+          let sum = 0;
+          for (let d = 0; d < 7; d++) {
+            sum += meteoData.daily.precipitation_sum[w * 7 + d] || 0;
+          }
+          newMonthlyRain.push({
+            label: `Week ${w + 1}`,
+            actualMm: Number(sum.toFixed(1)),
+            forecastMm: null
+          });
+        }
+        
+        // 3. Forecast Accumulations (Next 3d, Next 7d, Next 14d)
+        const getSum = (days: number) => {
+          let sum = 0;
+          for (let i = todayIdx + 1; i <= todayIdx + days && i < meteoData.daily.precipitation_sum.length; i++) {
+            sum += meteoData.daily.precipitation_sum[i] || 0;
+          }
+          return Number(sum.toFixed(1));
+        };
+        const newForecastRain = [
+          { label: "Next 3d", actualMm: null, forecastMm: getSum(3) },
+          { label: "Next 7d", actualMm: null, forecastMm: getSum(7) },
+          { label: "Next 14d", actualMm: null, forecastMm: getSum(13) },
+        ];
+        
+        setLiveRainfall({
+          weekly: newWeeklyRain,
+          monthly: newMonthlyRain,
+          forecast: newForecastRain
+        });
+        
+        // Dynamically calculate Alerts based on OpenWeather + OpenMeteo
+        const newAlerts: WeatherAlert[] = [];
+        const maxWind = meteoData.daily.wind_gusts_10m_max?.[todayIdx];
+        const maxRain = meteoData.daily.precipitation_sum?.[todayIdx];
+        const maxTemp = meteoData.daily.temperature_2m_max?.[todayIdx];
+        
+        if (maxRain > 25) {
+          newAlerts.push({ id: "dyn-rain", type: "Heavy Rain", severity: "high", description: `Heavy rainfall expected (${maxRain}mm) today.`, timestamp: "Valid Today", actionLabel: "View Radar" });
+        }
+        if (maxTemp > 35) {
+          newAlerts.push({ id: "dyn-heat", type: "Heatwave", severity: "moderate", description: `High temperatures expected (${maxTemp}°C). Protect sensitive crops.`, timestamp: "Valid Today", actionLabel: "View Advisory" });
+        }
+        if (maxWind > 40) {
+          newAlerts.push({ id: "dyn-wind", type: "Strong Wind", severity: "high", description: `Strong wind gusts up to ${maxWind}km/h today.`, timestamp: "Valid Today", actionLabel: "View Details" });
+        }
+        setLiveAlerts(newAlerts);
+
+        // Dynamically calculate Advisory & Crop Impacts
+        const pop = meteoData.daily.precipitation_probability_max?.[todayIdx] || 0;
+        const et = meteoData.daily.et0_fao_evapotranspiration?.[todayIdx] || 0;
+        
+        setLiveAdvisory({
+          summary: `Our AI has analyzed today's ${maxTemp}°C peak temperature and ${et.toFixed(1)}mm evaporation rate against the projected ${maxRain}mm of rainfall.`,
+          irrigation: et > 4 ? `High evapotranspiration (${et.toFixed(1)}mm) requires increased irrigation.` : `Evapotranspiration is stable (${et.toFixed(1)}mm). Normal irrigation.`,
+          spraying: pop > 50 ? `High rain chance (${pop}%). Reschedule spraying.` : `Low rain chance (${pop}%). Good conditions for spraying.`,
+          fertilizer: pop > 50 ? `Hold nitrogen top-dressing until after rainfall.` : `Ideal conditions for fertilizer application.`,
+          harvest: maxRain > 10 ? `Delay harvest due to expected rain (${maxRain}mm).` : `Clear weather expected. Safe to harvest.`,
+          pestRisk: maxTemp > 30 ? "high" : "moderate",
+          diseaseRisk: owmData?.main?.humidity > 80 ? "high" : "low"
+        });
+
+        // Dynamically choose 6 crops based on Indian State/Region
+        let localCrops = ["Wheat", "Rice", "Sugarcane", "Cotton", "Maize", "Tomato"]; // Default
+        const locLower = locName.toLowerCase();
+        
+        if (locLower.includes("gujarat")) {
+          localCrops = ["Cotton", "Groundnut", "Wheat", "Mango", "Cumin", "Onion"];
+        } else if (locLower.includes("punjab") || locLower.includes("haryana")) {
+          localCrops = ["Wheat", "Rice", "Mustard", "Sugarcane", "Maize", "Cotton"];
+        } else if (locLower.includes("maharashtra")) {
+          localCrops = ["Sugarcane", "Cotton", "Soybean", "Onion", "Grapes", "Pomegranate"];
+        } else if (locLower.includes("kerala") || locLower.includes("tamil nadu") || locLower.includes("andhra") || locLower.includes("karnataka")) {
+          localCrops = ["Rice", "Coconut", "Banana", "Coffee", "Cardamom", "Mango"];
+        } else if (locLower.includes("assam") || locLower.includes("west bengal") || locLower.includes("meghalaya") || locLower.includes("tripura")) {
+          localCrops = ["Tea", "Rice", "Jute", "Pineapple", "Arecanut", "Ginger"];
+        } else if (locLower.includes("himachal") || locLower.includes("jammu") || locLower.includes("uttarakhand") || locLower.includes("kashmir")) {
+          localCrops = ["Apple", "Potato", "Wheat", "Cherry", "Walnut", "Saffron"];
+        } else if (locLower.includes("rajasthan") || locLower.includes("madhya pradesh")) {
+          localCrops = ["Mustard", "Wheat", "Cotton", "Soybean", "Millets", "Chickpea"];
+        } else if (locLower.includes("uttar pradesh") || locLower.includes("bihar")) {
+          localCrops = ["Sugarcane", "Wheat", "Rice", "Maize", "Potato", "Mango"];
+        }
+
+        const humidity = owmData?.main?.humidity || 50;
+        const sm = (meteoData.hourly.soil_moisture_9_to_27cm?.[todayIdx] || 0.3) * 100;
+
+        const getCropImpact = (crop: string): CropWeatherImpact => {
+          if (crop === "Wheat") return { cropName: "Wheat", impact: et > 4 ? "High water demand due to heat." : "Favorable conditions.", riskLevel: et > 4 ? "moderate" : "low", recommendedAction: et > 4 ? "Increase irrigation." : "Monitor growth." };
+          if (crop === "Cotton") return { cropName: "Cotton", impact: pop > 50 ? "Rain may wash away pesticides." : "Good spraying conditions.", riskLevel: pop > 50 ? "high" : "low", recommendedAction: pop > 50 ? "Delay spraying." : "Proceed with spraying." };
+          if (crop === "Sugarcane") return { cropName: "Sugarcane", impact: humidity > 80 ? "High humidity raises fungal risk." : "Optimal growth conditions.", riskLevel: humidity > 80 ? "high" : "low", recommendedAction: humidity > 80 ? "Apply preventive fungicide." : "Maintain normal routine." };
+          if (crop === "Rice") return { cropName: "Rice", impact: maxRain < 5 ? "Low rainfall might affect paddy water levels." : "Rainfall is supporting paddy fields.", riskLevel: maxRain < 5 ? "high" : "low", recommendedAction: maxRain < 5 ? "Ensure artificial flooding." : "Maintain current water level." };
+          if (crop === "Groundnut") return { cropName: "Groundnut", impact: sm < 40 ? "Low soil moisture at root zone." : "Adequate soil moisture.", riskLevel: sm < 40 ? "moderate" : "low", recommendedAction: sm < 40 ? "Schedule light irrigation." : "No immediate action." };
+          if (crop === "Mustard") return { cropName: "Mustard", impact: maxTemp > 30 ? "Heat stress may affect flowering." : "Favorable cool conditions.", riskLevel: maxTemp > 30 ? "moderate" : "low", recommendedAction: maxTemp > 30 ? "Apply light evening irrigation." : "Standard care." };
+          if (crop === "Soybean") return { cropName: "Soybean", impact: maxRain > 20 ? "Heavy rain risks waterlogging." : "Good growing conditions.", riskLevel: maxRain > 20 ? "high" : "low", recommendedAction: maxRain > 20 ? "Ensure field drainage." : "Continue standard schedule." };
+          if (crop === "Coconut") return { cropName: "Coconut", impact: maxWind > 30 ? "Strong winds might drop young nuts." : "Favorable coastal weather.", riskLevel: maxWind > 30 ? "moderate" : "low", recommendedAction: maxWind > 30 ? "Inspect for fallen debris." : "Normal routine." };
+          if (crop === "Banana") return { cropName: "Banana", impact: maxWind > 40 ? "High wind risks uprooting." : "Good humid conditions.", riskLevel: maxWind > 40 ? "high" : "low", recommendedAction: maxWind > 40 ? "Provide physical propping/support." : "Monitor bunches." };
+          if (crop === "Tea") return { cropName: "Tea", impact: maxRain < 5 ? "Lack of rain affects leaf flush." : "Good rainfall for leaf growth.", riskLevel: maxRain < 5 ? "moderate" : "low", recommendedAction: maxRain < 5 ? "Use sprinkler irrigation." : "Plan for plucking." };
+          if (crop === "Jute") return { cropName: "Jute", impact: humidity < 60 ? "Dry air restricts growth." : "Ideal humid environment.", riskLevel: humidity < 60 ? "moderate" : "low", recommendedAction: humidity < 60 ? "Ensure adequate water supply." : "Optimal." };
+          if (crop === "Apple") return { cropName: "Apple", impact: maxTemp > 32 ? "High heat causes sunburn on fruits." : "Favorable chilling/growth conditions.", riskLevel: maxTemp > 32 ? "high" : "low", recommendedAction: maxTemp > 32 ? "Use shade netting or overhead sprinklers." : "Prune as scheduled." };
+          if (crop === "Potato") return { cropName: "Potato", impact: humidity > 85 ? "High risk of late blight disease." : "Good tuber development.", riskLevel: humidity > 85 ? "high" : "low", recommendedAction: humidity > 85 ? "Apply prophylactic fungicide." : "Monitor soil moisture." };
+          if (crop === "Mango") return { cropName: "Mango", impact: maxWind > 30 ? "High wind may drop flowers/fruits." : "Good orchard conditions.", riskLevel: maxWind > 30 ? "high" : "low", recommendedAction: maxWind > 30 ? "Deploy windbreaks if possible." : "Monitor standard growth." };
+          if (crop === "Cumin") return { cropName: "Cumin", impact: humidity > 70 ? "High humidity causes blight/mildew." : "Dry conditions are favorable.", riskLevel: humidity > 70 ? "high" : "low", recommendedAction: humidity > 70 ? "Apply sulfur-based fungicide." : "Maintain current routine." };
+          if (crop === "Onion") return { cropName: "Onion", impact: maxRain > 15 ? "Excess rain causes bulb rot." : "Optimal bulb development.", riskLevel: maxRain > 15 ? "high" : "low", recommendedAction: maxRain > 15 ? "Ensure excellent field drainage." : "Standard care." };
+          if (crop === "Maize") return { cropName: "Maize", impact: et > 5 ? "Water stress impacts silking." : "Favorable growth environment.", riskLevel: et > 5 ? "moderate" : "low", recommendedAction: et > 5 ? "Increase irrigation frequency." : "Continue standard schedule." };
+          if (crop === "Grapes") return { cropName: "Grapes", impact: maxRain > 5 ? "Rain risks berry cracking." : "Optimal vineyard weather.", riskLevel: maxRain > 5 ? "high" : "low", recommendedAction: maxRain > 5 ? "Use protective covers." : "Routine pruning/care." };
+          if (crop === "Pomegranate") return { cropName: "Pomegranate", impact: maxTemp > 38 ? "Extreme heat causes fruit cracking." : "Excellent fruit development.", riskLevel: maxTemp > 38 ? "high" : "low", recommendedAction: maxTemp > 38 ? "Apply light irrigation & shading." : "Normal maintenance." };
+          if (crop === "Coffee") return { cropName: "Coffee", impact: maxTemp > 30 ? "Heat stress affects berry development." : "Favorable plantation conditions.", riskLevel: maxTemp > 30 ? "moderate" : "low", recommendedAction: maxTemp > 30 ? "Ensure shade tree coverage." : "Monitor berry borer." };
+          if (crop === "Cardamom") return { cropName: "Cardamom", impact: humidity < 60 ? "Dry air causes poor capsule setting." : "Ideal humid plantation weather.", riskLevel: humidity < 60 ? "high" : "low", recommendedAction: humidity < 60 ? "Use mist irrigation." : "Maintain schedule." };
+          if (crop === "Pineapple") return { cropName: "Pineapple", impact: maxTemp < 10 ? "Risk of chilling injury." : "Great tropical conditions.", riskLevel: maxTemp < 10 ? "high" : "low", recommendedAction: maxTemp < 10 ? "Use frost protection covers." : "Standard care." };
+          if (crop === "Arecanut") return { cropName: "Arecanut", impact: maxWind > 40 ? "High wind causes crown damage." : "Favorable growth weather.", riskLevel: maxWind > 40 ? "moderate" : "low", recommendedAction: maxWind > 40 ? "Inspect plantation for damage." : "Normal care." };
+          if (crop === "Ginger") return { cropName: "Ginger", impact: maxRain > 30 ? "High rain causes rhizome rot." : "Optimal soil conditions.", riskLevel: maxRain > 30 ? "high" : "low", recommendedAction: maxRain > 30 ? "Improve trench drainage." : "Continue regular care." };
+          if (crop === "Cherry") return { cropName: "Cherry", impact: maxRain > 10 ? "Rain causes fruit cracking." : "Excellent orchard weather.", riskLevel: maxRain > 10 ? "high" : "low", recommendedAction: maxRain > 10 ? "Consider protective canopies." : "Routine maintenance." };
+          if (crop === "Walnut") return { cropName: "Walnut", impact: maxTemp > 35 ? "High heat causes hull shriveling." : "Favorable growth." , riskLevel: maxTemp > 35 ? "moderate" : "low", recommendedAction: maxTemp > 35 ? "Increase deep watering." : "Monitor standard growth." };
+          if (crop === "Saffron") return { cropName: "Saffron", impact: maxRain > 5 ? "Rain damages delicate flowers." : "Optimal blooming weather.", riskLevel: maxRain > 5 ? "high" : "low", recommendedAction: maxRain > 5 ? "Protect fields if possible." : "Harvest immediately." };
+          if (crop === "Millets") return { cropName: "Millets", impact: maxRain > 25 ? "Heavy rain causes lodging." : "Highly resilient, optimal growth.", riskLevel: maxRain > 25 ? "moderate" : "low", recommendedAction: maxRain > 25 ? "Ensure water drains quickly." : "No action needed." };
+          if (crop === "Chickpea") return { cropName: "Chickpea (Gram)", impact: maxTemp > 35 ? "High heat causes pod abortion." : "Excellent field conditions.", riskLevel: maxTemp > 35 ? "high" : "low", recommendedAction: maxTemp > 35 ? "Apply supplementary irrigation." : "Routine care." };
+          if (crop === "Tomato") return { cropName: "Tomato", impact: humidity > 75 ? "High humidity risks early blight." : "Favorable growth.", riskLevel: humidity > 75 ? "high" : "low", recommendedAction: humidity > 75 ? "Apply appropriate fungicides." : "Monitor soil moisture." };
+
+          return { cropName: crop, impact: "Weather conditions are neutral.", riskLevel: "low", recommendedAction: "Monitor as usual." };
+        };
+
+        setLiveCropImpacts(localCrops.map(getCropImpact));
+      }
+
     } catch (err) {
-      console.warn("Weather API unavailable", err);
+      console.warn("Weather APIs unavailable", err);
+    }
+  };
+
+  const handleCitySelect = async (city: {name: string, lat: number, lon: number}) => {
+    setSearchQuery("");
+    setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
+    setIsSearching(true);
+    await fetchWeatherByCoords(city.lat, city.lon, city.name);
+    setIsSearching(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (activeSuggestionIndex < liveSuggestions.length - 1) {
+        setActiveSuggestionIndex(prev => prev + 1);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (activeSuggestionIndex > 0) {
+        setActiveSuggestionIndex(prev => prev - 1);
+      }
+    } else if (e.key === 'Enter') {
+      if (showSuggestions && activeSuggestionIndex >= 0 && activeSuggestionIndex < liveSuggestions.length) {
+        e.preventDefault();
+        const selected = liveSuggestions[activeSuggestionIndex];
+        handleCitySelect(selected);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
     }
   };
 
@@ -292,6 +642,7 @@ function WeatherContent() {
           cleanState = state.split(",")[0].trim();
         }
         await fetchWeatherByCoords(lat, lon, `${name}${cleanState ? `, ${cleanState}` : ''}`);
+        setSearchQuery(""); // Clear the search bar
       } else {
         alert("Location not found in India. Please try another city.");
       }
@@ -469,7 +820,7 @@ function WeatherContent() {
 
         {/* Content Area */}
         <main data-lenis-prevent="true" className="flex-1 overflow-y-auto custom-scrollbar bg-background-sage p-4 md:p-6 pb-24 lg:pb-24">
-  <div className="max-w-container-max mx-auto space-y-6">
+  <div id="weather-dashboard-content" className="max-w-container-max mx-auto space-y-6">
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-container-low p-4 rounded-2xl border border-outline-variant">
         <div>
@@ -482,9 +833,34 @@ function WeatherContent() {
             type="text"
             placeholder="Search city in India..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+              setActiveSuggestionIndex(-1);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onKeyDown={handleKeyDown}
             className="flex-1 md:w-64 bg-surface text-on-surface border border-outline rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
           />
+          {showSuggestions && liveSuggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-outline-variant rounded-lg shadow-xl overflow-hidden z-50">
+              {liveSuggestions.map((city, index) => (
+                <div
+                  key={`${city.name}-${index}`}
+                  onClick={() => handleCitySelect(city)}
+                  className={`px-4 py-2.5 cursor-pointer text-sm transition-colors flex items-center justify-between gap-4 ${
+                    index === activeSuggestionIndex 
+                      ? 'bg-primary/10 text-primary font-semibold' 
+                      : 'text-on-surface hover:bg-surface-container-low'
+                  }`}
+                >
+                  <span className="truncate flex-shrink-0">{city.name}</span>
+                  <span className="text-[10px] text-on-surface-variant font-medium truncate text-right">{city.subtitle}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <button 
             type="submit" 
             disabled={isSearching}
@@ -505,53 +881,351 @@ function WeatherContent() {
 
       <HourlyForecast items={liveHourly} />
 
-      <RainfallChart data={rainfallData} />
+      <RainfallChart data={liveRainfall} />
 
       <SevenDayForecast days={liveSevenDay} />
 
-      <FarmingAdvisoryCard advisory={advisory} />
+      <div id="weather-advisory-section">
+        <FarmingAdvisoryCard 
+          advisory={liveAdvisory} 
+          onOptimize={() => {
+            const et = Number(liveMetrics.find(m => m.id === "et")?.value) || 0;
+            const rain = Number(liveRainfall.weekly.find(w => w.label === "Today")?.forecastMm) || 0;
+            
+            if (et > rain) {
+              const amount = (et - rain).toFixed(1);
+              setIrrigationPlan({ et, rain, isDeficit: true, amount });
+              addNotification({
+                title: "Water Deficit Alert",
+                message: `AI recommends applying ${amount} liters/m² today to maintain optimal soil moisture.`,
+                type: "system"
+              });
+            } else {
+              setIrrigationPlan({ et, rain, isDeficit: false, amount: "0" });
+              addNotification({
+                title: "Water Surplus Alert",
+                message: `Expected rainfall fully offsets today's evaporation. Halt irrigation to prevent waterlogging.`,
+                type: "system"
+              });
+            }
+          }}
+        />
+      </div>
 
       <section aria-label="Weather alerts" className="space-y-4">
         <h3 className="text-xl font-semibold text-on-surface">Weather Alerts</h3>
         <div className="space-y-4">
-          {alerts.map((alert) => (
-            <WeatherAlertCard key={alert.id} alert={alert} />
-          ))}
+          {liveAlerts.length === 0 ? (
+            <div className="flex items-center gap-4 rounded-2xl border border-white/30 bg-primary/5 p-5 shadow-sm backdrop-blur-xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Sun size={20} aria-hidden="true" />
+              </span>
+              <div>
+                <h4 className="font-semibold text-on-surface">All Clear</h4>
+                <p className="text-sm text-on-surface-variant">No severe weather alerts for your area today. Safe to proceed with normal farming activities.</p>
+              </div>
+            </div>
+          ) : (
+            liveAlerts.map((alert) => (
+              <WeatherAlertCard 
+                key={alert.id} 
+                alert={alert} 
+                onAction={(alertInfo) => {
+                  if (alertInfo.actionLabel === "View Radar") {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                  } else if (alertInfo.actionLabel === "View Advisory") {
+                    window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
+                  } else {
+                    addNotification({
+                      title: alertInfo.type,
+                      message: alertInfo.description,
+                      type: "system"
+                    });
+                  }
+                }}
+              />
+            ))
+          )}
         </div>
       </section>
 
       <section aria-label="Crop weather impact" className="space-y-4">
         <h3 className="text-xl font-semibold text-on-surface">Crop Weather Impact</h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {cropImpacts.map((crop) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {liveCropImpacts.map((crop) => (
             <CropImpactCard key={crop.cropName} crop={crop} />
           ))}
         </div>
       </section>
 
-      <WeatherMapCard />
+      <WeatherMapCard lat={liveWeather.location.lat} lon={liveWeather.location.lon} />
 
-      <QuickActions actions={[
-        { id: "refresh", label: "Refresh Weather", icon: RefreshCw, onClick: () => window.location.reload() },
-        { id: "download", label: "Download Report", icon: Download, onClick: () => window.print() },
-        { id: "radar", label: "View Radar", icon: Radar, onClick: () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) },
-        { id: "advisory", label: "Farm Advisory", icon: ClipboardList, onClick: () => window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' }) },
+      <QuickActions loadingActionId={loadingActionId} actions={[
+        { 
+          id: "refresh", 
+          label: "Refresh Weather", 
+          icon: RefreshCw, 
+          onClick: async () => {
+            if (liveWeather.location.lat && liveWeather.location.lon) {
+              setLoadingActionId("refresh");
+              await fetchWeatherByCoords(liveWeather.location.lat, liveWeather.location.lon, `${liveWeather.location.city}, ${liveWeather.location.state}`);
+              setLoadingActionId(null);
+              addNotification({
+                title: "Weather Synchronized",
+                message: `Successfully synchronized live atmospheric data for ${liveWeather.location.city}.`,
+                type: "system"
+              });
+            }
+          } 
+        },
+        { 
+          id: "download", 
+          label: "Download Report", 
+          icon: Download, 
+          onClick: async () => {
+            setLoadingActionId("download");
+            try {
+              const { jsPDF } = await import('jspdf');
+              const autoTable = (await import('jspdf-autotable')).default;
+              
+              const doc = new jsPDF('p', 'mm', 'a4');
+              
+              // Top Banner
+              doc.setFillColor(0, 0, 0); // Black
+              doc.rect(10, 10, 190, 8, 'F');
+              doc.setTextColor(255, 255, 255); // White
+              doc.setFontSize(12);
+              doc.setFont("helvetica", "bold");
+              doc.text("AGROMETEOROLOGICAL FORECAST", 105, 16, { align: 'center' });
+              
+              // Date Issued
+              doc.setTextColor(0, 0, 0);
+              doc.setFontSize(10);
+              doc.setFont("helvetica", "normal");
+              const now = new Date();
+              const dateStr = now.toLocaleDateString('en-GB') + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+              doc.text(`Issued at ${dateStr} LT for ${liveWeather.location.city}, ${liveWeather.location.state}`, 10, 24);
+              
+              let currentY = 32;
+
+              // Table 1: Current Weather & Metrics
+              const humidity = liveMetrics.find(m => m.id === 'humidity')?.value || 'N/A';
+              const wind = liveMetrics.find(m => m.id === 'wind')?.value || 'N/A';
+              const pressure = liveMetrics.find(m => m.id === 'pressure')?.value || 'N/A';
+              
+              autoTable(doc, {
+                startY: currentY,
+                theme: 'grid',
+                styles: { font: 'times', fontSize: 10, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [240, 240, 240], fontStyle: 'bold', textColor: [0, 0, 0] },
+                head: [['Current Conditions', 'Values', 'Atmospheric Metrics', 'Values']],
+                body: [
+                  ['Location', `${liveWeather.location.city}, ${liveWeather.location.state}`, 'Humidity', `${humidity} %`],
+                  ['Temperature', `${liveWeather.temperatureC} °C (Feels like ${liveWeather.feelsLikeC} °C)`, 'Wind Speed', `${wind} km/h`],
+                  ['Condition', liveWeather.condition, 'Pressure', `${pressure} hPa`],
+                  ['High / Low', `${liveWeather.highC} °C / ${liveWeather.lowC} °C`, 'Coordinates', `Lat: ${liveWeather.location.lat}, Lon: ${liveWeather.location.lon}`],
+                ],
+                margin: { left: 10, right: 10 }
+              });
+              
+              // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
+              currentY = doc.lastAutoTable.finalY + 8;
+
+              // Table 2: AI Farming Advisory
+              autoTable(doc, {
+                startY: currentY,
+                theme: 'grid',
+                styles: { font: 'times', fontSize: 10, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [240, 240, 240], fontStyle: 'bold', textColor: [0, 0, 0] },
+                head: [['AI Farming Advisory', 'Actionable Recommendation']],
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40 } },
+                body: [
+                  ['Irrigation', liveAdvisory.irrigation],
+                  ['Spraying', liveAdvisory.spraying],
+                  ['Fertilizer', liveAdvisory.fertilizer],
+                  ['Harvest', liveAdvisory.harvest],
+                  ['Risk Assessment', `Pest Risk: ${liveAdvisory.pestRisk.toUpperCase()} | Disease Risk: ${liveAdvisory.diseaseRisk.toUpperCase()}`]
+                ],
+                margin: { left: 10, right: 10 }
+              });
+
+              // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
+              currentY = doc.lastAutoTable.finalY + 8;
+
+              // Table 3: Crop Weather Impact
+              const cropBody = liveCropImpacts.map(crop => [
+                crop.cropName, 
+                crop.riskLevel.toUpperCase(), 
+                crop.impact, 
+                crop.recommendedAction
+              ]);
+
+              autoTable(doc, {
+                startY: currentY,
+                theme: 'grid',
+                styles: { font: 'times', fontSize: 10, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [240, 240, 240], fontStyle: 'bold', textColor: [0, 0, 0] },
+                head: [['Crop', 'Risk Level', 'Weather Impact', 'Action Required']],
+                columnStyles: { 
+                  0: { fontStyle: 'bold', cellWidth: 25 },
+                  1: { cellWidth: 25 },
+                  2: { cellWidth: 70 },
+                  3: { cellWidth: 70 }
+                },
+                body: cropBody,
+                margin: { left: 10, right: 10 }
+              });
+
+              doc.setFont("times", "bold");
+              doc.text(`Sr. Meteorologist: Smart Farming India`, 190, 285, { align: 'right' });
+
+              doc.save(`SmartFarming_OfficialReport_${liveWeather.location.city.replace(/[^a-zA-Z0-9]/g, '')}.pdf`);
+              
+              addNotification({
+                title: "Report Downloaded",
+                message: `Your formal weather report for ${liveWeather.location.city} has been generated as a PDF.`,
+                type: "system"
+              });
+            } catch (err) {
+              console.error("PDF generation failed", err);
+            } finally {
+              setLoadingActionId(null);
+            }
+          } 
+        },
+        { 
+          id: "radar", 
+          label: "View Radar", 
+          icon: Radar, 
+          onClick: () => {
+            const el = document.getElementById("weather-radar-section");
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          } 
+        },
+        { 
+          id: "advisory", 
+          label: "Farm Advisory", 
+          icon: ClipboardList, 
+          onClick: () => {
+            const el = document.getElementById("weather-advisory-section");
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          } 
+        },
       ]} />
+      
+      {/* Dynamic Irrigation Plan Modal */}
+      {irrigationPlan && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-md overflow-hidden rounded-[24px] bg-surface shadow-2xl border border-outline-variant">
+            
+            <div className={`p-6 text-white ${irrigationPlan.isDeficit ? 'bg-primary' : 'bg-[#40493d]'}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Droplets size={24} />
+                  Irrigation Plan
+                </h3>
+                <button onClick={() => setIrrigationPlan(null)} className="rounded-full p-1 hover:bg-white/20 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="mt-2 text-sm opacity-90">AI computation for {liveWeather.location.city}</p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl bg-surface-container-lowest p-4 text-center shadow-sm border border-outline-variant/30">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Evaporation</p>
+                  <p className="mt-1 text-2xl font-bold text-danger">{irrigationPlan.et} mm</p>
+                </div>
+                <div className="rounded-xl bg-surface-container-lowest p-4 text-center shadow-sm border border-outline-variant/30">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Expected Rain</p>
+                  <p className="mt-1 text-2xl font-bold text-primary">{irrigationPlan.rain} mm</p>
+                </div>
+              </div>
+              
+              <div className="rounded-xl border border-outline-variant p-4 bg-surface-container-lowest">
+                <h4 className="font-semibold text-on-surface mb-1">
+                  {irrigationPlan.isDeficit ? "Water Deficit Detected" : "Water Surplus Detected"}
+                </h4>
+                <p className="text-sm text-on-surface-variant">
+                  {irrigationPlan.isDeficit 
+                    ? `Recommendation: Apply ${irrigationPlan.amount} liters of water per square meter immediately to maintain optimal soil moisture.`
+                    : `Recommendation: Halt irrigation. Expected rainfall completely offsets today's evaporation.`
+                  }
+                </p>
+              </div>
+              
+              <div className="mt-6 flex justify-end gap-3">
+                <button 
+                  onClick={() => setIrrigationPlan(null)} 
+                  className="px-4 py-2 rounded-xl font-medium text-on-surface hover:bg-surface-container-high transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={async () => {
+                    setLoadingActionId("irrigation");
+                    
+                    // Simulate IoT connection sequence
+                    addNotification({
+                      title: "Connecting to Field IoT...",
+                      message: "Authenticating with smart irrigation valves.",
+                      type: "system"
+                    });
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    addNotification({
+                      title: irrigationPlan.isDeficit ? "Irrigation Scheduled" : "Irrigation Halted",
+                      message: irrigationPlan.isDeficit 
+                        ? `Successfully deployed ${irrigationPlan.amount}L/m² schedule to smart valves.` 
+                        : "Smart valves have been sealed for today to prevent waterlogging.",
+                      type: "system"
+                    });
+                    
+                    setLoadingActionId(null);
+                    setIrrigationPlan(null);
+                  }}
+                  disabled={loadingActionId === "irrigation"}
+                  className="px-4 py-2 rounded-xl font-bold bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingActionId === "irrigation" ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      Deploying...
+                    </>
+                  ) : irrigationPlan.isDeficit ? (
+                    <>
+                      <Droplets size={16} />
+                      Execute Plan
+                    </>
+                  ) : (
+                    <>
+                      <X size={16} />
+                      Halt Systems
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     
   </div>
 
           {/* Footer (Standard Shared) */}
-          <footer className="w-full py-6 px-margin-desktop flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-8">
-            <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
-              <h4 className="font-body-lg text-body-lg font-bold text-primary">Smart Farming India</h4>
-              <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
+          <footer className="w-full py-8 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-12">
+            <div className="mb-6 md:mb-0 flex flex-col items-center md:items-start text-center md:text-left">
+              <h4 className="text-lg font-bold text-primary">Smart Farming India</h4>
+              <p className="text-sm text-on-surface-variant mt-1 max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
             </div>
-            <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
-            </div>
+            <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
+            </ul>
           </footer>
         </main>
 

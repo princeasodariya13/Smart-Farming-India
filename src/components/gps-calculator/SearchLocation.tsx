@@ -17,11 +17,12 @@ const statusConfig: Record<GpsStatus, { label: string; dot: string }> = {
 };
 
 interface Suggestion {
-  place_id: number;
+  place_id: number | string;
   display_name: string;
-  lat: string;
-  lon: string;
-  boundingbox?: [string, string, string, string];
+  subtitle?: string;
+  lat: string | number;
+  lon: string | number;
+  boundingbox?: [number, number, number, number];
 }
 
 export default function SearchLocation({
@@ -61,9 +62,35 @@ export default function SearchLocation({
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+        const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || "38d8652905324ef49e93358b6ac82f40";
+        const response = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&format=json&filter=countrycode:in&limit=10`);
         const data = await response.json();
-        setSuggestions(data);
+        
+        if (data && data.results && Array.isArray(data.results)) {
+          const formatted = data.results.map((item: any, i: number) => {
+            const mainName = item.name || item.city || item.county || item.address_line1 || "Unknown Location";
+            const subName = item.address_line2 || [item.state, item.country].filter(Boolean).join(', ');
+            
+            let bbox: [number, number, number, number] | undefined = undefined;
+            if (item.bbox && item.bbox.length === 4) {
+              // Geoapify bbox is [minLon, minLat, maxLon, maxLat]
+              // We need [minLat, maxLat, minLon, maxLon] for Leaflet bounds
+              bbox = [item.bbox[1], item.bbox[3], item.bbox[0], item.bbox[2]];
+            }
+            
+            return {
+              place_id: item.place_id || i,
+              display_name: mainName,
+              subtitle: subName,
+              lat: item.lat,
+              lon: item.lon,
+              boundingbox: bbox
+            };
+          });
+          setSuggestions(formatted);
+        } else {
+          setSuggestions([]);
+        }
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
       } finally {
@@ -75,20 +102,16 @@ export default function SearchLocation({
   }, [query]);
 
   const handleSelect = (s: Suggestion) => {
-    setQuery(s.display_name);
+    setQuery("");
     setShowSuggestions(false);
     setSelectedIndex(-1);
     if (onLocationSelect) {
-      let bbox: [number, number, number, number] | undefined = undefined;
-      if (s.boundingbox && s.boundingbox.length === 4) {
-        bbox = [
-          parseFloat(s.boundingbox[0]), 
-          parseFloat(s.boundingbox[1]), 
-          parseFloat(s.boundingbox[2]), 
-          parseFloat(s.boundingbox[3])
-        ];
-      }
-      onLocationSelect(parseFloat(s.lat), parseFloat(s.lon), s.display_name, bbox);
+      onLocationSelect(
+        typeof s.lat === 'string' ? parseFloat(s.lat) : s.lat, 
+        typeof s.lon === 'string' ? parseFloat(s.lon) : s.lon, 
+        s.display_name, 
+        s.boundingbox
+      );
     }
   };
 
@@ -147,12 +170,21 @@ export default function SearchLocation({
                       type="button"
                       onClick={() => handleSelect(s)}
                       onMouseEnter={() => setSelectedIndex(index)}
-                      className={`w-full text-left px-4 py-2 transition-colors flex items-start gap-2 border-b border-outline-variant/30 last:border-0 ${
-                        index === selectedIndex ? 'bg-surface-container-high' : 'hover:bg-surface-container-low'
+                      className={`w-full text-left px-4 py-2 transition-colors flex items-start justify-between gap-3 border-b border-outline-variant/30 last:border-0 ${
+                        index === selectedIndex ? 'bg-primary/10 text-primary' : 'hover:bg-surface-container-low'
                       }`}
                     >
-                      <MapPin size={16} className="mt-1 flex-shrink-0 text-primary" />
-                      <span className="text-sm text-on-surface line-clamp-2">{s.display_name}</span>
+                      <div className="flex items-start gap-2 overflow-hidden">
+                        <MapPin size={16} className={`mt-0.5 flex-shrink-0 ${index === selectedIndex ? "text-primary" : "text-primary"}`} />
+                        <span className={`text-sm truncate flex-shrink-0 ${index === selectedIndex ? "font-bold" : "font-medium text-on-surface"}`}>
+                          {s.display_name}
+                        </span>
+                      </div>
+                      {s.subtitle && (
+                        <span className="text-[10px] text-on-surface-variant font-medium truncate text-right shrink-0 max-w-[140px] mt-0.5">
+                          {s.subtitle}
+                        </span>
+                      )}
                     </button>
                   </li>
                 ))}

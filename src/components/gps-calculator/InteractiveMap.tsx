@@ -57,7 +57,9 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
       const leafletPoints = initialPoints.map(p => L.latLng(p.lat, p.lng));
       setPoints(leafletPoints);
       if (mapInstance) {
-        mapInstance.flyTo(leafletPoints[0], 17, { animate: true, duration: 1.5 });
+        // Calculate the exact bounds of the entire polygon to guarantee it perfectly fits in the user's view!
+        const bounds = L.latLngBounds(leafletPoints);
+        mapInstance.fitBounds(bounds, { animate: true, duration: 1.5, padding: [40, 40], maxZoom: 18 });
       }
     }
   }, [initialPoints, mapInstance]);

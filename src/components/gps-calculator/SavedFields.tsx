@@ -7,7 +7,7 @@ interface SavedFieldsProps {
   fields?: SavedField[];
   total?: number;
   onSelect?: (id: string) => void;
-  onMenuAction?: (id: string, action: "rename" | "edit" | "delete") => void;
+  onMenuAction?: (id: string, action: "rename" | "edit" | "delete" | "export_pdf" | "share_apps") => void;
 }
 
 const defaultFields: SavedField[] = [
@@ -74,8 +74,14 @@ export default function SavedFields({
         </div>
       ) : (
         <div className="px-3 pb-4 pt-2 space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
-          {fields.map((field) => (
-            <FieldCard key={field.id} field={field} onSelect={onSelect} onMenuAction={onMenuAction} />
+          {fields.map((field, index) => (
+            <FieldCard 
+              key={field.id} 
+              field={field} 
+              onSelect={onSelect} 
+              onMenuAction={onMenuAction} 
+              isNearBottom={index >= fields.length - 2}
+            />
           ))}
         </div>
       )}

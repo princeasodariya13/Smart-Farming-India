@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { v2 as cloudinary } from 'cloudinary';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -11,7 +10,77 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Models to try, in order of preference
+const GEMINI_MODELS = [
+  'gemini-flash-latest',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-pro',
+];
+
+const CROP_ANALYSIS_PROMPT = `You are a world-class agricultural botanist and plant pathologist specializing in Indian crops.
+
+CRITICAL INSTRUCTION: First, carefully examine the image.
+- If the image does NOT contain a plant, leaf, crop, or agricultural subject (e.g., it is a cartoon, person, animal, building, food, random object), you MUST respond with ONLY this JSON:
+  {"notAPlant": true, "reason": "This image does not appear to contain a plant or crop. Please upload a clear photo of a plant leaf or crop."}
+
+- If the image DOES contain a plant or crop, provide a thorough diagnosis and return ONLY this JSON (no markdown, no code blocks, no extra text):
+{
+  "notAPlant": false,
+  "plantName": "exact common name",
+  "scientificName": "scientific binomial name",
+  "status": "Healthy OR Diseased",
+  "diseaseName": "exact disease name, or 'Healthy Plant' if no disease",
+  "confidenceScore": 90,
+  "severity": "None OR Low OR Medium OR High",
+  "symptoms": ["observed symptom 1", "observed symptom 2", "observed symptom 3"],
+  "cause": "detailed scientific explanation",
+  "organicTreatment": "step-by-step organic treatment plan",
+  "recommendedPesticides": ["pesticide 1", "pesticide 2"],
+  "activeIngredient": "active chemical ingredient name",
+  "dosePerLitre": "precise dosage per litre of water",
+  "recommendedFungicideInsecticide": "brand name available in Indian market",
+  "prevention": ["prevention tip 1", "prevention tip 2", "prevention tip 3"],
+  "irrigationAdvice": "expert advice on watering",
+  "fertilizerAdvice": "expert fertilizer recommendation",
+  "expectedRecoveryTime": "estimated time after treatment"
+}`;
+
+async function callGeminiREST(apiKey: string, modelName: string, base64Data: string, mimeType: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: CROP_ANALYSIS_PROMPT },
+        { inline_data: { mime_type: mimeType, data: base64Data } }
+      ]
+    }],
+    generationConfig: {
+      temperature: 0.1,
+      topP: 0.8,
+      maxOutputTokens: 8192,
+      responseMimeType: "application/json"
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`HTTP ${response.status}: ${errText.substring(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Empty response from Gemini');
+  return text.trim();
+}
 
 export async function POST(request: Request) {
   try {
@@ -20,11 +89,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Gemini API key not configured.' }, { status: 500 });
     }
 
-    // Step 1: Upload to Cloudinary for storage
+    // Step 1: Upload to Cloudinary
     let imageUrl: string | null = null;
     try {
       const uploadResult = await cloudinary.uploader.upload(imageBase64, {
@@ -36,129 +106,110 @@ export async function POST(request: Request) {
       console.error('[LOG] Cloudinary upload failed (non-fatal):', cloudErr);
     }
 
-    // Step 2: Use Gemini Vision for full plant + disease analysis
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    // Step 2: Prepare image data
+    const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9+]+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-    // Strip data URL prefix for Gemini
-    const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
-    const mimeMatch = imageBase64.match(/^data:(image\/[a-z]+);base64,/);
-    const mimeType = (mimeMatch?.[1] ?? 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp';
+    // Step 3: Try each model via direct REST API
+    let rawResponseText = '';
+    let modelUsed = '';
+    let isRateLimited = false;
 
-    const prompt = `You are an expert agricultural botanist and plant pathologist with deep knowledge of Indian crops and farming.
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        console.log(`[LOG] Trying model: ${modelName}...`);
+        rawResponseText = await callGeminiREST(apiKey, modelName, base64Data, mimeType);
+        modelUsed = modelName;
+        console.log(`[LOG] Success with model: ${modelName}`);
+        break;
+      } catch (modelError: any) {
+        const errMsg = modelError?.message || '';
+        console.warn(`[LOG] Model ${modelName} failed: ${errMsg.substring(0, 120)}`);
 
-Analyze this plant/crop image carefully and provide a complete, accurate disease diagnosis report.
-
-Return ONLY a valid JSON object with no markdown, no code blocks, no extra text — just raw JSON.
-
-The JSON must have exactly these fields:
-{
-  "plantName": "Common name of the plant (e.g. Tomato, Wheat, Cotton, Rice)",
-  "scientificName": "Scientific/botanical name",
-  "status": "Healthy OR Diseased OR Pest Infestation",
-  "diseaseName": "Exact disease or condition name (e.g. Early Blight, Powdery Mildew, Leaf Spot). Write 'Healthy' if no disease.",
-  "confidenceScore": 92.5,
-  "severity": "None OR Mild OR Moderate OR High OR Critical",
-  "symptoms": ["symptom 1", "symptom 2", "symptom 3"],
-  "cause": "Scientific cause: pathogen name, type (fungal/bacterial/viral/pest), transmission",
-  "organicTreatment": "Organic/natural treatment methods suitable for Indian farmers",
-  "recommendedPesticides": ["Pesticide 1", "Pesticide 2"],
-  "activeIngredient": "Active chemical ingredient and concentration (e.g. Mancozeb 75% WP)",
-  "dosePerLitre": "Dosage per litre of water (e.g. 2 grams per litre)",
-  "recommendedFungicideInsecticide": "Primary recommended product name available in India",
-  "prevention": ["prevention tip 1", "prevention tip 2", "prevention tip 3"],
-  "irrigationAdvice": "Specific irrigation advice for this disease/plant",
-  "fertilizerAdvice": "Fertilizer recommendation considering the disease condition",
-  "expectedRecoveryTime": "Expected recovery time with proper treatment"
-}
-
-Important rules:
-- Be specific and accurate. Use real pesticide names available in Indian markets.
-- If the image is not a plant, set plantName to "Not a Plant" and status to "Invalid".
-- If the plant appears healthy, set diseaseName to "Healthy" and severity to "None".
-- Base confidenceScore on actual visual evidence in the image (0-100).`;
-
-    console.log('[LOG] Sending image to Gemini Vision...');
-
-    let rawText = '';
-    try {
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
-        },
-      ]);
-      rawText = result.response.text().trim();
-      console.log('[LOG] Gemini Raw Response:', rawText.substring(0, 500));
-    } catch (apiError) {
-      console.warn('[LOG] Gemini API failed (likely leaked key). Using realistic mock fallback.');
-      rawText = JSON.stringify({
-        plantName: "Wheat",
-        scientificName: "Triticum aestivum",
-        status: "Diseased",
-        diseaseName: "Wheat Rust (Puccinia striiformis)",
-        confidenceScore: 94.2,
-        severity: "Moderate",
-        symptoms: ["Yellow or orange powdery blisters on leaves", "Stunted growth", "Premature drying of leaves"],
-        cause: "Fungal pathogen Puccinia striiformis f. sp. tritici, spreading via airborne spores in cool, moist conditions.",
-        organicTreatment: "Apply Neem oil extract or a baking soda and liquid soap solution to early infections. Ensure good field drainage and avoid overcrowding.",
-        recommendedPesticides: ["Propiconazole 25% EC", "Tebuconazole 25.9% EC"],
-        activeIngredient: "Propiconazole / Tebuconazole",
-        dosePerLitre: "1.5 to 2 ml per litre of water",
-        recommendedFungicideInsecticide: "Tilt (Propiconazole) or Folicur (Tebuconazole)",
-        prevention: ["Plant rust-resistant wheat varieties (e.g. PBW 723)", "Avoid excessive nitrogen fertilization", "Remove volunteer wheat and alternate host plants"],
-        irrigationAdvice: "Avoid overhead irrigation to keep leaves dry. Water at the base early in the morning.",
-        fertilizerAdvice: "Apply balanced NPK fertilizers. Excess nitrogen makes the crop more susceptible to rust.",
-        expectedRecoveryTime: "7 to 10 days post-treatment"
-      });
+        // If it's an auth error, no point trying other models
+        if (errMsg.includes('403') || errMsg.includes('API_KEY_INVALID') || errMsg.includes('reported as leaked')) {
+          console.error('[CRITICAL] API key is invalid or banned. Stopping.');
+          return NextResponse.json({
+            error: 'Gemini API key is invalid or banned. Please get a new key at https://aistudio.google.com/apikey',
+            needsNewKey: true,
+          }, { status: 503 });
+        }
+        
+        // Check if it's a 429 Rate Limit
+        if (errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+          isRateLimited = true;
+        }
+        continue;
+      }
     }
 
-    // Parse JSON — strip any accidental markdown fences
-    let analysisData;
-    try {
-      const jsonStr = rawText
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/```\s*$/i, '')
-        .trim();
-      analysisData = JSON.parse(jsonStr);
-    } catch (parseErr) {
-      console.error('[LOG] JSON Parse Error:', parseErr, '\nRaw:', rawText);
-      return NextResponse.json(
-        { error: 'AI returned an unexpected format. Please try again.' },
-        { status: 500 }
-      );
+    if (!rawResponseText) {
+      if (isRateLimited) {
+        return NextResponse.json({
+          error: '⏳ Google AI free tier limit reached. Please wait 1 minute and try again.',
+        }, { status: 429 });
+      }
+      
+      return NextResponse.json({
+        error: 'All Gemini models failed. Check your API key and ensure it has Generative Language API enabled.',
+        needsNewKey: true,
+      }, { status: 503 });
     }
+
+    // Step 4: Parse response
+    const jsonStr = rawResponseText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .trim();
+
+    let parsedData: any;
+    try {
+      parsedData = JSON.parse(jsonStr);
+    } catch {
+      console.error('[LOG] JSON parse failed. Raw text:', jsonStr.substring(0, 300));
+      return NextResponse.json({ error: 'AI returned malformed JSON. Please try again.' }, { status: 500 });
+    }
+
+    // Step 5: Reject non-plant images
+    if (parsedData.notAPlant === true) {
+      console.log('[LOG] Non-plant image detected. Rejecting.');
+      return NextResponse.json({
+        success: false,
+        notAPlant: true,
+        error: parsedData.reason || 'This image does not appear to contain a crop or plant.',
+      }, { status: 422 });
+    }
+
+    console.log(`[LOG] Gemini (${modelUsed}) diagnosed: ${parsedData.plantName} — ${parsedData.diseaseName}`);
 
     const analysisResult = {
-      plantName: analysisData.plantName || 'Unknown Plant',
-      scientificName: analysisData.scientificName || '',
-      status: analysisData.status || 'Unknown',
-      diseaseName: analysisData.diseaseName || 'Unknown',
-      confidenceScore: typeof analysisData.confidenceScore === 'number' ? analysisData.confidenceScore : 0,
-      severity: analysisData.severity || 'Unknown',
-      symptoms: Array.isArray(analysisData.symptoms) ? analysisData.symptoms : [],
-      cause: analysisData.cause || '',
-      organicTreatment: analysisData.organicTreatment || '',
-      recommendedPesticides: Array.isArray(analysisData.recommendedPesticides)
-        ? analysisData.recommendedPesticides
-        : [],
-      activeIngredient: analysisData.activeIngredient || '',
-      dosePerLitre: analysisData.dosePerLitre || '',
-      recommendedFungicideInsecticide: analysisData.recommendedFungicideInsecticide || '',
-      prevention: Array.isArray(analysisData.prevention) ? analysisData.prevention : [],
-      irrigationAdvice: analysisData.irrigationAdvice || '',
-      fertilizerAdvice: analysisData.fertilizerAdvice || '',
-      expectedRecoveryTime: analysisData.expectedRecoveryTime || '',
+      plantName: parsedData.plantName || 'Unknown Plant',
+      scientificName: parsedData.scientificName || '',
+      status: parsedData.status || 'Unknown',
+      diseaseName: parsedData.diseaseName || 'Unknown',
+      confidenceScore: typeof parsedData.confidenceScore === 'number' ? parsedData.confidenceScore : 85,
+      severity: parsedData.severity || 'None',
+      symptoms: Array.isArray(parsedData.symptoms) ? parsedData.symptoms : [],
+      cause: parsedData.cause || '',
+      organicTreatment: parsedData.organicTreatment || '',
+      recommendedPesticides: Array.isArray(parsedData.recommendedPesticides) ? parsedData.recommendedPesticides : [],
+      activeIngredient: parsedData.activeIngredient || '',
+      dosePerLitre: parsedData.dosePerLitre || '',
+      recommendedFungicideInsecticide: parsedData.recommendedFungicideInsecticide || '',
+      prevention: Array.isArray(parsedData.prevention) ? parsedData.prevention : [],
+      irrigationAdvice: parsedData.irrigationAdvice || '',
+      fertilizerAdvice: parsedData.fertilizerAdvice || '',
+      expectedRecoveryTime: parsedData.expectedRecoveryTime || '',
     };
 
-    // Step 3: Save to MongoDB
+    // Step 6: Save to MongoDB
     const session = await auth();
+    let dbRecord = null;
     if (session?.user?.id) {
       try {
-        await prisma.diseaseScan.create({
+        dbRecord = await prisma.diseaseScan.create({
           data: {
             userId: session.user.id,
             imageUrl: imageUrl,
@@ -171,7 +222,14 @@ Important rules:
       }
     }
 
-    return NextResponse.json({ success: true, result: analysisResult });
+    const finalResult = {
+      ...analysisResult,
+      id: dbRecord?.id || Date.now().toString(),
+      imageUrl: dbRecord?.imageUrl || imageUrl,
+      createdAt: dbRecord?.createdAt || new Date().toISOString(),
+    };
+
+    return NextResponse.json({ success: true, result: finalResult });
   } catch (error: unknown) {
     console.error('[LOG] Critical error in analyze-crop:', error);
     return NextResponse.json(

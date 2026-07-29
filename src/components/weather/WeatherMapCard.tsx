@@ -28,11 +28,11 @@ const MapComponent = dynamic(() => import("./WeatherMap"), {
 /**
  * Interactive weather map with OpenWeatherMap tile integration.
  */
-export default function WeatherMapCard() {
+export default function WeatherMapCard({ lat, lon }: { lat?: number; lon?: number }) {
   const [layer, setLayer] = useState<MapLayer>("satellite");
 
   return (
-    <section className="space-y-6 rounded-[20px] border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-xl md:p-8 relative z-0">
+    <section id="weather-radar-section" className="space-y-6 rounded-[20px] border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-xl md:p-8 relative z-0">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <h3 className="text-xl font-semibold text-on-surface">Live Weather Radar</h3>
         <div role="tablist" aria-label="Map layer" className="flex flex-wrap gap-1 rounded-xl bg-surface-container-low p-1">
@@ -55,7 +55,7 @@ export default function WeatherMapCard() {
       </div>
 
       <div data-lenis-prevent="true" className="h-96 w-full overflow-hidden rounded-2xl border border-outline-variant/30 shadow-inner relative z-0">
-        <MapComponent layer={layer} />
+        <MapComponent layer={layer} lat={lat} lon={lon} />
       </div>
     </section>
   );

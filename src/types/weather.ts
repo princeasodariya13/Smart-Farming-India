@@ -8,6 +8,8 @@ export interface WeatherLocation {
   city: string;
   state: string;
   lastUpdated: string;
+  lat?: number;
+  lon?: number;
 }
 
 export interface CurrentWeather {
@@ -54,6 +56,7 @@ export interface RainfallDataPoint {
 }
 
 export interface FarmingAdvisory {
+  summary?: string;
   irrigation: string;
   spraying: string;
   fertilizer: string;

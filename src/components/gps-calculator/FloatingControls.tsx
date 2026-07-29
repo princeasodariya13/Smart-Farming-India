@@ -104,7 +104,7 @@ export default function FloatingControls({
       </div>
 
       {/* Zoom / layers - bottom right */}
-      <div className="absolute bottom-12 right-4 flex flex-col gap-2 z-20">
+      <div className="absolute bottom-16 md:bottom-20 right-4 md:right-6 flex flex-col gap-3 z-20">
         <div className="bg-surface-glass backdrop-blur-xl border border-white/30 p-1 rounded-xl flex flex-col gap-0.5 shadow-lg">
           <button
             type="button"

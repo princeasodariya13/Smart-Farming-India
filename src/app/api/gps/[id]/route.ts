@@ -14,6 +14,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (!name) {
       return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
     }
+    
+    // Security Check: Verify field belongs to user
+    const field = await prisma.savedField.findUnique({ where: { id } });
+    if (!field || field.userId !== session.user.id) {
+      return NextResponse.json({ success: false, error: "Not found or unauthorized" }, { status: 403 });
+    }
 
     const updatedField = await prisma.savedField.update({
       where: { id },
@@ -35,6 +41,13 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
     }
 
     const { id } = await context.params;
+    
+    // Security Check: Verify field belongs to user
+    const field = await prisma.savedField.findUnique({ where: { id } });
+    if (!field || field.userId !== session.user.id) {
+      return NextResponse.json({ success: false, error: "Not found or unauthorized" }, { status: 403 });
+    }
+
     await prisma.savedField.delete({
       where: { id }
     });

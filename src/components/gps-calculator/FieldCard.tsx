@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreVertical, Map, Edit2, PenSquare, Trash2 } from "lucide-react";
+import { MoreVertical, Map, Edit2, PenSquare, Trash2, Share2 } from "lucide-react";
 import type { SavedField } from "@/types/gps-calculator";
 
 interface FieldCardProps {
   field: SavedField;
   onSelect?: (id: string) => void;
-  onMenuAction?: (id: string, action: "rename" | "edit" | "delete") => void;
+  onMenuAction?: (id: string, action: "rename" | "edit" | "delete" | "export_pdf" | "share_apps") => void;
+  isNearBottom?: boolean;
 }
 
 const statusStyles: Record<SavedField["status"], string> = {
@@ -17,9 +18,34 @@ const statusStyles: Record<SavedField["status"], string> = {
   draft: "bg-tertiary-fixed text-on-tertiary-fixed-variant",
 };
 
-export default function FieldCard({ field, onSelect, onMenuAction }: FieldCardProps) {
+export default function FieldCard({ field, onSelect, onMenuAction, isNearBottom = false }: FieldCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Dynamically compute the ArcGIS Satellite Thumbnail URL
+  let thumbnailSrc = field.imageUrl;
+  if (!thumbnailSrc && field.coordinates) {
+    try {
+      const pts = typeof field.coordinates === 'string' ? JSON.parse(field.coordinates) : field.coordinates;
+      if (pts && pts.length >= 3) {
+        let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+        pts.forEach((p: any) => {
+          if (p.lng < minLng) minLng = p.lng;
+          if (p.lng > maxLng) maxLng = p.lng;
+          if (p.lat < minLat) minLat = p.lat;
+          if (p.lat > maxLat) maxLat = p.lat;
+        });
+        
+        const padLng = (maxLng - minLng) * 0.2 || 0.001;
+        const padLat = (maxLat - minLat) * 0.2 || 0.001;
+        
+        const bbox = `${minLng - padLng},${minLat - padLat},${maxLng + padLng},${maxLat + padLat}`;
+        thumbnailSrc = `https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=4326&imageSR=4326&size=150,150&format=jpg&f=image`;
+      }
+    } catch (e) {
+      console.error("Failed to parse coordinates for thumbnail", e);
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -41,10 +67,10 @@ export default function FieldCard({ field, onSelect, onMenuAction }: FieldCardPr
     >
       <div className="flex gap-2.5">
         <div className="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0 flex items-center justify-center text-on-surface-variant/40">
-          {field.imageUrl ? (
+          {thumbnailSrc ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src={field.imageUrl}
+              src={thumbnailSrc}
               alt={`Satellite thumbnail of ${field.name}`}
               className="w-full h-full object-cover"
             />
@@ -91,17 +117,31 @@ export default function FieldCard({ field, onSelect, onMenuAction }: FieldCardPr
           <AnimatePresence>
             {showMenu && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                initial={{ opacity: 0, scale: 0.95, y: isNearBottom ? 10 : -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                exit={{ opacity: 0, scale: 0.95, y: isNearBottom ? 10 : -10 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-outline-variant py-1 z-[100] overflow-hidden"
+                className={`absolute right-0 w-36 bg-white rounded-lg shadow-lg border border-outline-variant py-1 z-[100] overflow-hidden ${
+                  isNearBottom ? "bottom-full mb-1 origin-bottom-right" : "top-full mt-1 origin-top-right"
+                }`}
               >
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "edit"); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
                 >
                   <Edit2 size={14} className="text-primary" /> Load to Map
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "export_pdf"); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                >
+                  <Map size={14} className="text-secondary" /> Export PDF
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "share_apps"); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                >
+                  <Share2 size={14} className="text-secondary" /> Share to Apps
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "rename"); }}
