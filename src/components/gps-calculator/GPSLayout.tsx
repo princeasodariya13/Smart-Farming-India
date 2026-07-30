@@ -457,12 +457,29 @@ export default function GPSLayout({
   };
 
 
+  const [mapKey, setMapKey] = useState(0);
+
   const handleLocationSelect = (lat: number, lon: number, displayName: string, bbox?: [number, number, number, number]) => {
     setMapCenter([lat, lon]);
     setCurrentLocName(displayName);
     if (bbox) {
       setSearchBBox(bbox);
     }
+    
+    // Clear old polygon and reset calculator fields when searching for a new location
+    setEditingPoints(undefined);
+    setLiveStats({
+      totalAreaAcres: 0,
+      totalAreaHectares: 0,
+      totalAreaBigha: 0,
+      totalAreaSqm: 0,
+      totalAreaSqFt: 0,
+      totalAreaVar: 0,
+      perimeterMeters: 0,
+      vertexCount: 0,
+      points: []
+    });
+    setMapKey(prev => prev + 1); // Force map component to fully remount and clear internal polygon state
   };
 
   const handleAreaCalculated = (stats: FieldStats | null) => {
@@ -541,6 +558,7 @@ export default function GPSLayout({
         <div className="w-full lg:flex-1 p-4 lg:p-6 lg:min-h-0 flex flex-col items-center justify-center relative overflow-y-auto lg:overflow-hidden bg-[#f4f7f4] print:p-8 print:pt-0 print:bg-white print:overflow-visible">
           <div id="map-capture-area" className="w-full h-[350px] min-h-[350px] lg:h-full lg:min-h-[500px] lg:max-h-[75vh] max-w-5xl rounded-3xl overflow-hidden shadow-sm border border-outline-variant/60 relative flex flex-col shrink-0 print:border-2 print:border-slate-200 print:shadow-none print:h-[500px] print:max-h-none print:w-full print:rounded-xl">
             <MapContainer
+              key={mapKey}
               activeTool={activeTool}
               onToolChange={setActiveTool}
               center={mapCenter}
