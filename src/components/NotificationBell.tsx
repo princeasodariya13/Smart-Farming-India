@@ -51,12 +51,16 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full -right-2 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[380px] bg-surface-glass backdrop-blur-2xl border border-outline-variant/60 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-          <div className="flex flex-wrap items-center justify-between px-4 py-3 border-b border-outline-variant/30 bg-surface/50 gap-2">
+        <div 
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="absolute top-full -right-2 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[380px] bg-white border border-outline-variant/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] z-[9999] flex flex-col max-h-[420px] overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200"
+        >
+          <div className="flex flex-wrap items-center justify-between px-4 py-3 border-b border-outline-variant/30 bg-surface/50 gap-2 z-10">
             <h3 className="font-bold text-[14px] text-on-surface flex items-center gap-2 shrink-0">
               Notifications
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-error/10 text-error text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-error text-white text-[10px] font-bold shadow-sm">
                   {unreadCount} New
                 </span>
               )}
@@ -65,7 +69,7 @@ export default function NotificationBell() {
               {unreadCount > 0 && (
                 <button 
                   onClick={markAllAsRead}
-                  className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
+                  className="text-[11px] font-semibold text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
                 >
                   <Check size={12} /> Mark all read
                 </button>
@@ -73,7 +77,7 @@ export default function NotificationBell() {
               {notifications.length > 0 && (
                 <button 
                   onClick={clearAllNotifications}
-                  className="text-[11px] font-medium text-on-surface-variant hover:text-error transition-colors flex items-center gap-1"
+                  className="text-[11px] font-semibold text-on-surface-variant hover:text-error transition-colors flex items-center gap-1"
                 >
                   <Trash2 size={12} /> Clear all
                 </button>
@@ -81,34 +85,42 @@ export default function NotificationBell() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+          <div 
+            data-lenis-prevent="true" 
+            className="flex-1 overflow-y-auto custom-scrollbar relative z-0 min-h-0 overscroll-contain"
+          >
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-on-surface-variant flex flex-col items-center">
-                <Bell size={32} className="opacity-20 mb-2" />
-                <p className="text-[13px] font-medium">No notifications yet</p>
-                <p className="text-[11px] mt-1">We'll let you know when something arrives!</p>
+              <div className="p-10 text-center text-on-surface-variant flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-3">
+                  <Bell size={20} className="text-on-surface-variant/50" />
+                </div>
+                <p className="text-[14px] font-semibold text-on-surface">You're all caught up!</p>
+                <p className="text-[12px] mt-1">We'll notify you when something new arrives.</p>
               </div>
             ) : (
-              <div className="flex flex-col">
+              <div className="flex flex-col pb-1">
                 {notifications.map((n) => (
                   <div 
                     key={n.id} 
                     onClick={() => { if (!n.read) markAsRead(n.id); }}
-                    className={`p-4 border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors cursor-pointer flex gap-3 ${n.read ? 'opacity-60' : 'bg-primary/5'}`}
+                    className={`p-4 border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors cursor-pointer flex gap-3.5 relative ${!n.read ? 'bg-primary/[0.03]' : ''}`}
                   >
-                    <div className="shrink-0 mt-0.5">
+                    {!n.read && (
+                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-md"></div>
+                    )}
+                    <div className="shrink-0 mt-0.5 w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm border border-outline-variant/30">
                       {getIcon(n.type)}
                     </div>
-                    <div className="flex-1 min-w-0 break-words">
+                    <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-0.5 gap-2">
                         <p className={`text-[13px] leading-tight ${n.read ? 'font-medium text-on-surface-variant' : 'font-bold text-on-surface'}`}>
                           {n.title}
                         </p>
-                        <span className="text-[10px] text-on-surface-variant shrink-0 whitespace-nowrap pt-0.5">
+                        <span className="text-[10px] font-medium text-on-surface-variant shrink-0 whitespace-nowrap pt-0.5">
                           {formatTime(n.timestamp)}
                         </span>
                       </div>
-                      <p className="text-[12px] text-on-surface-variant leading-relaxed mt-1 break-words">
+                      <p className={`text-[12px] leading-relaxed mt-1 line-clamp-2 ${n.read ? 'text-on-surface-variant/80' : 'text-on-surface-variant'}`}>
                         {n.message}
                       </p>
                     </div>

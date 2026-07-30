@@ -53,7 +53,7 @@ export default function ApplicationTracker({ data = defaultData }: ApplicationTr
   const progressPercent = ((currentIndex + 1) / stageOrder.length) * 100;
 
   return (
-    <div className="bg-white rounded-2xl border-l-8 border-primary border-y border-r border-outline-variant/60 shadow-sm p-6 md:p-8 relative overflow-hidden">
+    <div className="bg-surface-glass backdrop-blur-xl rounded-2xl border-l-8 border-primary border-y border-r border-outline-variant/60 shadow-sm p-6 md:p-8 relative overflow-hidden">
       <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
       <div className="relative z-10">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">

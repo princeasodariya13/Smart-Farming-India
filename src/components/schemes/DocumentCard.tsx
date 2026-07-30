@@ -54,7 +54,7 @@ const defaultDocuments: RequiredDocument[] = [
 
 export default function DocumentCard({ documents = defaultDocuments, onUpload }: DocumentCardProps) {
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
+    <div className="bg-surface-glass backdrop-blur-xl rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
       <h2 className="text-lg font-bold text-on-surface mb-6">Required Documents</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {documents.map((doc) => {

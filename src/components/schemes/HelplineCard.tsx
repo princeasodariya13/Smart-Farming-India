@@ -27,7 +27,7 @@ export default function HelplineCard({
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
+    <div className="bg-surface-glass backdrop-blur-xl rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
       <h2 className="text-lg font-bold text-on-surface mb-6">Government Helpline</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         {items.map(({ icon: Icon, label, value }) => (

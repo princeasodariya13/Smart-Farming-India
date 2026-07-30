@@ -13,6 +13,7 @@ export interface FieldStats {
   totalAreaAcres: number;
   totalAreaHectares: number;
   totalAreaBigha: number;
+  totalAreaGuntha: number;
   totalAreaSqm: number;
   totalAreaSqFt: number;
   totalAreaVar: number;

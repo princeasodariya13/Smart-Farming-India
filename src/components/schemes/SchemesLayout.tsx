@@ -15,6 +15,8 @@ import FAQAccordion from "./FAQAccordion";
 import HelplineCard from "./HelplineCard";
 import EmptyState from "./EmptyState";
 import Toast, { ToastType } from "./Toast";
+import SchemeDetailsModal from "./SchemeDetailsModal";
+import { useNotification } from "@/contexts/NotificationContext";
 
 import type { Scheme } from "@/types/schemes";
 
@@ -111,8 +113,10 @@ const allSchemes: Scheme[] = [
 export default function SchemesLayout() {
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { addNotification } = useNotification();
 
   useEffect(() => {
+    // Fetch Schemes
     fetch('/api/schemes')
       .then(res => res.json())
       .then(data => {
@@ -122,11 +126,34 @@ export default function SchemesLayout() {
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
+
+    // Fetch Active Applications
+    fetch('/api/applications')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.applications && data.applications.length > 0) {
+          setActiveApplication(data.applications[0]);
+        }
+      })
+      .catch(console.error);
+
+    // Fetch Required Documents
+    fetch('/api/documents')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.documents) {
+          setActiveDocuments(data.documents);
+        }
+      })
+      .catch(console.error);
   }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   const [activeState, setActiveState] = useState<string>("Gujarat");
   const [activeUiCategory, setActiveUiCategory] = useState<string>("All Categories");
+  const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
+  const [activeApplication, setActiveApplication] = useState<any>(null);
+  const [activeDocuments, setActiveDocuments] = useState<any[]>([]);
 
   // Toast state
   const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
@@ -153,18 +180,33 @@ export default function SchemesLayout() {
 
   const handleApply = (id: string) => {
     const scheme = schemes.find(s => s.id === id);
-    if (scheme?.applyUrl) {
+    if (!scheme) return;
+
+    if (scheme.applyUrl) {
       showToast(`Redirecting to ${scheme.name} portal...`, "info");
+      
+      addNotification({
+        title: 'Application Initiated',
+        message: `You are being redirected to the official portal to apply for ${scheme.name}. Please keep your Aadhar and land records ready.`,
+        type: 'system'
+      });
+
       setTimeout(() => {
         window.open(scheme.applyUrl, "_blank", "noopener,noreferrer");
       }, 800);
     } else {
-      showToast(`Redirecting to application portal...`, "info");
+      showToast(`Application submitted for ${scheme.name}!`, "success");
+      
+      addNotification({
+        title: 'Application Submitted',
+        message: `Your application for ${scheme.name} has been successfully submitted to the local authorities. You will receive an SMS update shortly.`,
+        type: 'system'
+      });
     }
   };
 
   const handleLearnMore = (id: string) => {
-    showToast(`Opening detailed guidelines...`, "info");
+    setSelectedSchemeId(id);
   };
 
   const handleUpload = (id: string) => {
@@ -250,6 +292,7 @@ export default function SchemesLayout() {
         <section>
           <h2 className="text-lg font-bold text-on-surface mb-4">Browse by Category</h2>
           <CategoryCard
+            schemes={schemes}
             activeId={activeCategory}
             onSelect={(id) => setActiveCategory((prev) => (prev === id ? undefined : id))}
           />
@@ -277,17 +320,19 @@ export default function SchemesLayout() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-8">
-            <ApplicationTracker />
-            <RecommendationCard onApply={handleApply} />
-            <DocumentCard onUpload={handleUpload} />
+            <ApplicationTracker data={activeApplication || undefined} />
+            <RecommendationCard schemes={schemes} onApply={handleApply} />
+            <DocumentCard documents={activeDocuments.length > 0 ? activeDocuments : undefined} onUpload={handleUpload} />
             <FAQAccordion />
           </div>
           <div className="space-y-8">
-            {/* Eligibility checker */}
             <div id="eligibility-checker-section">
-              <EligibilityChecker onSubmit={() => showToast("Eligibility check complete. Found 14 matching schemes.", "success")} />
+              <EligibilityChecker 
+                schemes={schemes}
+                onSubmit={(_, count) => showToast(`Eligibility check complete. Found ${count} matching schemes.`, "success")} 
+              />
             </div>
-            <AnnouncementTimeline />
+            <AnnouncementTimeline schemes={schemes} />
             <HelplineCard onLiveChat={handleLiveChat} onDownloadGuidelines={handleDownloadGuidelines} />
 
             {/* Saved schemes */}
@@ -316,6 +361,13 @@ export default function SchemesLayout() {
           </div>
         </div>
       </motion.div>
+
+      <SchemeDetailsModal 
+        isOpen={!!selectedSchemeId} 
+        onClose={() => setSelectedSchemeId(null)} 
+        scheme={schemes.find(s => s.id === selectedSchemeId) || null} 
+        onApply={handleApply} 
+      />
     </>
   );
 }

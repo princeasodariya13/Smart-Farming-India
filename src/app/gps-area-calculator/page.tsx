@@ -115,7 +115,7 @@ export default function GPSAreaCalculatorPage() {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-8 md:pb-0">
         {/* TopNavBar */}
-        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 z-30 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
+        <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 z-[99999] flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
           <div className="flex items-center gap-6">
             <div className="flex md:hidden items-center gap-2 mr-2">
               <button 

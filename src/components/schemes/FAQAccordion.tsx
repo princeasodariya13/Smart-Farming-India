@@ -52,7 +52,7 @@ export default function FAQAccordion({ items = defaultItems }: FAQAccordionProps
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
 
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
+    <div className="bg-surface-glass backdrop-blur-xl rounded-2xl border border-outline-variant/60 shadow-sm p-6 md:p-8">
       <h2 className="text-lg font-bold text-on-surface mb-4">Frequently Asked Questions</h2>
       <div className="divide-y divide-outline-variant/40">
         {items.map((item) => {

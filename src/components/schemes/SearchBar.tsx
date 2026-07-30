@@ -65,35 +65,37 @@ export default function SearchBar({
           />
         </div>
 
-        <label className="sr-only" htmlFor="state-select">
-          Select state
-        </label>
-        <select
-          id="state-select"
-          onChange={(e) => onStateChange?.(e.target.value)}
-          className="px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-sm outline-none"
-        >
-          {states.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-2 md:flex gap-3 md:w-auto w-full shrink-0">
+          <label className="sr-only" htmlFor="state-select">
+            Select state
+          </label>
+          <select
+            id="state-select"
+            onChange={(e) => onStateChange?.(e.target.value)}
+            className="w-full px-3 md:px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-[13px] md:text-sm outline-none"
+          >
+            {states.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
 
-        <label className="sr-only" htmlFor="category-select">
-          Select category
-        </label>
-        <select
-          id="category-select"
-          onChange={(e) => onCategoryChange?.(e.target.value)}
-          className="px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-sm outline-none"
-        >
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          <label className="sr-only" htmlFor="category-select">
+            Select category
+          </label>
+          <select
+            id="category-select"
+            onChange={(e) => onCategoryChange?.(e.target.value)}
+            className="w-full px-3 md:px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-[13px] md:text-sm outline-none"
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button
           type="button"

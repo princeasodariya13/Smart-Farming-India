@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut, SessionProvider } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Leaf } from 'lucide-react';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface AnalysisResult {
   plantName: string;
@@ -43,6 +45,40 @@ function DiseaseDetectionContent() {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const router = useRouter();
+
+  const { addNotification } = useNotification();
+  const [isBookingExpert, setIsBookingExpert] = useState(false);
+  const [expertBooked, setExpertBooked] = useState(false);
+
+  const handleBookConsultation = () => {
+    if (expertBooked) {
+      router.push('/consult');
+      return;
+    }
+    if (isBookingExpert) return;
+    setIsBookingExpert(true);
+    
+    // Simulate API call for booking
+    setTimeout(() => {
+      setIsBookingExpert(false);
+      setExpertBooked(true);
+      
+      const consultTime = new Date();
+      consultTime.setMinutes(consultTime.getMinutes() + 15);
+      const formattedTime = consultTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      addNotification({
+        title: 'Consultation Confirmed',
+        message: `Your video consultation with Dr. Arjun Sharma is booked for today at ${formattedTime}. Please keep your crop ready for inspection.`,
+        type: 'booking'
+      });
+
+      // Automatically redirect to the consult page after confirming
+      router.push('/consult');
+    }, 1500);
+  };
 
   // Scanner state management
   const [scannerState, setScannerState] = useState<'upload' | 'scanning' | 'results'>('upload');
@@ -819,15 +855,43 @@ function DiseaseDetectionContent() {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-[13px]">Dr. Arjun Sharma</p>
-                        <p className="text-[10px] opacity-70">Pathology Expert • 12km away</p>
+                        <p className="text-[10px] opacity-70">Pathology Expert</p>
                       </div>
                       <div className="flex items-center gap-1 bg-primary text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
                         <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span> Online
                       </div>
                     </div>
 
-                    <button className="w-full py-2.5 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-md text-[13px] shrink-0">
-                      <span className="material-symbols-outlined text-[18px] shrink-0">video_call</span> <span>Start Video Consultation</span>
+                    <button 
+                      onClick={handleBookConsultation}
+                      disabled={isBookingExpert}
+                      className={`w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-[13px] shrink-0 ${
+                        expertBooked 
+                          ? 'bg-success text-on-success hover:scale-[1.02] active:scale-95 cursor-pointer'
+                          : isBookingExpert
+                            ? 'bg-primary/80 text-white cursor-wait'
+                            : 'bg-primary text-on-primary hover:scale-[1.02] active:scale-95'
+                      }`}
+                    >
+                      {expertBooked ? (
+                        <>
+                          <span className="material-symbols-outlined text-[18px] shrink-0">check_circle</span> 
+                          <span>Consultation Booked - View</span>
+                        </>
+                      ) : isBookingExpert ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Confirming...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[18px] shrink-0">video_call</span> 
+                          <span>Start Video Consultation</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

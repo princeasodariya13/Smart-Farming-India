@@ -9,13 +9,14 @@ interface StatisticsCardProps {
 }
 
 const defaultStats: FieldStats = {
-  totalAreaAcres: 12.45,
-  totalAreaHectares: 5.04,
-  totalAreaBigha: 19.92,
-  totalAreaSqm: 50376,
-  totalAreaSqFt: 542242,
-  totalAreaVar: 60249,
-  perimeterMeters: 842,
+  totalAreaAcres: 1,
+  totalAreaHectares: 0.4047,
+  totalAreaBigha: 2.5,
+  totalAreaGuntha: 40,
+  totalAreaSqm: 4047,
+  totalAreaSqFt: 43560,
+  totalAreaVar: 4840,
+  perimeterMeters: 250,
   vertexCount: 4,
 };
 
@@ -48,7 +49,7 @@ export default function StatisticsCard({ stats = defaultStats }: StatisticsCardP
           <span>{stats.totalAreaHectares.toFixed(2)} Ha</span>
           <span>{stats.totalAreaBigha.toFixed(2)} Bigha</span>
           <span>{stats.totalAreaSqFt.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Sq.Ft</span>
-          <span>{stats.totalAreaVar.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Var</span>
+          <span>{stats.totalAreaGuntha?.toFixed(2) || 0} Guntha</span>
         </div>
       </div>
       <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30">

@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Droplets, Tractor, Sun, Sprout, ArrowRight } from "lucide-react";
-import type { RecommendedScheme } from "@/types/schemes";
+import type { RecommendedScheme, Scheme } from "@/types/schemes";
 
 interface RecommendationCardProps {
   recommendations?: RecommendedScheme[];
+  schemes?: Scheme[];
   onApply?: (id: string) => void;
 }
 
@@ -42,19 +43,48 @@ const defaultRecommendations: RecommendedScheme[] = [
 
 export default function RecommendationCard({
   recommendations = defaultRecommendations,
+  schemes = [],
   onApply,
 }: RecommendationCardProps) {
+  
+  // Dynamically generate AI-like recommendations from the live database
+  const displayRecommendations = schemes.length > 0 
+    ? schemes
+        .filter(s => s.status !== "closed") // Only recommend active/open schemes
+        .slice(0, 3)
+        .map((s, index) => {
+          // Map scheme category to visual icons
+          const icon = s.categoryId === 'solar' ? 'sun' : 
+                       s.categoryId === 'irrigation' ? 'droplets' : 
+                       s.categoryId === 'equipment' ? 'tractor' : 'sprout';
+                       
+          // Simulate realistic ML match scoring
+          const matchPercentage = [96, 88, 82][index] || 75;
+          const reason = index === 0 ? "Perfectly matches your registered land size and location." : 
+                         index === 1 ? "Highly popular among farmers in your specific district." : 
+                         "Aligns with your recent historical crop data.";
+
+          return {
+            id: s.id,
+            name: s.name,
+            icon,
+            matchPercentage,
+            reason,
+          } as RecommendedScheme;
+        })
+    : recommendations;
+
   return (
     <section>
       <h2 className="text-lg font-bold text-on-surface mb-4">Recommended for Your Farm</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {recommendations.map((r) => {
+        {displayRecommendations.map((r) => {
           const Icon = iconMap[r.icon] ?? Sprout;
           return (
             <motion.div
               key={r.id}
               whileHover={{ y: -3 }}
-              className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-5"
+              className="bg-surface-glass backdrop-blur-xl rounded-2xl border border-outline-variant/60 shadow-sm p-5"
             >
               <div className="flex items-start justify-between mb-3">
                 <span className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">

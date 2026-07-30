@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { Leaf, PhoneCall, CalendarCheck, MessageCircle, Star, Clock, Filter, CheckCircle2, Send, X } from 'lucide-react';
 import PageLoader from '@/components/PageLoader';
 import NotificationBell from '@/components/NotificationBell';
@@ -45,6 +46,18 @@ const experts = [
     image: "/experts/amit-desai.png",
     price: "₹600 / session",
     availability: "Available Today"
+  },
+  {
+    id: 4,
+    name: "Dr. Arjun Sharma",
+    role: "Pathology Expert",
+    experience: "10 Years",
+    rating: 4.9,
+    reviews: 142,
+    specialties: ["Crop Diseases", "Pest Control", "Soil Health"],
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBnjKdJ8IkqolUVeciOyWRvxitlVO8EUAl9iAjcSHvTRO6NQOjbv9UYAMQ2fwaPMO11Fc1kI0TCuYm0lJ2sM6H8TPL0tb8lhBv-RvgDlj6_91DNaFBhbrvSWre7A8mFrtjcCqe9to6pANsoKF35B0aRHZAVoaiJ7mPZrMpOBcRzpRuyV_Xg0ifcwTS-zw8SD5PtlWkEcFm9ikiNqIoEqtAQvc2H_vyOIpDiUBslWvNqizx7TSOhvd8JYAq6Bsdp7VYXCWATwkUKjw",
+    price: "₹650 / session",
+    availability: "Available Today"
   }
 ];
 
@@ -63,14 +76,22 @@ const EXPERT_QA: Record<number, Record<string, string>> = {
     "Are there any subsidies for solar pumps?": "Yes! The PM-KUSUM scheme offers up to a 60% subsidy for setting up standalone solar pumps. The remaining amount can often be financed through agricultural banks.",
     "When should I sell my cotton?": "Based on current market trends, cotton prices are expected to rise by 4-5% in the next two months due to export demands. If you can store it properly, I recommend holding for a bit longer.",
     "How to price organic produce?": "Organic produce usually commands a 20-30% premium. You should calculate your input costs, factor in certification fees, and research your local direct-to-consumer market prices."
+  },
+  4: { // Dr. Arjun Sharma (Pathology Expert)
+    "What is Alternaria Leaf Spot?": "Alternaria Leaf Spot is a fungal disease that causes circular brown spots with concentric rings. It often affects plants with potassium deficiency or during warm, humid conditions.",
+    "How to treat diseased crops?": "The best approach is to remove infected leaves immediately to prevent spread. Then apply a copper-based fungicide or an organic alternative like Neem oil every 7-10 days.",
+    "Is my plant going to survive?": "It depends on the severity. If caught early, most plants recover within a couple of weeks after proper fungicide application and improved airflow."
   }
 };
 
-export default function ConsultPage() {
+function ConsultContent() {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedExpert, setSelectedExpert] = useState<number | null>(null);
-  const [bookingStatus, setBookingStatus] = useState<'idle' | 'booking' | 'success'>('idle');
+  
+  const initialBookedId = searchParams?.get('booked');
+  const [selectedExpert, setSelectedExpert] = useState<number | null>(initialBookedId ? parseInt(initialBookedId) : null);
+  const [bookingStatus, setBookingStatus] = useState<'idle' | 'booking' | 'success'>(initialBookedId ? 'success' : 'idle');
 
   // Chat State
   const [activeChatExpert, setActiveChatExpert] = useState<typeof experts[0] | null>(null);
@@ -640,5 +661,13 @@ export default function ConsultPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ConsultPage() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <ConsultContent />
+    </Suspense>
   );
 }

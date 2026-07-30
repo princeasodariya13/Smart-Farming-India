@@ -79,8 +79,11 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
       
       const areaAcres = areaSqMeters * 0.000247105;
       const totalAreaHectares = areaSqMeters / 10000;
-      const totalAreaBigha = areaAcres * 1.6; // Common Indian conversion
-      const totalAreaSqFt = areaSqMeters * 10.7639;
+      
+      // Gujarat Specific Conversions
+      const totalAreaBigha = areaAcres * 2.5; // 1 Acre = 2.5 Bigha in Gujarat
+      const totalAreaGuntha = areaAcres * 40; // 1 Acre = 40 Guntha
+      const totalAreaSqFt = areaAcres * 43560; // 1 Acre = 43,560 sq ft
       const totalAreaVar = areaSqMeters * 1.19599;
       
       if (onAreaChange) {
@@ -88,6 +91,7 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
           totalAreaAcres: areaAcres,
           totalAreaHectares: totalAreaHectares,
           totalAreaBigha: totalAreaBigha,
+          totalAreaGuntha: totalAreaGuntha,
           totalAreaSqm: areaSqMeters,
           totalAreaSqFt: totalAreaSqFt,
           totalAreaVar: totalAreaVar,

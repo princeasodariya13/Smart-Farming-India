@@ -13,10 +13,11 @@ import {
   Landmark,
   GraduationCap,
 } from "lucide-react";
-import type { SchemeCategory } from "@/types/schemes";
+import type { SchemeCategory, Scheme } from "@/types/schemes";
 
 interface CategoryCardProps {
   categories?: SchemeCategory[];
+  schemes?: Scheme[];
   activeId?: string;
   onSelect?: (id: string) => void;
 }
@@ -49,12 +50,20 @@ const defaultCategories: SchemeCategory[] = [
 
 export default function CategoryCard({
   categories = defaultCategories,
+  schemes = [],
   activeId,
   onSelect,
 }: CategoryCardProps) {
+  const displayCategories = categories.map(cat => {
+    // If schemes array is empty (loading), show a placeholder or keep default.
+    // We will show actual count if schemes exist.
+    const count = schemes.length > 0 ? schemes.filter(s => s.categoryId === cat.id).length : cat.schemeCount;
+    return { ...cat, schemeCount: count };
+  });
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-      {categories.map((cat) => {
+    <div className="flex overflow-x-auto custom-scrollbar gap-3 pb-3 snap-x -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-5">
+      {displayCategories.map((cat) => {
         const Icon = iconMap[cat.icon] ?? Banknote;
         const active = activeId === cat.id;
         return (
@@ -64,10 +73,10 @@ export default function CategoryCard({
             whileHover={{ y: -3 }}
             onClick={() => onSelect?.(cat.id)}
             aria-pressed={active}
-            className={`flex flex-col items-center text-center gap-2 p-4 rounded-2xl border transition-colors ${
+            className={`flex flex-col items-center text-center gap-2 p-4 rounded-2xl border transition-colors min-w-[140px] snap-center shrink-0 md:min-w-0 md:shrink ${
               active
-                ? "bg-primary text-white border-primary"
-                : "bg-white border-outline-variant/60 hover:border-primary/40 text-on-surface"
+                ? "bg-primary text-white border-primary shadow-md"
+                : "bg-surface-glass backdrop-blur-md border-outline-variant/50 hover:border-primary/40 text-on-surface shadow-sm"
             }`}
           >
             <span
