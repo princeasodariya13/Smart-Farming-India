@@ -468,7 +468,7 @@ export default function SchemesLayout() {
           <div className="lg:col-span-2 space-y-8">
             <ApplicationTracker data={activeApplication || undefined} />
             <RecommendationCard schemes={schemes} onApply={handleApply} />
-            <DocumentCard documents={activeDocuments.length > 0 ? activeDocuments : undefined} onUpload={handleUpload} />
+            <DocumentCard documents={activeDocuments.length > 0 ? activeDocuments : undefined} />
             <FAQAccordion />
           </div>
           <div className="space-y-8">

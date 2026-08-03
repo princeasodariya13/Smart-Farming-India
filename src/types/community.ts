@@ -14,7 +14,12 @@ export type CropKey =
   | "vegetables"
   | "pulses"
   | "flowers"
-  | "organic";
+  | "organic"
+  | "groundnut"
+  | "castor"
+  | "bajra"
+  | "mango"
+  | "tobacco";
 
 export interface CropCategory {
   key: CropKey;
@@ -80,6 +85,7 @@ export interface CommunityPost {
   isBookmarked?: boolean;
   isSolved?: boolean;
   expertAnswer?: ExpertAnswer;
+  tags?: string[];
 }
 
 export interface CommunityStat {

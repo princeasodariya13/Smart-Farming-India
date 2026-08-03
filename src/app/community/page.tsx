@@ -180,14 +180,16 @@ function CommunityContent() {
       postedAt: p.createdAt || new Date().toISOString(),
       description: p.content,
       crop: p.tags?.[0] || undefined,
+      title: p.title || undefined,
       poll: p.pollOptions && p.pollOptions.length > 0 ? {
         question: p.content || "Poll",
         options: p.pollOptions.map((opt: string, i: number) => ({ id: `opt-${i}`, label: opt, votes: 0 })),
         totalVotes: 0,
         closesInHours: 24
       } : undefined,
+      likedByIds: p.likedByIds || [],
       expertAnswer: undefined
-    }));
+    } as import("@/types/community").CommunityPost));
     return [...formattedReal, ...communityPosts];
   }, [realPosts]);
 
@@ -201,7 +203,7 @@ function CommunityContent() {
           p.title?.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
           p.author.name.toLowerCase().includes(q) ||
-          p.tags?.some((t) => t.toLowerCase().includes(q))
+          p.tags?.some((t: string) => t.toLowerCase().includes(q))
       );
     }
 
@@ -223,7 +225,7 @@ function CommunityContent() {
       case "latest":
         return [...filtered].sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
       case "following":
-        return filtered.filter((p) => p.author.isFollowing || p.author.id === session?.user?.id);
+        return filtered.filter((p) => (p.author as any).isFollowing || p.author.id === session?.user?.id);
       case "nearby":
         return filtered.filter((p) => p.author.location && p.author.location !== "Local Farm");
       case "for-you":
