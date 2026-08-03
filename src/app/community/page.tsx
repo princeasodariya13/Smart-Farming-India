@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut, SessionProvider } from "next-auth/react";
-import { Leaf } from "lucide-react";
+import { Leaf, Loader2 } from "lucide-react";
 import PageLoader from '@/components/PageLoader';
 import NotificationBell from '@/components/NotificationBell';
 
@@ -46,6 +46,25 @@ function CommunityContent() {
   const [activeTab, setActiveTab] = useState<FeedTabKey>("for-you");
   const [isLoading, setIsLoading] = useState(true);
   const [realPosts, setRealPosts] = useState<any[]>([]);
+  const [realStats, setRealStats] = useState<any[]>(communityStats);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load saved posts from local storage initially and on custom event
+  useEffect(() => {
+    const loadSaved = () => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("sf_bookmarks") || "[]");
+        setSavedPostIds(new Set(saved));
+      }
+    };
+    loadSaved();
+    window.addEventListener("saved_posts_changed", loadSaved);
+    return () => window.removeEventListener("saved_posts_changed", loadSaved);
+  }, []);
 
   // Fetch real data
   useEffect(() => {
@@ -54,6 +73,9 @@ function CommunityContent() {
       .then(data => {
         if (data.success && data.posts) {
           setRealPosts(data.posts);
+          if (data.stats) {
+            setRealStats(data.stats);
+          }
         }
         setIsLoading(false);
       })
@@ -63,7 +85,14 @@ function CommunityContent() {
       });
   }, []);
 
-  const handleCreatePost = async (payload: { text: string; crop: string | null; mode: string }) => {
+  const handleCreatePost = async (payload: { 
+    text: string; 
+    crop: string | null; 
+    mode: string; 
+    images?: string[];
+    location?: string | null;
+    pollOptions?: string[];
+  }) => {
     try {
       const res = await fetch('/api/community', {
         method: 'POST',
@@ -71,15 +100,61 @@ function CommunityContent() {
         body: JSON.stringify({
           content: payload.text,
           type: payload.mode,
-          tags: payload.crop ? [payload.crop] : []
+          tags: payload.crop ? [payload.crop] : [],
+          images: payload.images || [],
+          location: payload.location,
+          pollOptions: payload.pollOptions
         })
       });
       const data = await res.json();
       if (data.success && data.post) {
         setRealPosts(prev => [data.post, ...prev]);
+        // Reset filters so the newly created post is instantly visible at the top
+        setSearchQuery("");
+        setFilterCategory(null);
+        setActiveTab("for-you");
+        alert("Post created successfully!");
+      } else {
+        console.error("API returned error:", data.error);
+        alert(`Failed to create post: ${data.error || "Unknown error"}`);
       }
     } catch (err) {
       console.error("Failed to post:", err);
+      alert("Network error: Failed to connect to server.");
+    }
+  };
+
+  const confirmDelete = async (postId: string) => {
+    setIsDeleting(true);
+    try {
+      if (!postId.startsWith("post-")) {
+        const res = await fetch(`/api/community?postId=${postId}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!data.success) {
+          alert(`Failed to delete: ${data.error}`);
+          setIsDeleting(false);
+          return;
+        }
+      }
+      setRealPosts((prev) => prev.filter(p => p.id !== postId));
+      setPostToDelete(null);
+    } catch (err) {
+      alert("Network error: Failed to delete post.");
+    }
+    setIsDeleting(false);
+  };
+
+  const handleSearch = (query: string, category: string | null) => {
+    setSearchQuery(query);
+    setFilterCategory(category);
+  };
+
+  const handleCreatePostClick = () => {
+    const composer = document.getElementById("post-composer");
+    if (composer) {
+      composer.scrollIntoView({ behavior: "smooth", block: "center" });
+      const textarea = composer.querySelector("textarea");
+      if (textarea) setTimeout(() => textarea.focus(), 500);
     }
   };
 
@@ -92,7 +167,7 @@ function CommunityContent() {
         role: "Community Member",
         avatarUrl: p.user?.image || "https://i.pravatar.cc/100?img=12",
         verified: false,
-        location: "Local Farm"
+        location: p.location || "Local Farm"
       },
       content: p.content,
       images: p.images || [],
@@ -105,23 +180,58 @@ function CommunityContent() {
       postedAt: p.createdAt || new Date().toISOString(),
       description: p.content,
       crop: p.tags?.[0] || undefined,
+      poll: p.pollOptions && p.pollOptions.length > 0 ? {
+        question: p.content || "Poll",
+        options: p.pollOptions.map((opt: string, i: number) => ({ id: `opt-${i}`, label: opt, votes: 0 })),
+        totalVotes: 0,
+        closesInHours: 24
+      } : undefined,
       expertAnswer: undefined
     }));
     return [...formattedReal, ...communityPosts];
   }, [realPosts]);
 
   const visiblePosts = useMemo(() => {
-    switch (activeTab) {
-      case "questions":
-        return allPosts.filter((p) => p.type === "question");
-      case "photos":
-        return allPosts.filter((p) => p.type === "photo" || (p.images && p.images.length > 0));
-      case "videos":
-        return allPosts.filter((p) => p.type === "video");
-      default:
-        return allPosts;
+    let filtered = allPosts;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.author.name.toLowerCase().includes(q) ||
+          p.tags?.some((t) => t.toLowerCase().includes(q))
+      );
     }
-  }, [activeTab, allPosts]);
+
+    if (filterCategory) {
+      filtered = filtered.filter((p) => p.crop === filterCategory);
+    }
+
+    switch (activeTab) {
+      case "saved":
+        return filtered.filter((p) => savedPostIds.has(p.id));
+      case "questions":
+        return filtered.filter((p) => p.type === "question");
+      case "photos":
+        return filtered.filter((p) => p.type === "photo" || (p.images && p.images.length > 0));
+      case "videos":
+        return filtered.filter((p) => p.type === "video");
+      case "trending":
+        return [...filtered].sort((a, b) => (b.likes + b.comments) - (a.likes + a.comments));
+      case "latest":
+        return [...filtered].sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
+      case "following":
+        return filtered.filter((p) => p.author.isFollowing || p.author.id === session?.user?.id);
+      case "nearby":
+        return filtered.filter((p) => p.author.location && p.author.location !== "Local Farm");
+      case "for-you":
+      default:
+        // Default sorting can be a mix, or just return as is (usually chronological from backend)
+        return filtered;
+    }
+  }, [activeTab, allPosts, searchQuery, filterCategory, session?.user?.id, savedPostIds]);
 
   const categoryByKey = useMemo(
     () => Object.fromEntries(cropCategories.map((c) => [c.key, c])),
@@ -132,8 +242,8 @@ function CommunityContent() {
     return <PageLoader />;
   }
 
-  const farmerName = session?.user?.name?.split(" ")[0] ?? "Farmer";
-  const avatarUrl = session?.user?.image ?? "https://i.pravatar.cc/100?img=12";
+  const fullName = session?.user?.name || "Farmer";
+  const avatarUrl = session?.user?.image || null;
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "F";
@@ -294,22 +404,26 @@ function CommunityContent() {
             className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 pb-24"
           >
             <CommunityHero
-              farmerFirstName={farmerName}
+              farmerFirstName={fullName}
               categories={cropCategories}
               trendingQueries={trendingSearchSuggestions}
+              onSearch={handleSearch}
+              onCreatePost={handleCreatePostClick}
             />
 
-            <StatsOverview stats={communityStats} />
+            <StatsOverview stats={realStats} />
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
               {/* Main feed column */}
               <div className="flex flex-col gap-6 lg:col-span-8">
-                <CreatePost
-                authorName={farmerName}
-                authorAvatarUrl={avatarUrl}
-                categories={cropCategories}
-                onSubmit={handleCreatePost}
-              />
+                <div id="post-composer">
+                  <CreatePost
+                    authorName={fullName}
+                    authorAvatarUrl={avatarUrl || "https://i.pravatar.cc/100?img=12"}
+                    categories={cropCategories}
+                    onSubmit={handleCreatePost}
+                  />
+                </div>
 
                 <FeedTabs active={activeTab} onChange={setActiveTab} />
 
@@ -330,7 +444,15 @@ function CommunityContent() {
                       >
                         {visiblePosts.map((post, i) => (
                           <div key={post.id} className="flex flex-col gap-0 overflow-hidden rounded-xl">
-                            <FeedCard post={post} category={post.crop ? categoryByKey[post.crop] : undefined} index={i} />
+                            <FeedCard 
+                              post={post} 
+                              category={post.crop ? categoryByKey[post.crop] : undefined} 
+                              index={i} 
+                              currentUserId={session?.user?.id}
+                              currentUserName={session?.user?.name || "Farmer"}
+                              currentUserImage={session?.user?.image || null}
+                              onDelete={(id) => setPostToDelete(id)}
+                            />
                             {post.expertAnswer && (
                               <div className="-mt-px rounded-b-xl border border-t-0 border-outline-variant/30 p-5 sm:p-6">
                                 <ExpertAnswerCard answer={post.expertAnswer} />
@@ -374,6 +496,46 @@ function CommunityContent() {
           </footer>
         </main>
       </div>
+
+      {/* Custom Delete Confirmation Modal */}
+      <AnimatePresence>
+        {postToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface-container-lowest rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-outline-variant/50"
+            >
+              <h3 className="text-xl font-bold text-on-surface mb-2">Delete Post</h3>
+              <p className="text-on-surface-variant text-body-md mb-6 leading-relaxed">
+                Are you sure you want to permanently delete this post? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setPostToDelete(null)}
+                  disabled={isDeleting}
+                  className="px-4 py-2 rounded-xl text-label-md font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => confirmDelete(postToDelete)}
+                  disabled={isDeleting}
+                  className="px-4 py-2 rounded-xl text-label-md font-semibold bg-error text-white hover:bg-error/90 transition-colors flex items-center justify-center min-w-[80px]"
+                >
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

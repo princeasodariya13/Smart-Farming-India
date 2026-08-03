@@ -116,7 +116,7 @@ export default function Header() {
               <Globe size={20} />
               <span className="text-xs font-bold uppercase hidden sm:inline-block">{currentLang}</span>
             </button>
-            
+
             {langDropdownOpen && (
               <div className="absolute top-full right-0 mt-2 w-32 rounded-xl border border-slate-200 bg-white p-1 shadow-lg overflow-hidden">
                 <button
@@ -134,7 +134,7 @@ export default function Header() {
               </div>
             )}
           </div>
-          
+
           {session ? (
             <div className="hidden sm:flex items-center gap-3">
               <Link
@@ -163,7 +163,7 @@ export default function Header() {
           )}
 
           {/* Mobile Menu Toggle Button */}
-          <button 
+          <button
             className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >

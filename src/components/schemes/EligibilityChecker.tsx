@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ChevronDown } from "lucide-react";
 import type { EligibilityCriteria, Scheme } from "@/types/schemes";
 
 interface EligibilityCheckerProps {
@@ -104,22 +104,28 @@ export default function EligibilityChecker({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {fields.map((f) => (
           <div key={f.id}>
-            <label htmlFor={`eligibility-${f.id}`} className="block text-xs font-medium text-on-surface-variant mb-1.5">
+            <label htmlFor={`eligibility-${f.id}`} className="block text-xs font-medium text-on-surface-variant mb-1.5 ml-1">
               {f.label}
             </label>
-            <select
-              id={`eligibility-${f.id}`}
-              value={criteria[f.id] || ""}
-              onChange={(e) => setCriteria((c) => ({ ...c, [f.id]: e.target.value }))}
-              className="w-full p-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <option value="">Select {f.label}</option>
-              {f.options.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+            <div className="relative group">
+              <select
+                id={`eligibility-${f.id}`}
+                value={criteria[f.id] || ""}
+                onChange={(e) => setCriteria((c) => ({ ...c, [f.id]: e.target.value }))}
+                className="appearance-none w-full pl-4 pr-10 py-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-[13px] md:text-sm outline-none cursor-pointer transition-all hover:bg-surface-container-low font-semibold text-on-surface"
+              >
+                <option value="">Select {f.label}</option>
+                {f.options.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown 
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none group-hover:text-primary transition-colors" 
+                size={18} 
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -128,7 +134,7 @@ export default function EligibilityChecker({
         type="button"
         onClick={handleSubmit}
         disabled={checking}
-        className="w-full py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:scale-[1.01] active:scale-95 transition-transform disabled:opacity-70"
+        className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-on-primary rounded-xl font-bold text-sm hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-70 shadow-sm"
       >
         {checking ? "Checking Eligibility..." : "Check Eligible Schemes"}
       </button>

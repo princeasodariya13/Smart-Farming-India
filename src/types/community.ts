@@ -73,6 +73,7 @@ export interface CommunityPost {
   videoThumbnailUrl?: string;
   poll?: Poll;
   likes: number;
+  likedByIds?: string[];
   comments: number;
   shares: number;
   isLiked?: boolean;
@@ -156,4 +157,5 @@ export type FeedTabKey =
   | "questions"
   | "photos"
   | "videos"
-  | "latest";
+  | "latest"
+  | "saved";

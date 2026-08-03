@@ -51,6 +51,7 @@ export default function GPSLayout({
   const [showInfo, setShowInfo] = useState(false);
   const [renameModal, setRenameModal] = useState<{ isOpen: boolean, fieldId: string, currentName: string, newName: string } | null>(null);
   const [toastMsg, setToastMsg] = useState<{ message: string, type: "error" | "success" } | null>(null);
+  const [isFetchingFields, setIsFetchingFields] = useState(true);
   const infoRef = useRef<HTMLDivElement>(null);
 
   const showToast = (message: string, type: "error" | "success" = "error") => {
@@ -89,7 +90,8 @@ export default function GPSLayout({
           setRealFields(mapped);
         }
       })
-      .catch(err => console.error("Failed to fetch fields:", err));
+      .catch(err => console.error("Failed to fetch fields:", err))
+      .finally(() => setIsFetchingFields(false));
   }, []);
 
   const handleSaveField = async () => {
@@ -609,7 +611,7 @@ export default function GPSLayout({
             <ExportMenu onSave={handleSaveField} onExportPdf={handleExportPdf} onShare={handleShare} onRename={handleRenameField} />
           </div>
 
-          <SavedFields fields={realFields} onMenuAction={handleMenuAction} />
+          <SavedFields fields={realFields} onMenuAction={handleMenuAction} isLoading={isFetchingFields} />
 
           <div className="px-4 pt-4 pb-12 lg:pb-4 space-y-4 border-t border-outline-variant/50">
             <MeasurementCard 

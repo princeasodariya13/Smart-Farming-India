@@ -2,12 +2,18 @@ import type { NextAuthConfig } from "next-auth"
 import Google from "next-auth/providers/google"
 import Facebook from "next-auth/providers/facebook"
 import Credentials from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
 
 export default {
   providers: [
     Google({
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     Facebook({
       allowDangerousEmailAccountLinking: true,
@@ -55,9 +61,11 @@ export default {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 60, // 30 minutes strict expiration
+    updateAge: 60, // Update cookie expiration if 60 seconds have passed
   },
   pages: {
     signIn: '/login',
-  }
+  },
+  basePath: "/api/auth"
 } satisfies NextAuthConfig

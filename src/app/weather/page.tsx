@@ -1237,7 +1237,7 @@ function WeatherContent() {
       </div>
 
       {/* Live Market Ticker */}
-      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-[60] flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none md:left-64">
+      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-30 flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none">
         <div className="flex ticker-animate font-label-sm text-[11px] tracking-wide gap-12 items-center">
           {dbData.mandiPrices.length > 0 ? (
             // Duplicate the array a few times to ensure the ticker spans the whole screen

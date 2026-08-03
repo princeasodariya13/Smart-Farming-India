@@ -107,7 +107,10 @@ export function CommunityHero({
             <button
               key={tq}
               type="button"
-              onClick={() => setQuery(tq)}
+              onClick={() => {
+                setQuery(tq);
+                onSearch?.(tq, activeCategory);
+              }}
               className="rounded-full px-2.5 py-1 transition-colors hover:bg-surface-container-high hover:text-on-surface"
             >
               {tq}
@@ -124,7 +127,10 @@ export function CommunityHero({
           <button
             role="tab"
             aria-selected={activeCategory === null}
-            onClick={() => setActiveCategory(null)}
+            onClick={() => {
+              setActiveCategory(null);
+              onSearch?.(query, null);
+            }}
             className={cn(
               "shrink-0 rounded-full px-4 py-1.5 text-label-md font-label-md whitespace-nowrap transition-colors",
               activeCategory === null
@@ -139,7 +145,10 @@ export function CommunityHero({
               key={cat.key}
               role="tab"
               aria-selected={activeCategory === cat.key}
-              onClick={() => setActiveCategory(cat.key)}
+              onClick={() => {
+                setActiveCategory(cat.key);
+                onSearch?.(query, cat.key);
+              }}
               className={cn(
                 "shrink-0 rounded-full px-4 py-1.5 text-label-md font-label-md whitespace-nowrap transition-colors",
                 activeCategory === cat.key

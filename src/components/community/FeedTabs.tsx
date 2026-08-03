@@ -13,6 +13,7 @@ const TABS: { key: FeedTabKey; label: string }[] = [
   { key: "photos", label: "Photos" },
   { key: "videos", label: "Videos" },
   { key: "latest", label: "Latest" },
+  { key: "saved", label: "Saved" },
 ];
 
 interface FeedTabsProps {

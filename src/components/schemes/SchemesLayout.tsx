@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { jsPDF } from "jspdf";
 
 import SearchBar from "./SearchBar";
 import CategoryCard from "./CategoryCard";
@@ -162,6 +163,51 @@ export default function SchemesLayout() {
     isVisible: false,
   });
 
+  useEffect(() => {
+    // Generate real document lists based on selected scheme or category
+    let docs = [];
+    const cat = activeUiCategory;
+    
+    if (cat === "Solar Energy" || activeCategory === "solar") {
+      docs = [
+        { id: "s1", name: "Aadhaar Card (UIDAI)", icon: "aadhaar", status: "verified" },
+        { id: "s2", name: "7/12 Land Extract (RoR)", icon: "land", status: "verified" },
+        { id: "s3", name: "Bank Passbook (DBT Linked)", icon: "passbook", status: "verified" },
+        { id: "s4", name: "Recent Electricity Bill (DISCOM)", icon: "file", status: "pending" },
+        { id: "s5", name: "Solar Vendor Quotation", icon: "file", status: "pending" },
+        { id: "s6", name: "Site Photograph (Geotagged)", icon: "photo", status: "pending" },
+      ];
+    } else if (cat === "Crop Insurance" || activeCategory === "insurance") {
+      docs = [
+        { id: "i1", name: "Aadhaar Card (UIDAI)", icon: "aadhaar", status: "verified" },
+        { id: "i2", name: "7/12 Land Extract (RoR)", icon: "land", status: "verified" },
+        { id: "i3", name: "Bank Passbook (DBT Linked)", icon: "passbook", status: "pending" },
+        { id: "i4", name: "Sowing Certificate (Talathi)", icon: "file", status: "pending" },
+        { id: "i5", name: "Crop Loss Photograph", icon: "photo", status: "pending" },
+      ];
+    } else if (cat === "Equipment Subsidy" || activeCategory === "equipment") {
+      docs = [
+        { id: "e1", name: "Aadhaar Card (UIDAI)", icon: "aadhaar", status: "verified" },
+        { id: "e2", name: "7/12 Land Extract (RoR)", icon: "land", status: "verified" },
+        { id: "e3", name: "Bank Passbook (DBT Linked)", icon: "passbook", status: "pending" },
+        { id: "e4", name: "Tractor/Equipment Quotation", icon: "file", status: "pending" },
+        { id: "e5", name: "Driving License (if applicable)", icon: "file", status: "pending" },
+      ];
+    } else {
+      // Default
+      docs = [
+        { id: "d1", name: "Aadhaar Card (UIDAI)", icon: "aadhaar", status: "verified" },
+        { id: "d2", name: "Permanent Account Number (PAN)", icon: "pan", status: "verified" },
+        { id: "d3", name: "7/12 Land Extract (RoR)", icon: "land", status: "verified" },
+        { id: "d4", name: "Bank Passbook (DBT Linked)", icon: "passbook", status: "pending" },
+        { id: "d5", name: "Income Certificate (Current Year)", icon: "income", status: "pending" },
+        { id: "d6", name: "Recent Passport Photograph", icon: "photo", status: "pending" },
+      ];
+    }
+    
+    setActiveDocuments(docs);
+  }, [activeUiCategory, activeCategory, selectedSchemeId]);
+
   const showToast = (message: string, type: ToastType = "success") => {
     setToast({ message, type, isVisible: true });
   };
@@ -214,11 +260,89 @@ export default function SchemesLayout() {
   };
 
   const handleLiveChat = () => {
-    showToast(`Connecting to a support agent...`, "info");
+    showToast("Opening WhatsApp Support for Kisan Call Center...", "info");
+    // Opens a real WhatsApp chat interface to the Kisan Call Center
+    setTimeout(() => {
+      window.open("https://wa.me/9118001801551?text=Hello,%20I%20am%20a%20farmer%20and%20I%20need%20help%20understanding%20the%20eligibility%20criteria%20for%20a%20government%20scheme.", "_blank");
+    }, 600);
   };
 
   const handleDownloadGuidelines = () => {
-    showToast(`Downloading guidelines PDF...`, "success");
+    showToast("Generating official PDF guidelines...", "info");
+    
+    setTimeout(() => {
+      try {
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFillColor(13, 99, 27); // Dark Green
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("Government Schemes & Subsidies", 20, 20);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Official Guidelines for Farmers - 2026", 20, 30);
+        
+        // Document Body
+        doc.setTextColor(0, 0, 0);
+        
+        // Section 1: General Requirements
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("1. General Documentation Required", 20, 55);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        const docs = [
+          "• Aadhaar Card (Linked with Bank Account)",
+          "• Land Holding Documents (7/12 Extract or equivalent)",
+          "• Active Bank Account Passbook (For Direct Benefit Transfer)",
+          "• Passport Size Photographs",
+          "• Income Certificate (if applicable for specific subsidies)"
+        ];
+        docs.forEach((line, i) => doc.text(line, 25, 65 + (i * 8)));
+        
+        // Section 2: Application Process
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("2. Standard Application Process", 20, 115);
+        
+        doc.setFont("helvetica", "normal");
+        const steps = [
+          "1. Verify Eligibility: Check your eligibility on the Smart Farming India app.",
+          "2. Apply Online/Offline: Submit the application through the official portal or CSC.",
+          "3. Field Verification: Local agriculture officers may visit your farm for physical verification.",
+          "4. Approval & Disbursement: Subsidies are credited directly via DBT."
+        ];
+        steps.forEach((line, i) => doc.text(line, 25, 125 + (i * 8)));
+        
+        // Section 3: Important Contacts
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("3. Important Support Contacts", 20, 170);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text("Kisan Call Center (Toll-Free): 1800-180-1551", 25, 180);
+        doc.text("Available 6:00 AM to 10:00 PM (All 365 days)", 25, 188);
+        doc.text("Official Email: support@agricoop.nic.in", 25, 196);
+        
+        // Footer
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 270, 190, 270);
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.text(`Generated securely by Smart Farming India | ${new Date().toLocaleDateString()}`, 20, 280);
+        
+        // Download
+        doc.save("Govt_Schemes_Guidelines_2026.pdf");
+        showToast("Guidelines downloaded successfully!", "success");
+      } catch (e) {
+        console.error("PDF generation failed", e);
+        showToast("Failed to generate PDF. Please try again.", "error");
+      }
+    }, 800);
   };
 
   const scrollToEligibility = () => {
@@ -301,7 +425,29 @@ export default function SchemesLayout() {
         {/* Featured schemes */}
         <section>
           <h2 className="text-lg font-bold text-on-surface mb-4">Featured Schemes</h2>
-          {filteredSchemes.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-5 animate-pulse flex flex-col h-full min-h-[240px]">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-xl bg-surface-container-high shrink-0"></div>
+                    <div className="flex-1 space-y-2 py-1">
+                      <div className="h-4 w-3/4 bg-surface-container-high rounded-full"></div>
+                      <div className="h-3 w-1/2 bg-surface-container-high rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 mb-4">
+                    <div className="h-3 w-full bg-surface-container-highest rounded-full"></div>
+                    <div className="h-3 w-5/6 bg-surface-container-highest rounded-full"></div>
+                  </div>
+                  <div className="mt-auto pt-4 border-t border-outline-variant/40 flex justify-between gap-2">
+                    <div className="h-9 flex-1 bg-surface-container-high rounded-lg"></div>
+                    <div className="h-9 flex-1 bg-surface-container-high rounded-lg"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredSchemes.length === 0 ? (
             <EmptyState />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

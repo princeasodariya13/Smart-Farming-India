@@ -138,7 +138,7 @@ function DashboardContent() {
     setIsTogglingIrrigation(true);
     const isCurrentlyActive = dbData.irrigation.status === "Active";
     const newStatus = isCurrentlyActive ? "Off" : "Active";
-    
+
     // Optimistic UI update
     setDbData(prev => ({
       ...prev,
@@ -147,7 +147,7 @@ function DashboardContent() {
         status: newStatus
       }
     }));
-    
+
     // Simulate network delay for effect (assuming no real API exists yet)
     await new Promise(r => setTimeout(r, 600));
     setIsTogglingIrrigation(false);
@@ -160,7 +160,7 @@ function DashboardContent() {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskLabel.trim()) return;
-    
+
     setIsSubmittingTask(true);
     try {
       const res = await fetch('/api/tasks', {
@@ -189,7 +189,7 @@ function DashboardContent() {
   const handleDeleteTask = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Optimistic delete
     const previousTasks = [...dbData.tasks];
     setDbData(prev => ({
@@ -220,9 +220,9 @@ function DashboardContent() {
   // Derive dynamic, real notifications from the current live database state
   const getDynamicNotifications = () => {
     if (!dbData) return [];
-    
+
     const notifs = [];
-    
+
     // 1. Irrigation Alert
     if (dbData.irrigation?.status === 'Active') {
       notifs.push({
@@ -288,8 +288,8 @@ function DashboardContent() {
         });
       }
     }
-    
-    return notifs; 
+
+    return notifs;
   };
 
   const dynamicNotifications = getDynamicNotifications();
@@ -298,8 +298,8 @@ function DashboardContent() {
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
       {/* Mobile Sidebar Overlay — above header (z-30) but below sidebar (z-50) */}
       {mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm" 
+        <div
+          className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -315,7 +315,7 @@ function DashboardContent() {
               Smart Farming<span className="text-primary">.</span>
             </h1>
           </div>
-          <button 
+          <button
             className="md:hidden text-on-surface hover:bg-surface-container-high p-1 rounded-lg transition-colors"
             onClick={() => setMobileMenuOpen(false)}
           >
@@ -385,7 +385,7 @@ function DashboardContent() {
         <header className="bg-surface-glass backdrop-blur-xl border-b border-white/20 h-12 sticky top-0 shrink-0 z-30 flex items-center justify-between px-6 w-full max-w-container-max mx-auto shadow-sm">
           <div className="flex items-center gap-6">
             <div className="flex md:hidden items-center gap-2 mr-2">
-              <button 
+              <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="p-1.5 -ml-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors"
               >
@@ -398,7 +398,7 @@ function DashboardContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-                      </div>
+          </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
@@ -428,8 +428,8 @@ function DashboardContent() {
                 <h2 className="font-headline-md text-headline-md font-bold text-on-surface truncate">Namaste, {session?.user?.name?.split(' ')[0] || "Farmer"}.</h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
                   {dbData.soilHealth && dbData.soilHealth.status !== 'Balanced' ? 'Action required for soil health.' : 'Farm is healthy.'} <span className="text-primary font-semibold">
-                    {dbData.tasks.filter((t: any) => !t.checked).length === 0 
-                      ? "All caught up today" 
+                    {dbData.tasks.filter((t: any) => !t.checked).length === 0
+                      ? "All caught up today"
                       : `${dbData.tasks.filter((t: any) => !t.checked).length} pending action${dbData.tasks.filter((t: any) => !t.checked).length === 1 ? '' : 's'}`}
                   </span>.
                 </p>
@@ -535,14 +535,13 @@ function DashboardContent() {
                     <p className="text-[10px] text-on-surface-variant">Water Usage Today</p>
                     <p className="text-[18px] font-bold text-on-surface">{dbData.irrigation?.waterUsage?.toLocaleString() || 0}L</p>
                   </div>
-                  <button 
+                  <button
                     onClick={toggleIrrigation}
                     disabled={isTogglingIrrigation}
-                    className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${
-                      dbData.irrigation?.status === 'Active' 
-                        ? 'bg-error-container text-on-error-container hover:bg-error-container/80' 
+                    className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${dbData.irrigation?.status === 'Active'
+                        ? 'bg-error-container text-on-error-container hover:bg-error-container/80'
                         : 'bg-primary text-on-primary hover:bg-primary/90'
-                    }`}
+                      }`}
                   >
                     {isTogglingIrrigation ? '...' : (dbData.irrigation?.status === 'Active' ? 'Shut Off' : 'Turn On')}
                   </button>
@@ -597,8 +596,8 @@ function DashboardContent() {
                       </p>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="h-1.5 flex-1 bg-surface-container-highest rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-1000 ${crop.healthScore > 80 ? 'bg-primary' : crop.healthScore > 50 ? 'bg-amber-500' : 'bg-error'}`} 
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ${crop.healthScore > 80 ? 'bg-primary' : crop.healthScore > 50 ? 'bg-amber-500' : 'bg-error'}`}
                             style={{ width: `${crop.healthScore}%` }}
                           ></div>
                         </div>
@@ -609,24 +608,24 @@ function DashboardContent() {
                     </div>
                   </Link>
                 )) : loadingDb ? (
-                   <div className="space-y-3">
-                     {[1, 2].map((skeleton) => (
-                       <div key={skeleton} className="flex gap-3 p-3 rounded-2xl bg-surface-container-low animate-pulse">
-                         <div className="w-14 h-14 rounded-xl bg-surface-container-high shrink-0"></div>
-                         <div className="flex-1 space-y-2 py-1">
-                           <div className="h-3 w-1/2 bg-surface-container-high rounded-full"></div>
-                           <div className="h-2 w-3/4 bg-surface-container-high rounded-full"></div>
-                           <div className="h-1.5 w-full bg-surface-container-high rounded-full mt-2"></div>
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                  <div className="space-y-3">
+                    {[1, 2].map((skeleton) => (
+                      <div key={skeleton} className="flex gap-3 p-3 rounded-2xl bg-surface-container-low animate-pulse">
+                        <div className="w-14 h-14 rounded-xl bg-surface-container-high shrink-0"></div>
+                        <div className="flex-1 space-y-2 py-1">
+                          <div className="h-3 w-1/2 bg-surface-container-high rounded-full"></div>
+                          <div className="h-2 w-3/4 bg-surface-container-high rounded-full"></div>
+                          <div className="h-1.5 w-full bg-surface-container-high rounded-full mt-2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                   <div className="flex flex-col items-center justify-center py-8 text-on-surface-variant">
-                     <span className="material-symbols-outlined text-4xl mb-2 opacity-50">psychiatry</span>
-                     <p className="text-sm">No active crops tracked.</p>
-                     <Link href="/analytics" className="mt-3 text-primary text-xs font-bold hover:underline">Add a Crop</Link>
-                   </div>
+                  <div className="flex flex-col items-center justify-center py-8 text-on-surface-variant">
+                    <span className="material-symbols-outlined text-4xl mb-2 opacity-50">psychiatry</span>
+                    <p className="text-sm">No active crops tracked.</p>
+                    <Link href="/analytics" className="mt-3 text-primary text-xs font-bold hover:underline">Add a Crop</Link>
+                  </div>
                 )}
               </div>
             </div>
@@ -647,14 +646,14 @@ function DashboardContent() {
                       <p className="font-label-lg text-label-lg font-bold text-on-surface mt-0.5">₹{price.price.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">/ {price.unit}</span></p>
                     </div>
                     <div className={`flex items-center gap-0.5 px-1.5 py-1 rounded-md ${price.trendDirection === 'UP' ? 'text-primary bg-primary/10' : 'text-error bg-error/10'}`}>
-                      <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>{price.trendDirection === 'UP' ? 'trending_up' : 'trending_down'}</span> 
+                      <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>{price.trendDirection === 'UP' ? 'trending_up' : 'trending_down'}</span>
                       <span className="font-label-sm text-[11px]">{price.trendDirection === 'UP' ? '+' : ''}{price.trendPercent}%</span>
                     </div>
                   </div>
                 )) : loadingDb ? (
-                   <p className="text-sm text-gray-500 text-center py-4">Loading prices...</p>
+                  <p className="text-sm text-gray-500 text-center py-4">Loading prices...</p>
                 ) : (
-                   <p className="text-sm text-gray-500 text-center py-4">No prices available.</p>
+                  <p className="text-sm text-gray-500 text-center py-4">No prices available.</p>
                 )}
               </div>
               <div className="mt-4 pt-3 text-center relative z-10 border-t border-outline-variant/20">
@@ -695,45 +694,45 @@ function DashboardContent() {
                     </button>
                   </label>
                 )) : loadingDb ? (
-                   <p className="text-sm text-gray-500 py-2">Loading tasks...</p>
+                  <p className="text-sm text-gray-500 py-2">Loading tasks...</p>
                 ) : (
-                   <p className="text-sm text-gray-500 py-2">No tasks assigned.</p>
+                  <p className="text-sm text-gray-500 py-2">No tasks assigned.</p>
                 )}
               </div>
               <div className="shrink-0 mt-2 pt-2 border-t border-outline-variant/20">
-              {isAddingTask ? (
-                <form onSubmit={handleAddTask} className="mt-4 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newTaskLabel}
-                    onChange={(e) => setNewTaskLabel(e.target.value)}
-                    placeholder="E.g. Check irrigation pipes..."
-                    className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                    autoFocus
-                  />
-                  <button 
-                    type="submit" 
-                    disabled={isSubmittingTask || !newTaskLabel.trim()}
-                    className="p-1.5 bg-primary text-on-primary rounded-lg disabled:opacity-50"
+                {isAddingTask ? (
+                  <form onSubmit={handleAddTask} className="mt-4 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newTaskLabel}
+                      onChange={(e) => setNewTaskLabel(e.target.value)}
+                      placeholder="E.g. Check irrigation pipes..."
+                      className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingTask || !newTaskLabel.trim()}
+                      className="p-1.5 bg-primary text-on-primary rounded-lg disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">add</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingTask(false)}
+                      className="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-lg"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingTask(true)}
+                    className="mt-4 w-full text-center py-1.5 text-[12px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    + Add New Task
                   </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setIsAddingTask(false)}
-                    className="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-lg"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
-                  </button>
-                </form>
-              ) : (
-                <button 
-                  onClick={() => setIsAddingTask(true)}
-                  className="mt-4 w-full text-center py-1.5 text-[12px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                >
-                  + Add New Task
-                </button>
-              )}
+                )}
               </div>
             </div>
 
@@ -805,7 +804,7 @@ function DashboardContent() {
                   <p className="text-[11px] text-on-surface-variant mt-0.5 mb-2 leading-tight">Low-interest credit up to ₹3 Lakh.</p>
                   <button onClick={() => router.push('/schemes')} className="w-full py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface rounded-lg text-[11px] font-bold transition-colors">Check Eligibility</button>
                 </div>
-                
+
                 {/* Soil Health Card */}
                 <div className="bg-white p-3 rounded-xl border border-primary/10 hover:border-primary/30 transition-colors group">
                   <div className="flex justify-between items-start mb-1">
@@ -838,13 +837,13 @@ function DashboardContent() {
       </div>
 
       {/* Live Market Ticker */}
-      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-30 flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none md:left-64">
+      <div className="fixed bottom-0 left-0 right-0 h-8 bg-on-surface text-surface z-30 flex items-center overflow-hidden whitespace-nowrap border-t border-white/10 pointer-events-none">
         <div className="flex ticker-animate font-label-sm text-[11px] tracking-wide gap-12 items-center">
           {dbData.mandiPrices.length > 0 ? (
             // Duplicate the array a few times to ensure the ticker spans the whole screen
             [...dbData.mandiPrices, ...dbData.mandiPrices, ...dbData.mandiPrices, ...dbData.mandiPrices].map((price, index) => (
               <span key={index} className="shrink-0 font-medium">
-                {price.cropName.toUpperCase()}: <span className="text-primary-container font-bold">₹{price.price.toLocaleString('en-IN')}</span> 
+                {price.cropName.toUpperCase()}: <span className="text-primary-container font-bold">₹{price.price.toLocaleString('en-IN')}</span>
                 <span className={price.trendDirection === 'UP' ? 'text-green-400' : 'text-red-400'}>
                   {' '}({price.trendDirection === 'UP' ? '+' : ''}{price.trendPercent}%)
                 </span>

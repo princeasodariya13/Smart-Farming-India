@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Sprout, TrendingUp } from "lucide-react";
+import Image from "next/image";
 
 /**
  * Left-hand agriculture-themed brand panel, desktop only.
@@ -15,7 +16,7 @@ export default function AuthBrandPanel() {
     >
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <img src="/login-bg.png" alt="Smart Farming" className="h-full w-full object-cover mix-blend-overlay opacity-30" />
+        <Image src="/login-bg.png" alt="Smart Farming" fill sizes="50vw" priority className="object-cover mix-blend-overlay opacity-30" />
       </div>
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-primary/90 to-transparent" />
 

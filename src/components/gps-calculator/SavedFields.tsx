@@ -8,6 +8,7 @@ interface SavedFieldsProps {
   total?: number;
   onSelect?: (id: string) => void;
   onMenuAction?: (id: string, action: "rename" | "edit" | "delete" | "export_pdf" | "share_apps") => void;
+  isLoading?: boolean;
 }
 
 const defaultFields: SavedField[] = [
@@ -54,6 +55,7 @@ export default function SavedFields({
   total,
   onSelect,
   onMenuAction,
+  isLoading = false,
 }: SavedFieldsProps) {
   const displayTotal = total ?? fields.length;
 
@@ -65,7 +67,20 @@ export default function SavedFields({
           {displayTotal} TOTAL
         </span>
       </div>
-      {fields.length === 0 ? (
+      {isLoading ? (
+        <div className="px-3 pb-4 pt-2 space-y-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex gap-3 p-2 bg-surface-container-low rounded-xl animate-pulse">
+              <div className="w-16 h-16 rounded-xl bg-surface-container-high shrink-0"></div>
+              <div className="flex flex-col justify-center flex-1 space-y-2 py-1 pr-4">
+                <div className="h-4 w-3/4 bg-surface-container-high rounded-full"></div>
+                <div className="h-3 w-1/2 bg-surface-container-high rounded-full"></div>
+                <div className="h-3 w-1/3 bg-surface-container-high rounded-full mt-1"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : fields.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center px-6 py-10 gap-2">
           <p className="font-semibold text-on-surface">No fields saved yet</p>
           <p className="text-sm text-on-surface-variant">

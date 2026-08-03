@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, Map, Edit2, PenSquare, Trash2, Share2 } from "lucide-react";
 import type { SavedField } from "@/types/gps-calculator";
@@ -20,7 +21,10 @@ const statusStyles: Record<SavedField["status"], string> = {
 
 export default function FieldCard({ field, onSelect, onMenuAction, isNearBottom = false }: FieldCardProps) {
   const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuCoords, setMenuCoords] = useState({ top: 0, right: 0, isUp: false });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Dynamically compute the ArcGIS Satellite Thumbnail URL
   let thumbnailSrc = field.imageUrl;
@@ -48,22 +52,56 @@ export default function FieldCard({ field, onSelect, onMenuAction, isNearBottom 
   }
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        portalRef.current && !portalRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)
+      ) {
         setShowMenu(false);
       }
     }
+    
+    function handleScroll() {
+      if (showMenu) setShowMenu(false);
+    }
+
     if (showMenu) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, [showMenu]);
+
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const isUp = spaceBelow < 200; // Open upwards if less than 200px space below
+      
+      setMenuCoords({
+        top: isUp ? rect.top - 170 : rect.bottom + 5,
+        right: window.innerWidth - rect.right,
+        isUp,
+      });
+    }
+    setShowMenu(!showMenu);
+  };
 
   return (
     <motion.div
       whileHover={{ y: -2 }}
       onClick={() => onSelect?.(field.id)}
-      className={`relative p-2.5 bg-white hover:bg-primary/5 rounded-xl border border-outline-variant transition-colors cursor-pointer group ${showMenu ? "z-[999]" : "z-10"}`}
+      className={`relative p-2.5 bg-white hover:bg-primary/5 rounded-xl border border-outline-variant transition-colors cursor-pointer group ${showMenu ? "z-[9999]" : "z-10"}`}
     >
       <div className="flex gap-2.5">
         <div className="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0 flex items-center justify-center text-on-surface-variant/40">
@@ -101,64 +139,71 @@ export default function FieldCard({ field, onSelect, onMenuAction, isNearBottom 
             <span className="text-[10px] text-on-surface-variant">{field.location}</span>
           </div>
         </div>
-        <div className="relative" ref={menuRef}>
+        <div>
           <button
             type="button"
+            ref={buttonRef}
             aria-label={`More options for ${field.name}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMenu(!showMenu);
-            }}
-            className={`text-on-surface-variant transition-opacity shrink-0 p-1 rounded-md hover:bg-surface-container ${showMenu ? "opacity-100 bg-surface-container" : "opacity-0 group-hover:opacity-100 focus:opacity-100"}`}
+            onClick={toggleMenu}
+            className={`text-on-surface-variant transition-opacity shrink-0 p-1 rounded-md hover:bg-surface-container ${showMenu ? "bg-surface-container" : ""}`}
           >
             <MoreVertical size={18} />
           </button>
 
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: isNearBottom ? 10 : -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: isNearBottom ? 10 : -10 }}
-                transition={{ duration: 0.15 }}
-                className={`absolute right-0 w-36 bg-white rounded-lg shadow-lg border border-outline-variant py-1 z-[100] overflow-hidden ${
-                  isNearBottom ? "bottom-full mb-1 origin-bottom-right" : "top-full mt-1 origin-top-right"
-                }`}
-              >
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "edit"); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+          {mounted && createPortal(
+            <AnimatePresence>
+              {showMenu && (
+                <motion.div
+                  ref={portalRef}
+                  initial={{ opacity: 0, scale: 0.95, y: menuCoords.isUp ? 10 : -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: menuCoords.isUp ? 10 : -10 }}
+                  transition={{ duration: 0.15 }}
+                  style={{
+                    position: "fixed",
+                    top: menuCoords.top,
+                    right: menuCoords.right,
+                  }}
+                  className={`w-36 bg-white rounded-lg shadow-lg border border-outline-variant py-1 z-[99999] overflow-hidden ${
+                    menuCoords.isUp ? "origin-bottom-right" : "origin-top-right"
+                  }`}
                 >
-                  <Edit2 size={14} className="text-primary" /> Load to Map
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "export_pdf"); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
-                >
-                  <Map size={14} className="text-secondary" /> Export PDF
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "share_apps"); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
-                >
-                  <Share2 size={14} className="text-secondary" /> Share to Apps
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "rename"); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
-                >
-                  <PenSquare size={14} className="text-secondary" /> Rename
-                </button>
-                <div className="h-[1px] bg-outline-variant/50 my-1"></div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "delete"); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-error/10 text-error transition-colors"
-                >
-                  <Trash2 size={14} /> Delete
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "edit"); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                  >
+                    <Edit2 size={14} className="text-primary" /> Load to Map
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "export_pdf"); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                  >
+                    <Map size={14} className="text-secondary" /> Export PDF
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "share_apps"); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                  >
+                    <Share2 size={14} className="text-secondary" /> Share to Apps
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "rename"); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-surface-container-lowest text-on-surface transition-colors"
+                  >
+                    <PenSquare size={14} className="text-secondary" /> Rename
+                  </button>
+                  <div className="h-[1px] bg-outline-variant/50 my-1"></div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onMenuAction?.(field.id, "delete"); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-error/10 text-error transition-colors"
+                  >
+                    <Trash2 size={14} /> Delete
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
         </div>
       </div>
     </motion.div>

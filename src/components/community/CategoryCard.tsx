@@ -11,11 +11,16 @@ import {
   Leaf,
   Cherry,
   Trees,
+  Nut,
+  FlameKindling,
+  Sun,
+  Cigarette,
   type LucideIcon,
 } from "lucide-react";
 import type { CropCategory, CropKey } from "@/types/community";
 
-const CROP_ICON: Record<CropKey, LucideIcon> = {
+const CROP_ICON: Record<string, LucideIcon> = {
+  // Original keys
   wheat: Wheat,
   rice: Sprout,
   cotton: Trees,
@@ -26,7 +31,16 @@ const CROP_ICON: Record<CropKey, LucideIcon> = {
   pulses: Bean,
   flowers: Flower2,
   organic: Grape,
+  // Gujarat-specific keys
+  groundnut: Nut,
+  castor: FlameKindling,
+  bajra: Sprout,
+  mango: Cherry,
+  tobacco: Cigarette,
 };
+
+// Safe fallback — returns Leaf if a key isn't in the map
+const getIcon = (key: string): LucideIcon => CROP_ICON[key] ?? Leaf;
 
 interface CategoryCardProps {
   category: CropCategory;
@@ -34,7 +48,7 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, onSelect }: CategoryCardProps) {
-  const Icon = CROP_ICON[category.key];
+  const Icon = getIcon(category.key);
   return (
     <motion.button
       type="button"
@@ -51,6 +65,7 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
     </motion.button>
   );
 }
+
 
 export function CategoryGrid({
   categories,

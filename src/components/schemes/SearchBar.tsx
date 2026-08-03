@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ShieldCheck } from "lucide-react";
+import { Search, ShieldCheck, ChevronDown } from "lucide-react";
 
 interface SearchBarProps {
   states?: string[];
@@ -45,7 +45,7 @@ export default function SearchBar({
       <div className="flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
             size={18}
             aria-hidden="true"
           />
@@ -61,7 +61,7 @@ export default function SearchBar({
               onSearch?.(e.target.value);
             }}
             placeholder="Search schemes by name or benefit..."
-            className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-sm outline-none"
+            className="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-sm outline-none transition-all hover:bg-surface-container-low font-medium text-on-surface"
           />
         </div>
 
@@ -69,40 +69,52 @@ export default function SearchBar({
           <label className="sr-only" htmlFor="state-select">
             Select state
           </label>
-          <select
-            id="state-select"
-            onChange={(e) => onStateChange?.(e.target.value)}
-            className="w-full px-3 md:px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-[13px] md:text-sm outline-none"
-          >
-            {states.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          <div className="relative group">
+            <select
+              id="state-select"
+              onChange={(e) => onStateChange?.(e.target.value)}
+              className="appearance-none w-full pl-4 pr-10 py-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-[13px] md:text-sm outline-none cursor-pointer transition-all hover:bg-surface-container-low font-semibold text-on-surface"
+            >
+              {states.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <ChevronDown 
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none group-hover:text-primary transition-colors" 
+              size={18} 
+            />
+          </div>
 
           <label className="sr-only" htmlFor="category-select">
             Select category
           </label>
-          <select
-            id="category-select"
-            onChange={(e) => onCategoryChange?.(e.target.value)}
-            className="w-full px-3 md:px-4 py-3 bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary/30 text-[13px] md:text-sm outline-none"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <div className="relative group">
+            <select
+              id="category-select"
+              onChange={(e) => onCategoryChange?.(e.target.value)}
+              className="appearance-none w-full pl-4 pr-10 py-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-[13px] md:text-sm outline-none cursor-pointer transition-all hover:bg-surface-container-low font-semibold text-on-surface"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <ChevronDown 
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none group-hover:text-primary transition-colors" 
+              size={18} 
+            />
+          </div>
         </div>
 
         <button
           type="button"
           onClick={onCheckEligibility}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:scale-[1.02] active:scale-95 transition-transform shrink-0"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:brightness-110 active:scale-[0.98] transition-all shadow-sm shrink-0"
         >
-          <ShieldCheck size={17} /> Check Eligibility
+          <ShieldCheck size={18} strokeWidth={2.5} /> Check Eligibility
         </button>
       </div>
     </div>

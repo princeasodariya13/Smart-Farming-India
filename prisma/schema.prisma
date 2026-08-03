@@ -760,17 +760,20 @@ model DiseaseScan {
 }
 
 model CommunityPost {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  type      String   // 'question', 'photo', 'video', 'post'
-  content   String
-  images    String[]
-  tags      String[]
-  likes     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  comments  CommunityComment[]
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // 'question', 'photo', 'video', 'post', 'poll'
+  content     String
+  images      String[]
+  tags        String[]
+  location    String?
+  pollOptions String[]
+  likes       Int      @default(0)
+  likedByIds  String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  comments    CommunityComment[]
 }
 
 model CommunityComment {

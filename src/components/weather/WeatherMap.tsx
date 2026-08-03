@@ -38,53 +38,28 @@ function Recenter({ lat, lon }: { lat: number; lon: number }) {
 }
 
 export default function WeatherMap({ layer, lat, lon }: WeatherMapProps) {
-  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || "02785a68098150e0254c7a9e7321daac";
-  
-  const layerMap: Record<string, string> = {
-    radar: "precipitation_new",
-    wind: "wind_new",
-    temperature: "temp_new",
-    satellite: "clouds_new" 
-  };
-
-  const weatherLayerUrl = `https://tile.openweathermap.org/map/${layerMap[layer]}/{z}/{x}/{y}.png?appid=${apiKey}`;
   const defaultPosition: [number, number] = [lat || 23.0225, lon || 72.5714];
 
+  // Map our internal layer names to Windy.com overlay names
+  const windyOverlayMap: Record<string, string> = {
+    satellite: "satellite",
+    radar: "radar", // Windy supports 'radar' natively for rain radar
+    wind: "wind",
+    temperature: "temp"
+  };
+
+  const windyOverlay = windyOverlayMap[layer] || "wind";
+
   return (
-    <MapContainer
-      center={defaultPosition}
-      zoom={7}
-      scrollWheelZoom={true}
-      className="h-full w-full rounded-2xl z-0"
-      style={{ minHeight: "100%", minWidth: "100%" }}
-    >
-      <Recenter lat={defaultPosition[0]} lon={defaultPosition[1]} />
-      
-      {layer === "satellite" ? (
-        <TileLayer
-          attribution='&copy; Esri'
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        />
-      ) : (
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
-      )}
-
-      <TileLayer
-        key={layer} 
-        url={weatherLayerUrl}
-        opacity={layer === 'satellite' ? 0.7 : 0.9} 
-        attribution='&copy; OpenWeatherMap'
-      />
-
-      <Marker position={defaultPosition} icon={pulseIcon}>
-        <Popup className="rounded-xl overflow-hidden font-sans">
-          <div className="font-semibold text-primary text-center px-1">Selected Location</div>
-          <div className="text-xs text-on-surface-variant text-center border-t border-outline-variant/30 mt-1 pt-1">Lat: {defaultPosition[0].toFixed(2)}, Lon: {defaultPosition[1].toFixed(2)}</div>
-        </Popup>
-      </Marker>
-    </MapContainer>
+    <div className="h-full w-full rounded-2xl overflow-hidden relative z-0 bg-surface-container-high">
+      <iframe
+        width="100%"
+        height="100%"
+        src={`https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km/h&zoom=7&overlay=${windyOverlay}&product=ecmwf&level=surface&lat=${defaultPosition[0]}&lon=${defaultPosition[1]}&detailLat=${defaultPosition[0]}&detailLon=${defaultPosition[1]}&marker=true`}
+        frameBorder="0"
+        title={`Live ${layer} Map`}
+        className="w-full h-full border-0"
+      ></iframe>
+    </div>
   );
 }
