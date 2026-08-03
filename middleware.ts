@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 const protectedRoutes = [
   "/dashboard",
@@ -15,32 +14,36 @@ const protectedRoutes = [
   "/soil-health",
 ];
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  });
-
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register");
 
-  // If accessing the root landing page (/)
+  // NextAuth v5 (auth.js) session cookie names
+  const sessionToken =
+    request.cookies.get("authjs.session-token")?.value ||
+    request.cookies.get("__Secure-authjs.session-token")?.value;
+
+  const isLoggedIn = !!sessionToken;
+  const isProtected = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isAuthRoute =
+    pathname.startsWith("/login") || pathname.startsWith("/register");
+
+  // Root landing page: redirect logged-in users to dashboard
   if (pathname === "/") {
-    if (token) {
+    if (isLoggedIn) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    // Allow unauthenticated users to see the landing page
     return NextResponse.next();
   }
 
-  // If trying to access a protected route without a valid session token
-  if (isProtected && !token) {
+  // Block protected routes for unauthenticated users
+  if (isProtected && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If logged in and trying to access login/register pages
-  if (isAuthRoute && token) {
+  // Redirect logged-in users away from login/register
+  if (isAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -48,5 +51,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
