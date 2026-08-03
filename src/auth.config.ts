@@ -66,6 +66,5 @@ export default {
   },
   pages: {
     signIn: '/login',
-  },
-  basePath: "/api/auth"
+  }
 } satisfies NextAuthConfig
