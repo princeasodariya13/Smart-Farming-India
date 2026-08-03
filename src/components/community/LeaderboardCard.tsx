@@ -19,7 +19,13 @@ export function LeaderboardCard({ entry }: { entry: LeaderboardEntry }) {
       >
         {entry.rank}
       </span>
-      <img src={entry.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+      {entry.avatarUrl ? (
+        <img src={entry.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover border border-outline-variant/30" />
+      ) : (
+        <div className="h-9 w-9 shrink-0 rounded-full border border-outline-variant/30 bg-primary-container text-on-primary-container flex items-center justify-center text-xs font-bold tracking-wider">
+          {entry.name ? entry.name.substring(0, 2).toUpperCase() : "U"}
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <h4 className="truncate text-label-md font-label-md text-on-surface">{entry.name}</h4>
@@ -36,7 +42,7 @@ export function LeaderboardCard({ entry }: { entry: LeaderboardEntry }) {
 
 export function LeaderboardPanel({ entries }: { entries: LeaderboardEntry[] }) {
   return (
-    <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
+    <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 sm:p-6">
       <h3 className="mb-5 font-headline-md text-lg font-bold text-on-surface">Top Contributors</h3>
       <div className="flex flex-col gap-4">
         {entries.map((e) => (

@@ -36,7 +36,7 @@ export interface CropCategory {
 export interface FarmerAuthor {
   id: string;
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   location: string;
   verified?: boolean;
   isExpert?: boolean;
@@ -107,20 +107,11 @@ export interface TrendingTopic {
 export interface PopularFarmer {
   id: string;
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   badge: string;
   followers: number;
   posts: number;
   isFollowing?: boolean;
-}
-
-export interface NearbyFarmer {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  distanceKm: number;
-  crop: string;
-  online?: boolean;
 }
 
 export interface CommunityEvent {
@@ -149,7 +140,7 @@ export interface LeaderboardEntry {
   id: string;
   rank: number;
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   score: number;
   helpfulAnswers: number;
   badge?: string;

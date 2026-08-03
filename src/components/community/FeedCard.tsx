@@ -32,6 +32,7 @@ interface FeedCardProps {
   currentUserName?: string;
   currentUserImage?: string | null;
   onDelete?: (postId: string) => void;
+  onReport?: (postId: string) => void;
 }
 
 function getInitials(name: string | null | undefined) {
@@ -60,7 +61,8 @@ export function FeedCard({
   currentUserId, 
   currentUserName = "Farmer", 
   currentUserImage = null, 
-  onDelete 
+  onDelete,
+  onReport
 }: FeedCardProps) {
   const isActuallyLiked = (currentUserId && post.likedByIds?.includes(currentUserId)) || post.isLiked || false;
   const [liked, setLiked] = useState(isActuallyLiked);
@@ -254,11 +256,17 @@ export function FeedCard({
         {/* Header */}
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex gap-3">
-            <img
-              src={post.author.avatarUrl}
-              alt=""
-              className="h-10 w-10 shrink-0 rounded-full object-cover"
-            />
+            {post.author.avatarUrl ? (
+              <img
+                src={post.author.avatarUrl}
+                alt=""
+                className="h-10 w-10 shrink-0 rounded-full object-cover border border-outline-variant/30"
+              />
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-full border border-outline-variant/30 bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold tracking-wider">
+                {post.author.name ? post.author.name.substring(0, 2).toUpperCase() : "F"}
+              </div>
+            )}
             <div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <h3 className="text-label-md font-label-md text-on-surface">{post.author.name}</h3>
@@ -325,7 +333,10 @@ export function FeedCard({
                   <button
                     role="menuitem"
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-label-md text-error hover:bg-surface-container-high"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onReport?.(post.id);
+                    }}
                   >
                     <Flag className="h-4 w-4" aria-hidden="true" />
                     Report post
@@ -527,14 +538,15 @@ export function FeedCard({
               ) : (
                 <div className="flex flex-col gap-3 max-h-64 overflow-y-auto custom-scrollbar">
                   {comments.map((c: any) => {
+                    const cImage = (c.userId === currentUserId && currentUserImage) ? currentUserImage : c.user?.image;
                     const initials = getInitials(c.user?.name);
                     return (
                     <div key={c.id} className="flex gap-3">
-                      {c.user?.image ? (
+                      {cImage ? (
                         <img
-                          src={c.user.image}
+                          src={cImage}
                           alt=""
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          className="h-8 w-8 shrink-0 rounded-full object-cover border border-outline-variant/30"
                         />
                       ) : (
                         <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[11px] font-bold text-primary">

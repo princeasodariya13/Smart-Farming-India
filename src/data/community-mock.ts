@@ -5,7 +5,6 @@ import type {
   CommunityStat,
   CropCategory,
   LeaderboardEntry,
-  NearbyFarmer,
   PopularFarmer,
   TrendingTopic,
 } from "@/types/community";
@@ -42,7 +41,7 @@ export const communityPosts: CommunityPost[] = [
     author: {
       id: "u-1",
       name: "Rameshbhai Patel",
-      avatarUrl: "https://i.pravatar.cc/100?img=12",
+      avatarUrl: "/images/farmers/man1.png",
       location: "Anand, Gujarat",
       verified: true,
     },
@@ -64,7 +63,7 @@ export const communityPosts: CommunityPost[] = [
       expert: {
         id: "e-1",
         name: "Dr. Kavita Mehta",
-        avatarUrl: "https://i.pravatar.cc/100?img=47",
+        avatarUrl: "/images/farmers/woman1.png",
         location: "AAU, Anand",
         isExpert: true,
         expertQualification: "Senior Agronomist, Anand Agricultural University",
@@ -80,7 +79,7 @@ export const communityPosts: CommunityPost[] = [
     author: {
       id: "u-2",
       name: "Priyaben Desai",
-      avatarUrl: "https://i.pravatar.cc/100?img=32",
+      avatarUrl: "/images/farmers/woman2.png",
       location: "Rajkot, Gujarat",
     },
     postedAt: "4h ago",
@@ -102,7 +101,7 @@ export const communityPosts: CommunityPost[] = [
     author: {
       id: "u-3",
       name: "Jayantibhai Chaudhari",
-      avatarUrl: "https://i.pravatar.cc/100?img=15",
+      avatarUrl: "/images/farmers/man2.png",
       location: "Banaskantha, Gujarat",
     },
     postedAt: "5h ago",
@@ -118,7 +117,7 @@ export const communityPosts: CommunityPost[] = [
     author: {
       id: "u-4",
       name: "Manubhai Gamit",
-      avatarUrl: "https://i.pravatar.cc/100?img=45",
+      avatarUrl: "/images/farmers/man1.png",
       location: "Bharuch, Gujarat",
       verified: true,
     },
@@ -147,7 +146,7 @@ export const communityPosts: CommunityPost[] = [
     author: {
       id: "u-5",
       name: "Kamlesh Vasava",
-      avatarUrl: "https://i.pravatar.cc/100?img=68",
+      avatarUrl: "/images/farmers/man2.png",
       location: "Narmada, Gujarat",
     },
     postedAt: "9h ago",
@@ -173,17 +172,11 @@ export const trendingTopics: TrendingTopic[] = [
 ];
 
 export const popularFarmers: PopularFarmer[] = [
-  { id: "pf1", name: "Dr. Kavita Mehta", avatarUrl: "https://i.pravatar.cc/100?img=44", badge: "Soil Specialist, AAU", followers: 19800, posts: 362 },
-  { id: "pf2", name: "Vikrambhai Rajput", avatarUrl: "https://i.pravatar.cc/100?img=51", badge: "Plant Pathology Expert", followers: 13200, posts: 224 },
-  { id: "pf3", name: "Meeraben Prajapati", avatarUrl: "https://i.pravatar.cc/100?img=25", badge: "Top Contributor", followers: 10400, posts: 438 },
+  { id: "pf1", name: "Dr. Kavita Mehta", avatarUrl: "/images/farmers/woman1.png", badge: "Soil Specialist, AAU", followers: 19800, posts: 362 },
+  { id: "pf2", name: "Vikrambhai Rajput", avatarUrl: "/images/farmers/man1.png", badge: "Plant Pathology Expert", followers: 13200, posts: 224 },
+  { id: "pf3", name: "Meeraben Prajapati", avatarUrl: "/images/farmers/woman2.png", badge: "Top Contributor", followers: 10400, posts: 438 },
 ];
 
-export const nearbyFarmers: NearbyFarmer[] = [
-  { id: "nf1", name: "Sureshbhai Patel", avatarUrl: "https://i.pravatar.cc/100?img=8", distanceKm: 1.8, crop: "Groundnut", online: true },
-  { id: "nf2", name: "Anitaben Chaudhari", avatarUrl: "https://i.pravatar.cc/100?img=29", distanceKm: 3.4, crop: "Castor", online: true },
-  { id: "nf3", name: "Ganeshbhai Gamit", avatarUrl: "https://i.pravatar.cc/100?img=60", distanceKm: 6.2, crop: "Bt Cotton", online: false },
-  { id: "nf4", name: "Rekhaben Vasava", avatarUrl: "https://i.pravatar.cc/100?img=36", distanceKm: 8.7, crop: "Kesar Mango", online: false },
-];
 
 export const communityEvents: CommunityEvent[] = [
   {
@@ -220,18 +213,18 @@ export const communityEvents: CommunityEvent[] = [
 ];
 
 export const communityNotifications: CommunityNotification[] = [
-  { id: "n1", type: "expert", actor: "Dr. Kavita Mehta", actorAvatarUrl: "https://i.pravatar.cc/100?img=47", message: "answered your question on groundnut leaf spot", postedAt: "15m ago", read: false },
-  { id: "n2", type: "comment", actor: "Priyaben Desai", actorAvatarUrl: "https://i.pravatar.cc/100?img=32", message: "commented on your Kesar mango post", postedAt: "52m ago", read: false },
-  { id: "n3", type: "follower", actor: "Ganeshbhai Gamit", actorAvatarUrl: "https://i.pravatar.cc/100?img=60", message: "started following you from Narmada", postedAt: "3h ago", read: true },
-  { id: "n4", type: "mention", actor: "Vikrambhai Rajput", actorAvatarUrl: "https://i.pravatar.cc/100?img=51", message: "mentioned you in a cotton pest alert post", postedAt: "1d ago", read: true },
+  { id: "n1", type: "expert", actor: "Dr. Kavita Mehta", actorAvatarUrl: "/images/farmers/woman1.png", message: "answered your question on groundnut leaf spot", postedAt: "15m ago", read: false },
+  { id: "n2", type: "comment", actor: "Priyaben Desai", actorAvatarUrl: "/images/farmers/woman2.png", message: "commented on your Kesar mango post", postedAt: "52m ago", read: false },
+  { id: "n3", type: "follower", actor: "Ganeshbhai Gamit", actorAvatarUrl: "/images/farmers/man1.png", message: "started following you from Narmada", postedAt: "3h ago", read: true },
+  { id: "n4", type: "mention", actor: "Vikrambhai Rajput", actorAvatarUrl: "/images/farmers/man2.png", message: "mentioned you in a cotton pest alert post", postedAt: "1d ago", read: true },
 ];
 
 export const leaderboard: LeaderboardEntry[] = [
-  { id: "l1", rank: 1, name: "Dr. Kavita Mehta", avatarUrl: "https://i.pravatar.cc/100?img=44", score: 10240, helpfulAnswers: 434, badge: "Top Expert" },
-  { id: "l2", rank: 2, name: "Meeraben Prajapati", avatarUrl: "https://i.pravatar.cc/100?img=25", score: 8640, helpfulAnswers: 372 },
-  { id: "l3", rank: 3, name: "Vikrambhai Rajput", avatarUrl: "https://i.pravatar.cc/100?img=51", score: 7820, helpfulAnswers: 316, badge: "Top Expert" },
-  { id: "l4", rank: 4, name: "Rameshbhai Patel", avatarUrl: "https://i.pravatar.cc/100?img=12", score: 5640, helpfulAnswers: 158 },
-  { id: "l5", rank: 5, name: "Manubhai Gamit", avatarUrl: "https://i.pravatar.cc/100?img=45", score: 5120, helpfulAnswers: 136 },
+  { id: "l1", rank: 1, name: "Dr. Kavita Mehta", avatarUrl: "/images/farmers/woman1.png", score: 10240, helpfulAnswers: 434, badge: "Top Expert" },
+  { id: "l2", rank: 2, name: "Meeraben Prajapati", avatarUrl: "/images/farmers/woman2.png", score: 8640, helpfulAnswers: 372 },
+  { id: "l3", rank: 3, name: "Vikrambhai Rajput", avatarUrl: "/images/farmers/man1.png", score: 7820, helpfulAnswers: 316, badge: "Top Expert" },
+  { id: "l4", rank: 4, name: "Rameshbhai Patel", avatarUrl: "/images/farmers/man2.png", score: 5640, helpfulAnswers: 158 },
+  { id: "l5", rank: 5, name: "Manubhai Gamit", avatarUrl: "/images/farmers/man1.png", score: 5120, helpfulAnswers: 136 },
 ];
 
 export const trendingSearchSuggestions = [

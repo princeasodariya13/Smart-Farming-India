@@ -32,12 +32,14 @@ export function NotificationCard({ notification }: { notification: CommunityNoti
   );
 }
 
-export function NotificationsPanel({ notifications }: { notifications: CommunityNotification[] }) {
+export function NotificationsPanel({ notifications, onMarkAllRead }: { notifications: CommunityNotification[], onMarkAllRead?: () => void }) {
   return (
     <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
       <div className="mb-5 flex items-center justify-between">
         <h3 className="font-headline-md text-lg font-bold text-on-surface">Notifications</h3>
-        <button className="text-label-md font-label-md text-primary hover:underline">Mark all read</button>
+        {notifications.some(n => !n.read) && (
+          <button onClick={onMarkAllRead} className="text-label-md font-label-md text-primary hover:underline">Mark all read</button>
+        )}
       </div>
       <div className="flex flex-col gap-4">
         {notifications.map((n) => (

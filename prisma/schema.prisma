@@ -246,6 +246,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   notifications Notification[]
+  communityNotifications CommunityNotification[]
   
   crops         Crop[]
   irrigation    IrrigationSystem?
@@ -786,6 +787,19 @@ model CommunityComment {
   createdAt DateTime @default(now())
 }
 
+model CommunityNotification {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String   // 'comment', 'follower', 'reply', 'mention', 'expert'
+  actorName       String
+  actorAvatarUrl  String
+  message         String
+  isRead          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isRead])
+}
 
 model SavedField {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId

@@ -17,11 +17,17 @@ export function ExpertAnswerCard({ answer }: ExpertAnswerCardProps) {
   return (
     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-success-soft/40 to-transparent p-5">
       <div className="flex gap-3">
-        <img
-          src={answer.expert.avatarUrl}
-          alt=""
-          className="h-10 w-10 shrink-0 rounded-full border-2 border-primary object-cover"
-        />
+        {answer.expert.avatarUrl ? (
+          <img
+            src={answer.expert.avatarUrl}
+            alt=""
+            className="h-10 w-10 shrink-0 rounded-full border-2 border-primary object-cover"
+          />
+        ) : (
+          <div className="h-10 w-10 shrink-0 rounded-full border-2 border-primary bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold tracking-wider">
+            {answer.expert.name ? answer.expert.name.substring(0, 2).toUpperCase() : "E"}
+          </div>
+        )}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h4 className="text-label-md font-label-md text-on-surface">{answer.expert.name}</h4>

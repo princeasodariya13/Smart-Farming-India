@@ -6,7 +6,7 @@ import { Image as ImageIcon, Video, HelpCircle, BarChart2, Sprout, MapPin, X, Lo
 import type { CropCategory } from "@/types/community";
 
 interface CreatePostProps {
-  authorAvatarUrl: string;
+  authorAvatarUrl?: string | null;
   authorName: string;
   categories: CropCategory[];
   onSubmit?: (payload: { 
@@ -187,11 +187,17 @@ export function CreatePost({ authorAvatarUrl, authorName, categories, onSubmit }
   return (
     <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
       <div className="flex items-start gap-3">
-        <img
-          src={authorAvatarUrl}
-          alt={`${authorName}'s avatar`}
-          className="h-11 w-11 shrink-0 rounded-full object-cover"
-        />
+        {authorAvatarUrl ? (
+          <img
+            src={authorAvatarUrl}
+            alt={`${authorName}'s avatar`}
+            className="h-11 w-11 shrink-0 rounded-full object-cover border border-outline-variant/30"
+          />
+        ) : (
+          <div className="h-11 w-11 shrink-0 rounded-full border border-outline-variant/30 bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold tracking-wider">
+            {authorName ? authorName.substring(0, 2).toUpperCase() : "F"}
+          </div>
+        )}
         <div className="flex-1">
           <label htmlFor="composer-text" className="sr-only">
             {placeholder}

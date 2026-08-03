@@ -43,8 +43,8 @@ export function CommunityHero({
             "repeating-linear-gradient(115deg, currentColor 0px, currentColor 1.5px, transparent 1.5px, transparent 22px)",
         }}
       />
-      <div className="relative z-10 flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative z-10 flex flex-col gap-5 px-4 py-6 sm:px-10 sm:py-10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container px-3 py-1 text-label-sm font-label-md text-on-primary-container">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
@@ -52,11 +52,11 @@ export function CommunityHero({
             </span>
             <h1
               id="community-hero-heading"
-              className="mt-3 font-headline-md text-3xl font-bold leading-tight text-on-surface sm:text-4xl"
+              className="mt-3 font-headline-md text-2xl font-bold leading-tight text-on-surface sm:text-4xl"
             >
               Good to see you, {farmerFirstName}.
             </h1>
-            <p className="mt-2 max-w-xl text-body-md text-on-surface-variant">
+            <p className="mt-2 max-w-xl text-sm text-on-surface-variant sm:text-body-md">
               Ask a question, share what&apos;s working in your field, or see what the rest of the
               community is harvesting this week.
             </p>
@@ -66,7 +66,7 @@ export function CommunityHero({
             type="button"
             onClick={onCreatePost}
             whileTap={{ scale: 0.96 }}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-label-md text-label-md text-on-primary shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 sm:px-6 sm:py-3 font-label-md text-label-md text-on-primary shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Create Post

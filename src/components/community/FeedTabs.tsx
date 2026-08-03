@@ -39,7 +39,7 @@ export function FeedTabs({ active, onChange }: FeedTabsProps) {
             aria-controls="community-feed-panel"
             onClick={() => onChange(tab.key)}
             className={cn(
-              "relative shrink-0 px-4 py-3 text-label-md font-label-md whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+              "relative shrink-0 px-3 py-2.5 sm:px-4 sm:py-3 text-[12px] sm:text-label-md font-label-md whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
               isActive ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
             )}
           >

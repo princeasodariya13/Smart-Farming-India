@@ -9,6 +9,7 @@ import { Leaf, PhoneCall, CalendarCheck, MessageCircle, Star, Clock, Filter, Che
 import PageLoader from '@/components/PageLoader';
 import NotificationBell from '@/components/NotificationBell';
 import { useNotification } from '@/contexts/NotificationContext';
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const experts = [
   {
@@ -230,77 +231,7 @@ function ConsultContent() {
       )}
 
       {/* SideNavBar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-full w-64 md:w-48 bg-surface-container-low border-r border-outline-variant p-2.5 gap-2 shadow-2xl md:shadow-none`}>
-        <div className="flex items-center justify-between px-2 py-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1 rounded-lg bg-primary text-on-primary">
-              <Leaf size={16} strokeWidth={2.5} />
-            </div>
-            <h1 className="text-[13px] font-extrabold tracking-tight text-on-surface">
-              Smart Farming<span className="text-primary">.</span>
-            </h1>
-          </div>
-          <button 
-            className="md:hidden text-on-surface hover:bg-surface-container-high p-1 rounded-lg transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-        
-        <nav data-lenis-prevent="true" className="flex-1 mt-2 space-y-1 overflow-y-auto custom-scrollbar">
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/dashboard">
-            <span className="material-symbols-outlined text-[18px]">dashboard</span>
-            <span className="text-[12px] font-medium">Dashboard</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/gps-area-calculator">
-            <span className="material-symbols-outlined text-[18px]">map</span>
-            <span className="text-[12px] font-medium">GPS Area Calculator</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/weather">
-            <span className="material-symbols-outlined text-[18px]">early_on</span>
-            <span className="text-[12px] font-medium">Weather</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/disease-detection">
-            <span className="material-symbols-outlined text-[18px]">shutter_speed</span>
-            <span className="text-[12px] font-medium">Scanner</span>
-          </Link>
-
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/market">
-            <span className="material-symbols-outlined text-[18px]">storefront</span>
-            <span className="text-[12px] font-medium">Marketplace</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/schemes">
-            <span className="material-symbols-outlined text-[18px]">article</span>
-            <span className="text-[12px] font-medium">Schemes</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/community">
-            <span className="material-symbols-outlined text-[18px]">forum</span>
-            <span className="text-[12px] font-medium">Community</span>
-          </Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/analytics">
-            <span className="material-symbols-outlined text-[18px]">insights</span>
-            <span className="text-[12px] font-medium">Analytics</span>
-          </Link>
-
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/settings">
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span className="text-[12px] font-medium">Settings</span>
-          </Link>
-        </nav>
-
-        <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
-          <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all outline outline-2 outline-offset-2 outline-primary/50">Consult Expert</Link>
-          <Link className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/support">
-            <span className="material-symbols-outlined text-[18px]">help</span>
-            <span className="text-[12px] font-medium">Support</span>
-          </Link>
-          <button onClick={() => signOut({ callbackUrl: '/' })} className="flex items-center gap-2 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all w-full text-left">
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span className="text-[12px] font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-8 md:pb-0">
