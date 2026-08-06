@@ -10,10 +10,8 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better hydration performance
   reactStrictMode: true,
 
-  // Fix Vercel Turbopack build error
-  experimental: {
-    turbo: {},
-  },
+  // Silence Turbopack/Webpack conflict error from PWA plugin (Next.js 16+)
+  turbopack: {},
 
   // Optimize images: use WebP/AVIF, enable lazy loading globally, and permit external hostnames
   images: {
