@@ -5,6 +5,7 @@ import SmoothScrolling from "@/components/SmoothScrolling";
 import GoogleTranslate from "@/components/GoogleTranslate";
 import { Providers } from "@/components/Providers";
 import { auth } from "@/auth";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default async function RootLayout({
         <Providers session={session}>
           <GoogleTranslate />
           <SmoothScrolling>{children}</SmoothScrolling>
+          <PWAInstallBanner />
         </Providers>
       </body>
     </html>
