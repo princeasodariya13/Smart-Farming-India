@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Satellite, CloudRain, Wind, Thermometer, MapPinned } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,30 @@ const MapComponent = dynamic(() => import("./WeatherMap"), {
  */
 export default function WeatherMapCard({ lat, lon }: { lat?: number; lon?: number }) {
   const [layer, setLayer] = useState<MapLayer>("satellite");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      try {
+        await containerRef.current.requestFullscreen();
+      } catch (err) {
+        console.error("Error attempting to enable fullscreen:", err);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    }
+  };
 
   return (
     <section id="weather-radar-section" className="space-y-6 rounded-[20px] border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-xl md:p-8 relative z-0">
@@ -54,8 +78,25 @@ export default function WeatherMapCard({ lat, lon }: { lat?: number; lon?: numbe
         </div>
       </div>
 
-      <div data-lenis-prevent="true" className="h-96 w-full overflow-hidden rounded-2xl border border-outline-variant/30 shadow-inner relative z-0">
+      <div 
+        ref={containerRef}
+        data-lenis-prevent="true" 
+        className={`w-full overflow-hidden border border-outline-variant/30 shadow-inner relative z-0 bg-surface-container-highest transition-all duration-300 ${
+          isFullscreen ? "h-screen rounded-none" : "h-96 rounded-2xl"
+        }`}
+      >
         <MapComponent layer={layer} lat={lat} lon={lon} />
+        
+        {/* Fullscreen Toggle Button */}
+        <button 
+          onClick={toggleFullscreen}
+          className="absolute bottom-6 right-6 z-[500] p-3 bg-white/90 backdrop-blur-sm text-primary rounded-xl shadow-lg border border-outline-variant hover:bg-white transition-all active:scale-95 flex items-center justify-center"
+          aria-label="Toggle Fullscreen"
+        >
+          <span className="material-symbols-outlined font-bold text-[22px]">
+            {isFullscreen ? "fullscreen_exit" : "fullscreen"}
+          </span>
+        </button>
       </div>
     </section>
   );

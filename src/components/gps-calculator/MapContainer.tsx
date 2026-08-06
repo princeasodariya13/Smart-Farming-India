@@ -33,8 +33,6 @@ export default function MapContainer({
   initialPoints,
 }: MapContainerProps) {
   const [currentStats, setCurrentStats] = useState<FieldStats | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleAreaChange = (stats: FieldStats | null) => {
     setCurrentStats(stats);
@@ -43,35 +41,8 @@ export default function MapContainer({
     }
   };
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      try {
-        await containerRef.current.requestFullscreen();
-      } catch (err) {
-        console.error("Error attempting to enable fullscreen:", err);
-      }
-    } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      }
-    }
-  };
-
   return (
-    <div 
-      ref={containerRef}
-      className={`relative w-full h-full min-h-[400px] bg-surface-container-highest overflow-hidden transition-all duration-300 ease-in-out ${
-        isFullscreen ? "rounded-none" : "rounded-3xl"
-      }`}
-    >
+    <div className="relative w-full h-full min-h-[400px] bg-surface-container-highest overflow-hidden">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -96,17 +67,6 @@ export default function MapContainer({
           </div>
         </div>
       )}
-
-      {/* Fullscreen Toggle Button */}
-      <button 
-        onClick={toggleFullscreen}
-        className="absolute bottom-6 right-6 z-[500] p-3 bg-white/90 backdrop-blur-sm text-primary rounded-xl shadow-lg border border-outline-variant hover:bg-white transition-all active:scale-95 flex items-center justify-center"
-        aria-label="Toggle Fullscreen"
-      >
-        <span className="material-symbols-outlined font-bold text-[22px]">
-          {isFullscreen ? "fullscreen_exit" : "fullscreen"}
-        </span>
-      </button>
     </div>
   );
 }
