@@ -1,9 +1,9 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Leaf } from "lucide-react";
+import { Leaf, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -25,6 +25,26 @@ const NAV_LINKS = [
 
 export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
   const pathname = usePathname();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
 
   return (
     <aside
@@ -73,6 +93,14 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
       </nav>
 
       <div className="mt-auto pt-3 border-t border-outline-variant space-y-1">
+        {deferredPrompt && (
+          <button 
+            onClick={handleInstallClick}
+            className="w-full flex items-center justify-center gap-2 mb-2 py-2.5 bg-secondary text-white rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all"
+          >
+            <Download size={14} /> Download App
+          </button>
+        )}
         <Link href="/consult" className="w-full block text-center mb-3 py-2.5 bg-primary text-on-primary rounded-lg text-[12px] font-bold shadow-sm active:scale-95 transition-all">
           Consult Expert
         </Link>

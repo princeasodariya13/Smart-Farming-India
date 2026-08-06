@@ -517,7 +517,7 @@ export default function GPSLayout({
       <div className="hidden print:block w-full px-8 pt-8 pb-4 bg-white">
         <h1 className="text-3xl font-bold text-[#0d631b] border-b-2 border-[#0d631b] pb-2 mb-6">Field Measurement Report</h1>
         <p className="mb-1 text-black"><strong>Location:</strong> {currentLocName}</p>
-        <p className="mb-6 text-black"><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+        <p className="mb-6 text-black" suppressHydrationWarning><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
         
         <div className="grid grid-cols-2 gap-6 mt-6 mb-6">
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>

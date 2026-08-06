@@ -600,7 +600,7 @@ function CommunityContent() {
                   activeQuery={searchQuery}
                 />
                 <PopularFarmersPanel farmers={realPopularFarmers} />
-                <LeaderboardPanel entries={realLeaderboard} />
+
               </aside>
             </div>
           </motion.div>

@@ -177,7 +177,7 @@ export default function InteractiveMap({ activeTool, onToolChange, onAreaChange,
         }
       },
       (error) => {
-        console.error("GPS Error:", error);
+        console.error("GPS Error:", { code: error.code, message: error.message });
         alert("Could not find your location. Please ensure location services are enabled in your browser/device settings.");
       },
       {

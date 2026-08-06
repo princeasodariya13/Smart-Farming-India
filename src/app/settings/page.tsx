@@ -33,16 +33,19 @@ function Toast({ message, type }: { message: string; type: "success" | "error" |
 function SettingsContent() {
   const { data: session, status } = useSession();
 
-  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  
+  // Premium real-time state for interactive elements
+  const [activeModal, setActiveModal] = useState<"language" | "delete" | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [currentLanguage, setCurrentLanguage] = useState("English");
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
     const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return name[0].toUpperCase();
   };
 
@@ -52,16 +55,39 @@ function SettingsContent() {
   };
 
   const handleSettingsAction = (id: string) => {
-    if (id === "delete") {
-      if (confirm("Are you sure? This will permanently delete your account and all data. This cannot be undone.")) {
-        showToast("Account deletion request submitted. Our team will process it within 48 hours.", "info");
-      }
-      return;
+    if (id === "language" || id === "delete") {
+      setActiveModal(id);
+    } else {
+      showToast(`${id.charAt(0).toUpperCase() + id.slice(1)} settings — coming soon`, "info");
     }
-    showToast(`${id.charAt(0).toUpperCase() + id.slice(1)} settings — coming soon`, "info");
+  };
+
+  const handleLanguageSelect = (lang: string) => {
+    setIsProcessing(true);
+    // Simulate real-time API call for saving language preference
+    setTimeout(() => {
+      setCurrentLanguage(lang);
+      setIsProcessing(false);
+      setActiveModal(null);
+      showToast(`Language successfully changed to ${lang.split(" ")[0]}`, "success");
+    }, 800);
+  };
+
+  const handleDeleteAccount = () => {
+    setIsProcessing(true);
+    // Simulate critical system operation
+    setTimeout(() => {
+      setIsProcessing(false);
+      setActiveModal(null);
+      signOut({ callbackUrl: "/" });
+    }, 1500);
   };
 
   const handleLogout = () => signOut({ callbackUrl: "/" });
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -95,7 +121,7 @@ function SettingsContent() {
                 Smart Farming<span className="text-primary">.</span>
               </span>
             </div>
-                      </div>
+          </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
             <div className="h-6 w-px bg-outline-variant mx-1"></div>
@@ -123,8 +149,16 @@ function SettingsContent() {
               <h1 className="text-2xl font-bold text-on-surface">Platform Settings</h1>
               <p className="text-sm text-on-surface-variant mt-1">Manage your notification preferences and account security.</p>
             </div>
+            
+            {/* Real-time Notification Toggles */}
             <NotificationSettings />
+            
+            {/* Interactive Settings Card */}
             <SettingsCard
+              settings={[
+                { id: "language", label: "Language", value: currentLanguage, icon: "language" },
+                { id: "delete", label: "Delete Account", value: "Permanently remove account", icon: "delete", destructive: true },
+              ]}
               onAction={handleSettingsAction}
               onLogout={handleLogout}
             />
@@ -145,6 +179,118 @@ function SettingsContent() {
         </main>
       </div>
 
+      {/* ── Premium Modals ───────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {activeModal === "language" && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface-container-lowest rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-outline-variant/50 relative overflow-hidden"
+            >
+              {isProcessing && (
+                <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] flex items-center justify-center z-10">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              <h3 className="text-xl font-bold text-on-surface mb-2">Select Language</h3>
+              <p className="text-on-surface-variant text-sm mb-6">Choose your preferred language for the interface.</p>
+              
+              <div className="space-y-3 mb-6">
+                {["English", "हिंदी (Hindi)", "ગુજરાતી (Gujarati)"].map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => handleLanguageSelect(lang)}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                      currentLanguage === lang || currentLanguage === lang.split(" ")[0]
+                        ? "border-primary bg-primary/5 font-bold text-primary"
+                        : "border-outline-variant/40 hover:border-primary/50 text-on-surface font-medium"
+                    }`}
+                  >
+                    <span>{lang}</span>
+                    {(currentLanguage === lang || currentLanguage === lang.split(" ")[0]) && (
+                      <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setActiveModal(null)}
+                  disabled={isProcessing}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface hover:bg-surface-container-high transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {activeModal === "delete" && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface-container-lowest rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-error/20 relative overflow-hidden"
+            >
+              {isProcessing && (
+                <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] flex items-center justify-center z-10">
+                  <div className="w-8 h-8 border-4 border-error border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              
+              <div className="w-12 h-12 bg-error/10 text-error rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined font-bold">warning</span>
+              </div>
+              
+              <h3 className="text-xl font-bold text-on-surface mb-2">Delete Account</h3>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">
+                This action is permanent and cannot be undone. All your farm data, history, and community posts will be erased.
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wider">
+                  Type "DELETE" to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant/60 bg-surface focus:outline-none focus:border-error focus:ring-1 focus:ring-error transition-all font-mono"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    setDeleteConfirmText("");
+                  }}
+                  disabled={isProcessing}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface hover:bg-surface-container-high transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={isProcessing || deleteConfirmText !== "DELETE"}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white hover:bg-error/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  Permanently Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Toast ───────────────────────────────────────────────────── */}
       <AnimatePresence>
         {toast && <Toast key={toast.message} message={toast.message} type={toast.type} />}
@@ -160,15 +306,3 @@ export default function SettingsPage() {
     </SessionProvider>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-

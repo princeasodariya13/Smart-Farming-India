@@ -24,6 +24,17 @@ const hindVadodara = Hind_Vadodara({
 export const metadata: Metadata = {
   title: "Smart Farming India | Intelligent Agriculture",
   description: "AI-powered digital agriculture tools for every Indian farmer.",
+  manifest: "/manifest.json",
+  themeColor: "#2E7D32",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Smart Farming",
+  },
+};
+
+export const viewport = {
+  themeColor: "#2E7D32",
 };
 
 export default async function RootLayout({

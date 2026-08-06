@@ -1,0 +1,21 @@
+{
+  "name": "Smart Farming India",
+  "short_name": "Smart Farming",
+  "description": "India's complete digital farming ecosystem.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f4",
+  "theme_color": "#2E7D32",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

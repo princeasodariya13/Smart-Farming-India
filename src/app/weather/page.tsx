@@ -1156,10 +1156,7 @@ function WeatherContent() {
           </footer>
         </main>
 
-        {/* Floating Action Button for AI Detection (Mobile) */}
-        <button className="md:hidden fixed bottom-12 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary-container transition-colors">
-          <span className="material-symbols-outlined">camera</span>
-        </button>
+
 
       </div>
 
