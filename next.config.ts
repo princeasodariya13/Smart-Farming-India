@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better hydration performance
   reactStrictMode: true,
 
+  // Fix Vercel Turbopack build error
+  experimental: {
+    turbo: {},
+  },
+
   // Optimize images: use WebP/AVIF, enable lazy loading globally, and permit external hostnames
   images: {
     formats: ["image/avif", "image/webp"],
