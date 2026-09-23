@@ -1,6 +1,107 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Briefcase, MapPin, Clock } from 'lucide-react';
+import JsonLd from '@/components/JsonLd';
+
+export const metadata: Metadata = {
+  title: "Careers at Smart Farming India — Join Our Team",
+  description:
+    "Explore open career opportunities at Smart Farming India. Build AI models, agronomy platforms, and technology for Indian agriculture.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/careers",
+  },
+  openGraph: {
+    title: "Careers at Smart Farming India — Join Our Team",
+    description:
+      "Explore open career opportunities at Smart Farming India. Build AI models, agronomy platforms, and technology for Indian agriculture.",
+    url: "https://smart-farming-india.vercel.app/careers",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Careers at Smart Farming India" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Careers at Smart Farming India — Join Our Team",
+    description:
+      "Explore open career opportunities at Smart Farming India. Build AI models, agronomy platforms, and technology for Indian agriculture.",
+    images: ["/logo.jpg"],
+  },
+};
+
+const jobsJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: "Senior AI/ML Engineer",
+    description:
+      "Join Smart Farming India as a Senior AI/ML Engineer in Bengaluru. Help build computer vision models for crop disease detection.",
+    employmentType: "FULL_TIME",
+    hiringOrganization: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Bengaluru",
+        addressCountry: "IN",
+      },
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: "Lead Agronomy Specialist",
+    description:
+      "Join Smart Farming India as Lead Agronomy Specialist in Pune to drive agricultural advisory models.",
+    employmentType: "FULL_TIME",
+    hiringOrganization: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Pune",
+        addressCountry: "IN",
+      },
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: "Product Marketing Manager",
+    description:
+      "Join Smart Farming India as Product Marketing Manager (Remote) to lead growth and farmer outreach campaigns.",
+    employmentType: "FULL_TIME",
+    hiringOrganization: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    applicantLocationRequirements: {
+      "@type": "Country",
+      name: "India",
+    },
+    jobLocationType: "TELECOMMUTE",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: "Customer Success Representative",
+    description:
+      "Join Smart Farming India as Customer Success Representative (Remote) supporting farmers across India.",
+    employmentType: "CONTRACT",
+    hiringOrganization: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    applicantLocationRequirements: {
+      "@type": "Country",
+      name: "India",
+    },
+    jobLocationType: "TELECOMMUTE",
+  },
+];
 
 export default function CareersPage() {
   const jobs = [
@@ -12,14 +113,15 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans">
+      <JsonLd data={jobsJsonLd} />
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
         <Link href="/" className="inline-flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition-colors mb-8 md:mb-10">
           <ArrowLeft size={18} /> Back to Home
         </Link>
         
-        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 tracking-tight">Join the Revolution.</h1>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-5 tracking-tight">Careers at Smart Farming India</h1>
         <p className="text-xl text-slate-600 mb-10 md:mb-12 leading-relaxed max-w-3xl">
-          We are looking for passionate builders, thinkers, and innovators to help us modernize one of the oldest and most important industries in the world.
+          Build AI models, computer vision diagnostic engines, satellite GIS tools, and direct-to-farmer marketplaces that empower millions of agricultural workers across India.
         </p>
 
         <h2 className="text-2xl font-bold text-slate-900 mb-6">Open Positions</h2>

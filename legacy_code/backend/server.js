@@ -59,9 +59,9 @@ const allowedOrigins = [
     'http://localhost:5173', // Vite dev server
     'http://127.0.0.1:5173', // Explicit loopback for some browsers
     'http://127.0.0.1:8080', // Explicit loopback for legacy port
-    'https://smart-farmer-three.vercel.app', // Vercel deployed frontend
-    'https://www.smart-farmer-three.vercel.app', // Alternate Vercel domain
-    'https://smart-farmer-cyyz.onrender.com', // Render backend (for direct access/tests)
+    'https://smart-farming-india.vercel.app', // Vercel deployed frontend
+    'https://www.smart-farming-india.vercel.app', // Alternate Vercel domain
+    'https://smart-farmer-three.vercel.app', // Legacy Vercel domain
 ];
 
 const corsOptions = {
@@ -76,8 +76,8 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        // Allow Vercel preview deployments (e.g., smart-farmer-three-git-branch-username.vercel.app)
-        if (origin.match(/^https:\/\/smart-farmer-three.*\.vercel\.app$/)) {
+        // Allow Vercel preview deployments (e.g., smart-farming-india-git-branch.vercel.app)
+        if (origin.match(/^https:\/\/(smart-farming-india|smart-farmer-three).*\.vercel\.app$/)) {
             return callback(null, true);
         }
 

@@ -3,27 +3,43 @@ import { Globe, Mail, MessageCircle } from "lucide-react";
 
 const FOOTER_COLUMNS = [
   {
-    heading: "Platform",
+    heading: "Platform Features",
     links: [
-      { name: "Marketplace", href: "/login" },
-      { name: "Weather API", href: "/login" },
-      { name: "Yield Prediction", href: "/login" },
+      { name: "Live Weather Radar", href: "/weather" },
+      { name: "AI Disease Detection", href: "/disease-detection" },
+      { name: "Mandi Marketplace", href: "/market" },
+      { name: "Market Price Insights", href: "/market-insights" },
+      { name: "Government Schemes", href: "/schemes" },
     ],
   },
   {
-    heading: "Resources",
+    heading: "Tools & Advisory",
     links: [
-      { name: "Schemes Guide", href: "/schemes" },
-      { name: "Community Forum", href: "/community" },
-      { name: "Expert Blog", href: "/blog" },
+      { name: "GPS Area Calculator", href: "/gps-area-calculator" },
+      { name: "Agri Expert Consult", href: "/consult" },
+      { name: "Farmer Community", href: "/community" },
+      { name: "Platform Documentation", href: "/docs" },
+      { name: "Help & Support", href: "/support" },
     ],
   },
   {
-    heading: "Legal",
+    heading: "Company",
+    links: [
+      { name: "About Us", href: "/about" },
+      { name: "Agricultural Blog", href: "/blog" },
+      { name: "Careers", href: "/careers" },
+      { name: "Partner Network", href: "/partner-network" },
+      { name: "Press & News", href: "/press" },
+    ],
+  },
+  {
+    heading: "Legal & Security",
     links: [
       { name: "Privacy Policy", href: "/privacy" },
       { name: "Terms of Service", href: "/terms" },
       { name: "Compliance", href: "/compliance" },
+      { name: "Platform Security", href: "/security" },
+      { name: "Refund Policy", href: "/refund" },
     ],
   },
 ];
@@ -49,7 +65,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-12 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {FOOTER_COLUMNS.map((column) => (
               <div key={column.heading}>
                 <h4 className="mb-6 font-bold text-slate-900">{column.heading}</h4>

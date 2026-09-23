@@ -87,6 +87,21 @@ export default function GPSAreaCalculatorPage() {
           <div className="flex-1 lg:h-full">
             <GPSLayout />
           </div>
+          <footer className="w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-4">
+            <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start">
+              <h4 className="text-sm font-bold text-primary">Smart Farming India — GPS Plot Calculator</h4>
+              <p className="text-xs text-on-surface-variant mt-0.5 text-center md:text-left">
+                Accurate land area measurement for seed, fertilizer, and machinery estimation.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-4 md:gap-6 whitespace-nowrap overflow-x-auto custom-scrollbar text-xs font-medium">
+              <Link className="text-on-surface-variant hover:text-primary transition-colors" href="/market">Equipment Rental</Link>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors" href="/schemes">Land Subsidies</Link>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors" href="/docs">GPS Docs</Link>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
+            </div>
+          </footer>
         </main>
       </div>
     </div>

@@ -20,7 +20,9 @@ export function ExpertAnswerCard({ answer }: ExpertAnswerCardProps) {
         {answer.expert.avatarUrl ? (
           <img
             src={answer.expert.avatarUrl}
-            alt=""
+            alt={`Profile avatar of expert ${answer.expert.name}`}
+            loading="lazy"
+            decoding="async"
             className="h-10 w-10 shrink-0 rounded-full border-2 border-primary object-cover"
           />
         ) : (

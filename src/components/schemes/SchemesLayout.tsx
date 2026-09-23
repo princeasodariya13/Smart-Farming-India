@@ -398,11 +398,10 @@ export default function SchemesLayout() {
         {/* Hero */}
         <header>
           <h1 className="text-3xl md:text-4xl font-bold text-on-surface mb-2">
-            Government Schemes &amp; Subsidies
+            Government Schemes &amp; Agricultural Subsidies Portal
           </h1>
           <p className="text-base text-on-surface-variant max-w-2xl mb-6">
-            Streamlined access to agricultural financial support. Secure, transparent, and
-            direct-to-farmer benefits.
+            Streamlined access to PM-Kisan, PM Fasal Bima Yojana, tractor subsidies, drip irrigation grants, and Direct Benefit Transfer (DBT) eligibility for Indian farmers.
           </p>
           <SearchBar
             onSearch={handleSearch}

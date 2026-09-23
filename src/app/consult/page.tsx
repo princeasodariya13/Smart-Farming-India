@@ -291,7 +291,7 @@ function ConsultContent() {
                   </span>
                   Experts Available Now
                 </div>
-                <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-2">Consult an Agronomist</h2>
+                <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-2">Agri Expert Consultation &amp; 1-on-1 Advisory</h1>
                 <p className="text-on-surface-variant font-body-sm max-w-lg mb-6">
                   Book a 1-on-1 video consultation or direct chat with certified agriculture experts to solve pest issues, plan crops, or discuss soil health.
                 </p>
@@ -411,6 +411,21 @@ function ConsultContent() {
             </div>
 
           </div>
+            {/* Footer */}
+            <footer className="w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-12 rounded-2xl">
+              <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start text-center md:text-left">
+                <h4 className="text-sm font-bold text-primary">Smart Farming India — Expert Consultation</h4>
+                <p className="text-xs text-on-surface-variant mt-0.5 max-w-sm">Connect 1-on-1 with certified agronomists and plant pathology specialists.</p>
+              </div>
+              <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-medium">
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/disease-detection">AI Disease Detection</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/community">Farmer Community</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/weather">Weather Radar</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
+              </ul>
+            </footer>
         </main>
       </div>
 

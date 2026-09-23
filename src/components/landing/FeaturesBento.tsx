@@ -41,7 +41,7 @@ export default function FeaturesBento() {
                 Snap a photo to identify crop diseases instantly with 98.5% precision. Receive
                 immediate treatment protocols and preventative measures.
               </p>
-              <ul className="mb-8 space-y-4">
+              <ul className="mb-6 space-y-4">
                 {DISEASE_DETECTION_POINTS.map((point) => (
                   <li key={point} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
                     <CheckCircle size={20} className="text-green-600" />
@@ -49,6 +49,13 @@ export default function FeaturesBento() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href="/disease-detection"
+                className="inline-flex items-center gap-2 text-sm font-bold text-green-700 hover:text-green-800 transition-transform hover:translate-x-1"
+              >
+                Try AI Disease Detection
+                <ArrowRight size={16} />
+              </Link>
             </div>
             <div className="relative mt-auto h-56 min-h-[14rem] w-full shrink-0 overflow-hidden rounded-2xl border border-slate-100">
               <Image
@@ -71,9 +78,16 @@ export default function FeaturesBento() {
                 <CloudSun size={24} />
               </div>
               <h3 className="mb-2 text-xl font-bold text-slate-900">Hyper-local Weather</h3>
-              <p className="text-base text-slate-600 leading-relaxed mb-6 md:mb-0">
+              <p className="text-base text-slate-600 leading-relaxed mb-4">
                 Pinpoint accurate forecasts with live AI-driven localized insights tailored for Gujarat.
               </p>
+              <Link
+                href="/weather"
+                className="inline-flex items-center gap-2 text-sm font-bold text-amber-700 hover:text-amber-800 transition-transform hover:translate-x-1"
+              >
+                View Live Weather Radar
+                <ArrowRight size={16} />
+              </Link>
             </div>
             <LiveWeather />
           </RevealOnScroll>
@@ -91,10 +105,10 @@ export default function FeaturesBento() {
               </p>
             </div>
             <Link
-              href="/dashboard"
+              href="/schemes"
               className="mt-6 flex items-center gap-2 text-sm font-bold text-blue-700 transition-transform hover:translate-x-1"
             >
-              Apply now
+              Explore Schemes
               <ArrowRight size={18} />
             </Link>
           </RevealOnScroll>
@@ -109,9 +123,15 @@ export default function FeaturesBento() {
                 <Store size={24} />
               </div>
               <h3 className="mb-2 text-xl font-bold text-slate-900">Mandi Prices</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed mb-3">
                 Real-time market rates from 1000+ APMCs across India.
               </p>
+              <Link
+                href="/market"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-700 hover:text-purple-800 transition-transform hover:translate-x-1 mb-2"
+              >
+                Browse Marketplace <ArrowRight size={14} />
+              </Link>
             </div>
             <dl className="mt-4 border-t border-slate-100 pt-4">
               {MANDI_PRICES.map((row) => (

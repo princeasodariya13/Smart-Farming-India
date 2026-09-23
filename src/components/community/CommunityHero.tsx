@@ -54,11 +54,10 @@ export function CommunityHero({
               id="community-hero-heading"
               className="mt-3 font-headline-md text-2xl font-bold leading-tight text-on-surface sm:text-4xl"
             >
-              Good to see you, {farmerFirstName}.
+              Farmer Community &amp; Knowledge Exchange
             </h1>
             <p className="mt-2 max-w-xl text-sm text-on-surface-variant sm:text-body-md">
-              Ask a question, share what&apos;s working in your field, or see what the rest of the
-              community is harvesting this week.
+              Ask questions, share localized farming techniques, get expert answers, and connect with 48,000+ farmers across India.
             </p>
           </div>
 

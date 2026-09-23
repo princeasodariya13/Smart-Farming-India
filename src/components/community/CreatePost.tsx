@@ -190,7 +190,9 @@ export function CreatePost({ authorAvatarUrl, authorName, categories, onSubmit }
         {authorAvatarUrl ? (
           <img
             src={authorAvatarUrl}
-            alt={`${authorName}'s avatar`}
+            alt={`Profile avatar of ${authorName}`}
+            loading="lazy"
+            decoding="async"
             className="h-11 w-11 shrink-0 rounded-full object-cover border border-outline-variant/30"
           />
         ) : (
@@ -221,7 +223,7 @@ export function CreatePost({ authorAvatarUrl, authorName, categories, onSubmit }
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="relative mt-3 inline-block"
               >
-                <img src={selectedImage} alt="Upload preview" className="max-h-64 rounded-xl object-cover border border-outline-variant/30" />
+                <img src={selectedImage} alt="Image attachment preview for post" loading="lazy" decoding="async" className="max-h-64 rounded-xl object-cover border border-outline-variant/30" />
                 <button
                   type="button"
                   onClick={() => setSelectedImage(null)}

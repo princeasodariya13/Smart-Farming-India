@@ -15,7 +15,8 @@ export default function Hero() {
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Image
           src="/login-bg.png"
-          alt="Hero Background"
+          alt=""
+          aria-hidden="true"
           fill
           priority
           className="object-cover opacity-[0.03] mix-blend-multiply"
@@ -30,12 +31,11 @@ export default function Hero() {
           </span>
 
           <h1 className="mb-6 text-balance text-4xl font-extrabold leading-tight text-slate-900 md:text-5xl lg:text-6xl tracking-tight">
-            Empowering Every Farmer <span className="italic text-green-600">with AI</span>
+            Smart Farming India — Empowering Every Farmer <span className="italic text-green-600">with AI &amp; Real-Time Data</span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-xl text-base text-slate-600 md:mx-0 md:text-lg leading-relaxed">
-            India&apos;s complete digital farming ecosystem. AI-driven insights, marketplace
-            access, and government integration in one premium platform.
+            India&apos;s complete digital farming ecosystem. AI crop disease detection, live APMC mandi prices, hyper-local weather forecasts, and government scheme access in one unified platform.
           </p>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row md:justify-start">

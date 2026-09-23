@@ -91,9 +91,9 @@ export default function DocumentationPage() {
             {/* Header */}
             <div className="bg-surface-glass border border-outline-variant/60 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row gap-6 items-center justify-between">
               <div>
-                <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-2">Platform Documentation</h2>
+                <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-2">Smart Farming Platform Documentation &amp; User Manual</h1>
                 <p className="text-on-surface-variant font-body-sm max-w-lg">
-                  Everything you need to know about using Smart Farming India, from setting up your account to calculating field areas precisely.
+                  Comprehensive guides for using AI crop diagnostics, GPS land calculators, APMC mandi trackers, and government scheme eligibility tools.
                 </p>
               </div>
               <div className="relative w-full md:w-64 shrink-0">
@@ -235,6 +235,23 @@ export default function DocumentationPage() {
               </div>
 
             </div>
+
+            {/* Footer */}
+            <footer className="w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-12 rounded-2xl">
+              <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start text-center md:text-left">
+                <h4 className="text-sm font-bold text-primary">Smart Farming India — Documentation</h4>
+                <p className="text-xs text-on-surface-variant mt-0.5 max-w-sm">Comprehensive guides and manuals for all agricultural modules.</p>
+              </div>
+              <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-medium">
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/weather">Weather</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/disease-detection">Disease Scanner</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/market">Marketplace</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/schemes">Govt Schemes</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/gps-area-calculator">GPS Calculator</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/consult">Expert Consult</Link></li>
+                <li><Link className="text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</Link></li>
+              </ul>
+            </footer>
           </div>
         </main>
       </div>

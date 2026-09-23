@@ -20,7 +20,7 @@ export function LeaderboardCard({ entry }: { entry: LeaderboardEntry }) {
         {entry.rank}
       </span>
       {entry.avatarUrl ? (
-        <img src={entry.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover border border-outline-variant/30" />
+        <img src={entry.avatarUrl} alt={`Profile avatar of top contributor ${entry.name}`} className="h-9 w-9 shrink-0 rounded-full object-cover border border-outline-variant/30" loading="lazy" decoding="async" />
       ) : (
         <div className="h-9 w-9 shrink-0 rounded-full border border-outline-variant/30 bg-primary-container text-on-primary-container flex items-center justify-center text-xs font-bold tracking-wider">
           {entry.name ? entry.name.substring(0, 2).toUpperCase() : "U"}

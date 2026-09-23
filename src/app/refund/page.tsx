@@ -1,6 +1,33 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCcw } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: "Refund & Cancellation Policy",
+  description:
+    "Read our clear refund and cancellation terms for marketplace transactions and premium agricultural advisory bookings.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/refund",
+  },
+  openGraph: {
+    title: "Refund & Cancellation Policy | Smart Farming India",
+    description:
+      "Read our clear refund and cancellation terms for marketplace transactions and premium agricultural advisory bookings.",
+    url: "https://smart-farming-india.vercel.app/refund",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Refund Policy" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Refund & Cancellation Policy | Smart Farming India",
+    description:
+      "Read our clear refund and cancellation terms for marketplace transactions and premium agricultural advisory bookings.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function RefundPage() {
   return (

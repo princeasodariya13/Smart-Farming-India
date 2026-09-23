@@ -1,10 +1,72 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Newspaper, Download } from 'lucide-react';
+import JsonLd from '@/components/JsonLd';
+
+export const metadata: Metadata = {
+  title: "Press & Media Resources",
+  description:
+    "Official press releases, media announcements, brand assets, and company news from Smart Farming India.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/press",
+  },
+  openGraph: {
+    title: "Press & Media Resources | Smart Farming India",
+    description:
+      "Official press releases, media announcements, brand assets, and company news from Smart Farming India.",
+    url: "https://smart-farming-india.vercel.app/press",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Press Resources" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Press & Media Resources | Smart Farming India",
+    description:
+      "Official press releases, media announcements, brand assets, and company news from Smart Farming India.",
+    images: ["/logo.jpg"],
+  },
+};
+
+const pressJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: "Smart Farming India crosses 50,000 active daily users.",
+    datePublished: "2025-10-12",
+    publisher: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    url: "https://smart-farming-india.vercel.app/press",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: "New AI Engine launched with 95% accuracy for 40+ crop diseases.",
+    datePublished: "2025-08-04",
+    publisher: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    url: "https://smart-farming-india.vercel.app/press",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: "Series A funding secured to expand drone mapping operations.",
+    datePublished: "2025-05-22",
+    publisher: {
+      "@id": "https://smart-farming-india.vercel.app/#organization",
+    },
+    url: "https://smart-farming-india.vercel.app/press",
+  },
+];
 
 export default function PressPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans">
+      <JsonLd data={pressJsonLd} />
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
         <Link href="/" className="inline-flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition-colors mb-8 md:mb-10">
           <ArrowLeft size={18} /> Back to Home

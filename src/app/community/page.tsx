@@ -614,6 +614,8 @@ function CommunityContent() {
               </p>
             </div>
             <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto pb-2 md:pb-0 max-w-full">
+              <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/blog">Agri Blog</Link>
+              <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/consult">Expert Consultation</Link>
               <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
               <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
               <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>

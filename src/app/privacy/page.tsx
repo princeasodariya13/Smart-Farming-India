@@ -1,8 +1,35 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Home } from 'lucide-react';
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Understand how Smart Farming India collects, protects, and handles farm data, personal details, and user privacy.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy | Smart Farming India",
+    description:
+      "Understand how Smart Farming India collects, protects, and handles farm data, personal details, and user privacy.",
+    url: "https://smart-farming-india.vercel.app/privacy",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Privacy Policy" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | Smart Farming India",
+    description:
+      "Understand how Smart Farming India collects, protects, and handles farm data, personal details, and user privacy.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function PrivacyPage() {
   return (

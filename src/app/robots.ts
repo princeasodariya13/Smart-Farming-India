@@ -1,0 +1,29 @@
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://smart-farming-india.vercel.app";
+
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/dashboard",
+          "/analytics",
+          "/profile",
+          "/settings",
+          "/api/",
+          "/login",
+          "/signup",
+          "/forgot-password",
+          "/reset-password",
+        ],
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
+  };
+}

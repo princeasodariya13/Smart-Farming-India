@@ -259,7 +259,9 @@ export function FeedCard({
             {post.author.avatarUrl ? (
               <img
                 src={post.author.avatarUrl}
-                alt=""
+                alt={`Profile avatar of ${post.author.name}`}
+                loading="lazy"
+                decoding="async"
                 className="h-10 w-10 shrink-0 rounded-full object-cover border border-outline-variant/30"
               />
             ) : (
@@ -398,7 +400,7 @@ export function FeedCard({
         {/* Video placeholder */}
         {post.type === "video" && post.videoThumbnailUrl && (
           <div className="relative mb-4 aspect-video overflow-hidden rounded-xl bg-black/80">
-            <img src={post.videoThumbnailUrl} alt="" className="h-full w-full object-cover opacity-80" />
+            <img src={post.videoThumbnailUrl} alt={post.title ? `Video thumbnail for ${post.title}` : "Community video post thumbnail"} loading="lazy" decoding="async" className="h-full w-full object-cover opacity-80" />
             <button
               type="button"
               aria-label="Play video"
@@ -545,7 +547,9 @@ export function FeedCard({
                       {cImage ? (
                         <img
                           src={cImage}
-                          alt=""
+                          alt={`Profile avatar of ${c.user?.name || "Commenter"}`}
+                          loading="lazy"
+                          decoding="async"
                           className="h-8 w-8 shrink-0 rounded-full object-cover border border-outline-variant/30"
                         />
                       ) : (

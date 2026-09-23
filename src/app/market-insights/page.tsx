@@ -158,10 +158,10 @@ export default function MarketInsightsPage() {
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface">Live Market Insights</h1>
+              <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface">APMC Mandi Prices &amp; Agricultural Market Insights</h1>
               <p className="text-[12px] text-on-surface-variant flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                Govt. AGMARKNET Data
+                Live Govt. AGMARKNET Mandi Data Across India
               </p>
             </div>
           </div>
@@ -276,6 +276,22 @@ export default function MarketInsightsPage() {
             ))}
           </div>
         )}
+
+        {/* Footer */}
+        <footer className="w-full py-8 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-12 rounded-2xl">
+          <div className="mb-6 md:mb-0 flex flex-col items-center md:items-start text-center md:text-left">
+            <h4 className="text-lg font-bold text-primary">Smart Farming India</h4>
+            <p className="text-sm text-on-surface-variant mt-1 max-w-sm">© 2026 Smart Farming India. Real-time APMC Mandi price analytics.</p>
+          </div>
+          <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market">Mandi Marketplace</Link></li>
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/weather">Harvest Weather</Link></li>
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/schemes">MSP & Schemes</Link></li>
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
+            <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
+          </ul>
+        </footer>
       </main>
     </div>
   );

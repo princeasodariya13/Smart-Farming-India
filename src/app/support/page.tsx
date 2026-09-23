@@ -141,7 +141,7 @@ export default function SupportPage() {
             
             {/* Header Section */}
             <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-b from-primary/10 to-transparent rounded-3xl border border-primary/10 text-center">
-              <h2 className="font-headline-md text-headline-md md:text-3xl font-bold text-on-surface mb-2 tracking-tight">Help & Support</h2>
+              <h1 className="font-headline-md text-headline-md md:text-3xl font-bold text-on-surface mb-2 tracking-tight">Farmer Help &amp; Technical Support Center</h1>
               <p className="text-on-surface-variant font-body-sm max-w-lg">Find answers to your questions, explore detailed guides, or contact our team directly for assistance.</p>
             </div>
 

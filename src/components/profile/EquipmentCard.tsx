@@ -70,7 +70,9 @@ export default function EquipmentCard({ items = defaultItems, onEdit }: Equipmen
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.imageUrl}
-                alt={item.name}
+                alt={`${item.name} (${item.category}) agricultural equipment`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>

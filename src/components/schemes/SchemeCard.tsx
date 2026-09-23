@@ -34,7 +34,15 @@ export default function SchemeCard({ scheme, onApply, onLearnMore, onSave }: Sch
       <div className="flex items-start justify-between mb-5 relative z-10">
         <div className="w-16 h-16 rounded-2xl bg-white border border-outline-variant/30 shadow-sm overflow-hidden shrink-0 flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform duration-300">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={scheme.logoUrl} alt={`${scheme.name} logo`} className="w-full h-full object-cover rounded-xl" />
+          <img
+            src={scheme.logoUrl}
+            alt={`${scheme.name} official government scheme badge logo`}
+            width={64}
+            height={64}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover rounded-xl"
+          />
         </div>
         <div className="flex items-center gap-2.5">
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm ${statusStyles[scheme.status]}`}>

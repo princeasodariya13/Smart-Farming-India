@@ -30,10 +30,10 @@ export default function MarketplaceHeader({
     <header className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
       <div>
         <h1 className="font-bold text-display-lg text-on-surface md:text-display-lg" style={{ fontSize: "clamp(32px,5vw,48px)" }}>
-          Agri-Marketplace
+          Agricultural Marketplace &amp; Equipment Rental
         </h1>
         <p className="mt-1 text-body-lg text-on-surface-variant">
-          Find premium equipment and high-yield supplies for your farm.
+          Rent farm tractors &amp; harvesters, buy certified seeds, and trade agricultural supplies across India.
           <span className="ml-2 text-label-md text-outline">
             ({productCount} products)
           </span>

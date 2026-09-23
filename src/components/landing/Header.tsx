@@ -8,10 +8,11 @@ import { useSession, signOut } from "next-auth/react";
 import { Globe, Leaf, User, Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 
 const NAV_LINKS = [
-  { label: "Marketplace", href: "/#marketplace", current: true },
-  { label: "Schemes", href: "/#schemes", current: false },
-  { label: "Community", href: "/#community", current: false },
-  { label: "Analytics", href: "/#analytics", current: false },
+  { label: "Weather Radar", href: "/weather" },
+  { label: "Marketplace", href: "/market" },
+  { label: "Govt Schemes", href: "/schemes" },
+  { label: "Community", href: "/community" },
+  { label: "Agri Blog", href: "/blog" },
 ];
 
 export default function Header() {
@@ -46,31 +47,6 @@ export default function Header() {
 
   const pathname = usePathname();
 
-  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    // If it's a hash link for the home page
-    if (href.startsWith('/#')) {
-      if (pathname === '/') {
-        // If we're already on the home page, smoothly scroll to it
-        e.preventDefault();
-        const targetId = href.replace('/#', '');
-        const element = document.getElementById(targetId);
-        if (element) {
-          const headerOffset = 80; // Account for sticky header
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.scrollY - headerOffset;
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-          });
-          setMobileMenuOpen(false); // Close mobile menu after clicking
-        }
-      } else {
-        // If we are on another page (like /privacy), let Next.js navigate normally
-        setMobileMenuOpen(false);
-      }
-    }
-  };
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/80 shadow-sm backdrop-blur-xl">
       <nav
@@ -87,22 +63,23 @@ export default function Header() {
             </span>
           </Link>
           <ul className="hidden gap-6 md:flex">
-            {!session && NAV_LINKS.map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.href}
-                  onClick={(e) => handleScroll(e, link.href)}
-                  aria-current={link.current ? "page" : undefined}
-                  className={
-                    link.current
-                      ? "border-b-2 border-green-600 pb-1 text-sm font-bold text-green-700"
-                      : "text-sm text-slate-600 transition-colors hover:text-green-700"
-                  }
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
+            {!session && NAV_LINKS.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className={
+                      isActive
+                        ? "border-b-2 border-green-600 pb-1 text-sm font-bold text-green-700"
+                        : "text-sm text-slate-600 font-medium transition-colors hover:text-green-700"
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
         <div className="flex items-center gap-2 md:gap-4 relative" ref={dropdownRef}>
@@ -176,14 +153,14 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-lg py-4 px-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
           {!session && NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.label}
               href={link.href}
-              onClick={(e) => handleScroll(e, link.href)}
-              className="text-base font-semibold text-slate-700 py-2 border-b border-slate-100"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-base font-semibold text-slate-700 py-2 border-b border-slate-100 hover:text-green-700 transition-colors"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
           {session ? (
             <div className="flex flex-col gap-2 mt-2">

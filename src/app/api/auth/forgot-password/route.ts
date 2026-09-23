@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       { expiresIn: '15m' }
     )
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000'
+    const clientUrl = process.env.CLIENT_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://smart-farming-india.vercel.app'
     const resetLink = `${clientUrl}/reset-password?token=${token}`
 
     // Configure Nodemailer

@@ -12,7 +12,7 @@ export function CommunityEventCard({ event }: { event: CommunityEvent }) {
     <div className="flex flex-col overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm">
       <div className="relative aspect-[16/9] bg-surface-container">
         {event.bannerUrl && (
-          <img src={event.bannerUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          <img src={event.bannerUrl} alt={event.title || "Community event banner image"} className="h-full w-full object-cover" loading="lazy" decoding="async" />
         )}
         <span className="absolute left-3 top-3 rounded-full bg-surface-container-lowest/90 px-2.5 py-1 text-label-sm font-label-md text-on-surface backdrop-blur">
           {event.type}

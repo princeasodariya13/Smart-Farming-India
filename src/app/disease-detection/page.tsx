@@ -402,8 +402,8 @@ function DiseaseDetectionContent() {
             {/* Header Section */}
             <header className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-4 shrink-0">
               <div className="flex-1 min-w-[280px]">
-                <h1 className="text-2xl md:text-[32px] leading-tight font-bold text-primary tracking-tight font-body-lg">AI Crop Diagnostic</h1>
-                <p className="text-sm text-on-surface-variant">Identify and treat crop diseases with state-of-the-art computer vision.</p>
+                <h1 className="text-2xl md:text-[32px] leading-tight font-bold text-primary tracking-tight font-body-lg">AI Crop Disease Detection &amp; Plant Doctor</h1>
+                <p className="text-sm text-on-surface-variant">Instant leaf diagnosis, organic treatment advice, and pesticide guidance for 200+ crop varieties across India.</p>
               </div>
               <div className="flex flex-wrap gap-3 shrink-0">
                 <button onClick={scrollToHistory} className="flex items-center shrink-0 whitespace-nowrap gap-2 px-4 py-2 bg-white border border-outline-variant rounded-full text-[13px] text-on-surface hover:bg-surface-container transition-all">
@@ -483,7 +483,7 @@ function DiseaseDetectionContent() {
                   {scannerState === 'scanning' && (
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                        <img className="w-full h-full object-cover" alt="Crop diagnostic" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
+                        <img className="w-full h-full object-cover" alt="Selected crop leaf sample undergoing AI disease diagnostic scan" loading="lazy" decoding="async" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
                         <div className="scanning-line"></div>
                         <div className="absolute inset-0 border-[20px] border-black/10"></div>
                       </div>
@@ -498,7 +498,7 @@ function DiseaseDetectionContent() {
                   {scannerState === 'results' && analysisResult && (
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-sm border-4 border-white">
-                        <img className="w-full h-full object-cover" alt="Crop diagnostic" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
+                        <img className="w-full h-full object-cover" alt="Selected crop leaf sample undergoing AI disease diagnostic scan" loading="lazy" decoding="async" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
                         <div className="absolute top-4 left-4 border-2 border-primary-fixed bg-primary-fixed/60 rounded-lg flex flex-col items-start p-2 backdrop-blur-md">
                           <span className="text-on-primary-fixed text-xs font-bold">{analysisResult.diseaseName}</span>
                           <span className="text-on-primary-fixed text-[10px] opacity-80">{analysisResult.confidenceScore}% Match</span>
@@ -538,7 +538,7 @@ function DiseaseDetectionContent() {
                         className="group relative bg-surface-container-low p-2 md:p-3 rounded-2xl border border-transparent hover:border-primary-fixed transition-all cursor-pointer shadow-sm"
                       >
                         <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 md:mb-3">
-                          <img className="w-full h-full object-cover group-hover:scale-110 transition-transform bg-surface-container" alt={item.plantName || "Crop"} src={item.imageUrl} />
+                          <img className="w-full h-full object-cover group-hover:scale-110 transition-transform bg-surface-container" alt={`${item.plantName || "Crop"} disease history diagnostic scan`} loading="lazy" decoding="async" src={item.imageUrl} />
                           <button 
                             onClick={(e) => deleteHistoryItem(e, item.id)}
                             className="absolute top-1 right-1 md:top-1.5 md:right-1.5 p-1 bg-error/90 hover:bg-error text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all shadow-sm flex items-center justify-center"
@@ -584,7 +584,7 @@ function DiseaseDetectionContent() {
                               className="group bg-surface-container-lowest p-2 md:p-3 rounded-2xl border border-[#E0E5DF] hover:border-primary-fixed hover:bg-surface-container-low transition-all cursor-pointer shadow-sm flex flex-col"
                             >
                               <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 md:mb-3">
-                                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform bg-surface-container" alt={item.plantName || "Crop"} src={item.imageUrl} />
+                                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform bg-surface-container" alt={`${item.plantName || "Crop"} disease history diagnostic scan`} loading="lazy" decoding="async" src={item.imageUrl} />
                                 <button 
                                   onClick={(e) => deleteHistoryItem(e, item.id)}
                                   className="absolute top-1.5 right-1.5 md:top-2 md:right-2 p-1.5 bg-error/90 hover:bg-error text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all shadow-sm flex items-center justify-center"
@@ -783,7 +783,7 @@ function DiseaseDetectionContent() {
 
                     <div className="flex items-center gap-3 p-3 bg-white/10 rounded-xl backdrop-blur-md mb-5 border border-white/10">
                       <div className="w-10 h-10 rounded-full border-2 border-primary-fixed overflow-hidden">
-                        <img className="w-full h-full object-cover" alt="Expert" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnjKdJ8IkqolUVeciOyWRvxitlVO8EUAl9iAjcSHvTRO6NQOjbv9UYAMQ2fwaPMO11Fc1kI0TCuYm0lJ2sM6H8TPL0tb8lhBv-RvgDlj6_91DNaFBhbrvSWre7A8mFrtjcCqe9to6pANsoKF35B0aRHZAVoaiJ7mPZrMpOBcRzpRuyV_Xg0ifcwTS-zw8SD5PtlWkEcFm9ikiNqIoEqtAQvc2H_vyOIpDiUBslWvNqizx7TSOhvd8JYAq6Bsdp7VYXCWATwkUKjw" />
+                        <img className="w-full h-full object-cover" alt="Dr. Arjun Sharma - Pathology Expert" width={40} height={40} loading="lazy" decoding="async" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnjKdJ8IkqolUVeciOyWRvxitlVO8EUAl9iAjcSHvTRO6NQOjbv9UYAMQ2fwaPMO11Fc1kI0TCuYm0lJ2sM6H8TPL0tb8lhBv-RvgDlj6_91DNaFBhbrvSWre7A8mFrtjcCqe9to6pANsoKF35B0aRHZAVoaiJ7mPZrMpOBcRzpRuyV_Xg0ifcwTS-zw8SD5PtlWkEcFm9ikiNqIoEqtAQvc2H_vyOIpDiUBslWvNqizx7TSOhvd8JYAq6Bsdp7VYXCWATwkUKjw" />
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-[13px]">Dr. Arjun Sharma</p>
@@ -841,7 +841,9 @@ function DiseaseDetectionContent() {
             <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/weather">Weather Radar</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/consult">Expert Consultation</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/support">Help & Support</Link></li>
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
             </ul>
           </footer>

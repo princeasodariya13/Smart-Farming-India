@@ -46,9 +46,9 @@ export default function WeatherHero({ data }: WeatherHeroProps) {
         <div className="flex items-center justify-center gap-2 md:justify-start">
           <MapPin size={32} className="text-primary" aria-hidden="true" />
           <div>
-            <h1 className="text-3xl font-semibold text-on-surface">
+            <h2 className="text-3xl font-semibold text-on-surface">
               {location.city}{location.state ? `, ${location.state}` : ''}
-            </h1>
+            </h2>
             <p className="text-sm text-on-surface-variant">Last updated: {location.lastUpdated}</p>
           </div>
         </div>

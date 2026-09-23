@@ -10,7 +10,8 @@ export default function ExpertBanner() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/login-bg.png"
-            alt="Farm landscape"
+            alt=""
+            aria-hidden="true"
             fill
             className="object-cover opacity-30 mix-blend-overlay"
           />

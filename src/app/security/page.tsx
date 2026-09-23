@@ -1,6 +1,33 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Lock, Server, Fingerprint } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: "Security & Data Protection",
+  description:
+    "Discover enterprise-grade security protocols, data encryption, and account protection measures safeguarding Indian farm data.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/security",
+  },
+  openGraph: {
+    title: "Security & Data Protection | Smart Farming India",
+    description:
+      "Discover enterprise-grade security protocols, data encryption, and account protection measures safeguarding Indian farm data.",
+    url: "https://smart-farming-india.vercel.app/security",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Security" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Security & Data Protection | Smart Farming India",
+    description:
+      "Discover enterprise-grade security protocols, data encryption, and account protection measures safeguarding Indian farm data.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function SecurityPage() {
   return (

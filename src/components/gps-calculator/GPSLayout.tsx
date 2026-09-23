@@ -543,10 +543,10 @@ export default function GPSLayout({
       <header className="relative z-30 px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-outline-variant/60 bg-white/60 backdrop-blur-sm print:hidden">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight">
-            GPS Area Calculator
+            GPS Farm Land Area Calculator &amp; Plot Boundary Mapper
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Draw field boundaries and get instant, precise area measurements.
+            Calculate precise plot area in Acres, Hectares, Bigha, and Guntha using interactive satellite mapping for seed, fertilizer, and machinery estimation.
           </p>
         </div>
         <SearchLocation

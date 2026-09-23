@@ -39,7 +39,9 @@ export default function ProfileHeader({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={profile.coverUrl}
-          alt="Farm cover banner"
+          alt={`${profile.name} farm land cover photo`}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -57,7 +59,9 @@ export default function ProfileHeader({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={profile.avatarUrl}
-                alt={`Profile photo of ${profile.name}`}
+                alt={`Profile photo of farmer ${profile.name}`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>

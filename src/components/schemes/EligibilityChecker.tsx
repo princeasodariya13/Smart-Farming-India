@@ -160,7 +160,15 @@ export default function EligibilityChecker({
                   <div key={scheme.id} className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest shadow-sm hover:border-primary/30 transition-colors">
                     <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-outline-variant/30">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={scheme.logoUrl} alt={scheme.name} className="w-full h-full object-cover" />
+                      <img
+                        src={scheme.logoUrl}
+                        alt={`${scheme.name} official government scheme badge logo`}
+                        width={40}
+                        height={40}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <h4 className="text-sm font-bold text-on-surface truncate">{scheme.name}</h4>

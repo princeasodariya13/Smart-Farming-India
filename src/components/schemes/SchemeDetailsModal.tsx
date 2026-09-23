@@ -37,7 +37,15 @@ export default function SchemeDetailsModal({ isOpen, onClose, scheme, onApply }:
             <div className="relative p-6 border-b border-outline-variant/30 flex items-start gap-4 shrink-0 bg-gradient-to-b from-white/40 to-transparent">
               <div className="w-16 h-16 rounded-2xl bg-white border border-outline-variant/30 shadow-sm overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={scheme.logoUrl} alt={`${scheme.name} logo`} className="w-full h-full object-cover rounded-xl" />
+                <img
+                  src={scheme.logoUrl}
+                  alt={`${scheme.name} official government scheme badge logo`}
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
               <div className="flex-1 min-w-0 pr-8">
                 <div className="flex items-center gap-2 mb-1.5">

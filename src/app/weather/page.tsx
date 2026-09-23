@@ -25,16 +25,25 @@ import {
   X
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
+import dynamic from "next/dynamic";
 import WeatherHero from "@/components/weather/WeatherHero";
 import WeatherMetricCard from "@/components/weather/WeatherMetricCard";
 import HourlyForecast from "@/components/weather/HourlyForecast";
 import SevenDayForecast from "@/components/weather/ForecastCard";
-import RainfallChart from "@/components/weather/RainfallChart";
 import WeatherAlertCard from "@/components/weather/WeatherAlertCard";
 import FarmingAdvisoryCard from "@/components/weather/FarmingAdvisoryCard";
 import CropImpactCard from "@/components/weather/CropImpactCard";
 import WeatherMapCard from "@/components/weather/WeatherMapCard";
 import QuickActions from "@/components/weather/QuickActionCard";
+
+const RainfallChart = dynamic(() => import("@/components/weather/RainfallChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[300px] flex items-center justify-center bg-white/50 rounded-2xl animate-pulse text-xs text-slate-400">
+      Loading chart...
+    </div>
+  ),
+});
 import type {
   CurrentWeather,
   WeatherMetric,
@@ -751,8 +760,8 @@ function WeatherContent() {
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-container-low p-4 rounded-2xl border border-outline-variant">
         <div>
-          <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">Live Weather</h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Real-time updates for any location in India.</p>
+          <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface">Live Agricultural Weather &amp; Forecast Radar</h1>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">Hyper-local weather forecasts, evapotranspiration rates, and rainfall insights across India.</p>
         </div>
         <form onSubmit={handleSearch} className="flex items-center gap-2 w-full md:w-auto relative">
           <span className="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
@@ -1148,9 +1157,11 @@ function WeatherContent() {
               <p className="text-sm text-on-surface-variant mt-1 max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
             </div>
             <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/disease-detection">AI Disease Detection</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/market-insights">Market Insights</Link></li>
+              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/support">Help & Support</Link></li>
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link></li>
               <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
             </ul>
           </footer>

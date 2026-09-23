@@ -1,6 +1,33 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Handshake, TrendingUp, Users } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: "Partner Network & Agri-Business Collaboration",
+  description:
+    "Partner with Smart Farming India to connect equipment providers, seed suppliers, and buyers with thousands of verified farmers.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/partner-network",
+  },
+  openGraph: {
+    title: "Partner Network & Agri-Business Collaboration | Smart Farming India",
+    description:
+      "Partner with Smart Farming India to connect equipment providers, seed suppliers, and buyers with thousands of verified farmers.",
+    url: "https://smart-farming-india.vercel.app/partner-network",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Partner Network" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Partner Network & Agri-Business Collaboration | Smart Farming India",
+    description:
+      "Partner with Smart Farming India to connect equipment providers, seed suppliers, and buyers with thousands of verified farmers.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function PartnerNetworkPage() {
   return (

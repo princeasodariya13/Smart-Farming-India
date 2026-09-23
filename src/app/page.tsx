@@ -1,12 +1,43 @@
+import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Header from "@/components/landing/Header";
 import Hero from "@/components/landing/Hero";
 import FeaturesBento from "@/components/landing/FeaturesBento";
-import ExpertBanner from "@/components/landing/ExpertBanner";
 import Footer from "@/components/landing/Footer";
 
-export const metadata = {
-  title: "Smart Farming India | Intelligent Agriculture",
-  description: "India's complete digital farming ecosystem. AI-driven insights, marketplace access, and government integration in one premium platform.",
+const ExpertBanner = dynamic(() => import("@/components/landing/ExpertBanner"));
+
+export const metadata: Metadata = {
+  title: "Smart Farming India — Digital Agriculture & Farmer Advisory Platform",
+  description:
+    "India's leading digital agriculture platform empowering farmers with live mandi prices, crop weather advisories, government schemes, AI crop disease detection, GPS field area calculation, and equipment rentals.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app",
+  },
+  openGraph: {
+    title: "Smart Farming India — Digital Agriculture & Farmer Advisory Platform",
+    description:
+      "India's leading digital agriculture platform empowering farmers with live mandi prices, crop weather advisories, government schemes, AI crop disease detection, GPS field area calculation, and equipment rentals.",
+    url: "https://smart-farming-india.vercel.app",
+    siteName: "Smart Farming India",
+    images: [
+      {
+        url: "/logo.jpg",
+        width: 512,
+        height: 512,
+        alt: "Smart Farming India Logo",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Smart Farming India — Digital Agriculture & Farmer Advisory Platform",
+    description:
+      "India's leading digital agriculture platform empowering farmers with live mandi prices, crop weather advisories, government schemes, AI crop disease detection, GPS field area calculation, and equipment rentals.",
+    images: ["/logo.jpg"],
+  },
 };
 
 export default function Home() {

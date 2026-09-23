@@ -6,12 +6,13 @@ import FilterSidebar from "./FilterSidebar";
 import MarketplaceHeader from "./MarketplaceHeader";
 import ProductGrid from "./ProductGrid";
 import PromoBanner from "./PromoBanner";
-import ProductModal from "./ProductModal";
+import MarketplaceNotifications from "./MarketplaceNotifications";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import AddProductModal from "./AddProductModal";
-import MarketplaceNotifications from "./MarketplaceNotifications";
-import MyBookings from "./MyBookings";
+const ProductModal = dynamic(() => import("./ProductModal"));
+const AddProductModal = dynamic(() => import("./AddProductModal"));
+const MyBookings = dynamic(() => import("./MyBookings"));
 
 import type { Product, SortOption, ViewMode } from "./types";
 
@@ -94,9 +95,11 @@ export default function MarketplacePage() {
               <p className="font-label-sm text-label-sm text-on-surface-variant mt-1 text-center md:text-left max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
             </div>
             <div className="flex items-center justify-center gap-4 md:gap-8 whitespace-nowrap overflow-x-auto custom-scrollbar pb-2 md:pb-0 max-w-full">
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/market-insights">Market Insights</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/gps-area-calculator">GPS Area Calculator</Link>
+              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/support">Help & Support</Link>
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link>
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link>
-              <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/contact">Contact Us</Link>
               <Link className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link>
             </div>
           </footer>

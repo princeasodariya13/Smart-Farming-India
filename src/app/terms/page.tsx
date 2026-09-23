@@ -1,8 +1,35 @@
+import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileText, Home } from 'lucide-react';
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Official terms of service governing the use of Smart Farming India platform, marketplace, and agricultural advisory services.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/terms",
+  },
+  openGraph: {
+    title: "Terms of Service | Smart Farming India",
+    description:
+      "Official terms of service governing the use of Smart Farming India platform, marketplace, and agricultural advisory services.",
+    url: "https://smart-farming-india.vercel.app/terms",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Terms of Service" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | Smart Farming India",
+    description:
+      "Official terms of service governing the use of Smart Farming India platform, marketplace, and agricultural advisory services.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function TermsPage() {
   return (

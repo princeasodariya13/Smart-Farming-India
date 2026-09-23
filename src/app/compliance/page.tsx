@@ -1,7 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+
+export const metadata: Metadata = {
+  title: "Agricultural & Platform Compliance",
+  description:
+    "Learn about Smart Farming India's adherence to agricultural standards, data governance, and national compliance guidelines.",
+  alternates: {
+    canonical: "https://smart-farming-india.vercel.app/compliance",
+  },
+  openGraph: {
+    title: "Agricultural & Platform Compliance | Smart Farming India",
+    description:
+      "Learn about Smart Farming India's adherence to agricultural standards, data governance, and national compliance guidelines.",
+    url: "https://smart-farming-india.vercel.app/compliance",
+    siteName: "Smart Farming India",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Smart Farming India Compliance" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Agricultural & Platform Compliance | Smart Farming India",
+    description:
+      "Learn about Smart Farming India's adherence to agricultural standards, data governance, and national compliance guidelines.",
+    images: ["/logo.jpg"],
+  },
+};
 
 export default function Page() {
   return (

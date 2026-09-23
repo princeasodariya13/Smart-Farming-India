@@ -23,7 +23,7 @@ export function PopularFarmerCard({ farmer }: { farmer: PopularFarmer }) {
   return (
     <div className="flex items-center gap-3">
       {farmer.avatarUrl ? (
-        <img src={farmer.avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover border border-outline-variant/30" />
+        <img src={farmer.avatarUrl} alt={`Profile photo of ${farmer.name}`} className="h-11 w-11 shrink-0 rounded-full object-cover border border-outline-variant/30" loading="lazy" decoding="async" />
       ) : (
         <div className="h-11 w-11 shrink-0 rounded-full border border-outline-variant/30 bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold tracking-wider">
           {farmer.name ? farmer.name.substring(0, 2).toUpperCase() : "F"}

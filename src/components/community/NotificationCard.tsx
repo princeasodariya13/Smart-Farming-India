@@ -16,7 +16,7 @@ export function NotificationCard({ notification }: { notification: CommunityNoti
   return (
     <div className={cn("flex gap-3 rounded-lg p-2 -m-2", !notification.read && "bg-primary/5")}>
       <div className="relative shrink-0">
-        <img src={notification.actorAvatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+        <img src={notification.actorAvatarUrl} alt={`Profile avatar of ${notification.actor}`} className="h-9 w-9 rounded-full object-cover" loading="lazy" decoding="async" />
         <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-container-lowest text-primary">
           <Icon className="h-3 w-3" aria-hidden="true" />
         </span>
