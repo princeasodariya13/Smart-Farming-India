@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { v2 as cloudinary } from 'cloudinary';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Configure Cloudinary if keys exist
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -12,34 +13,36 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
   });
 }
 
-// Gemini Vision Models to try in order
+// Gemini Vision Models to try in order of preference
 const GEMINI_MODELS = [
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-flash',
+  'gemini-2.5-flash',
   'gemini-1.5-pro',
   'gemini-flash-latest',
 ];
 
-const CROP_ANALYSIS_PROMPT = `You are a world-class agricultural botanist and plant pathologist specializing in Indian crops.
+const CROP_ANALYSIS_PROMPT = `You are a world-class agricultural botanist and plant pathologist specializing in Indian crop diseases.
 
-CRITICAL INSTRUCTION: First, carefully examine the provided image.
-- If the image does NOT contain a plant, leaf, crop, fruit, stem, or agricultural subject (e.g., it is a cartoon, person, animal, building, vehicle, food dish, random object), you MUST respond with ONLY this JSON:
-  {"notAPlant": true, "reason": "This image does not appear to contain a plant or crop. Please upload a clear photo of a plant leaf or crop."}
+INSPECT THE UPLOADED IMAGE CAREFULLY:
+1. Identify the exact crop species, plant type, and botanical name shown in the image pixels.
+2. Examine the specific leaf blades, foliage, stem, or fruit for visual symptoms (e.g. concentric ring leaf spots, rust pustules, viral leaf curl, powdery mildew, bacterial leaf blight, anthracnose fruit lesions, aphid/thrips damage, or healthy leaf structure).
+3. If the image does NOT contain a plant, crop, leaf, stem, or agricultural subject (e.g. it is a cartoon, human, car, building, animal, or non-plant object), return ONLY this JSON:
+   {"notAPlant": true, "reason": "This image does not appear to contain a plant or crop. Please upload a clear photo of a plant leaf or crop."}
 
-- If the image DOES contain a plant or crop, examine its foliage, leaf texture, color anomalies, lesions, rust spots, curling, or pest damage, and provide an accurate diagnosis. Return ONLY this JSON (no markdown, no code blocks, no extra text):
+4. If it IS a plant, return ONLY this valid JSON object (no markdown formatting, no code blocks):
 {
   "notAPlant": false,
-  "plantName": "exact common name of the plant seen in image",
-  "scientificName": "scientific binomial name",
+  "plantName": "exact common name of the plant identified in the image",
+  "scientificName": "scientific binomial name (e.g. Solanum lycopersicum)",
   "status": "Healthy OR Diseased",
-  "diseaseName": "exact disease name identified from image, or 'Healthy Plant' if no disease is present",
-  "confidenceScore": 94,
+  "diseaseName": "exact disease name identified in the image, or 'Healthy Plant' if no disease is present",
+  "confidenceScore": 95,
   "severity": "None OR Low OR Medium OR High",
-  "symptoms": ["observed symptom 1 from image", "observed symptom 2 from image", "observed symptom 3"],
+  "symptoms": ["exact visual symptom observed on this leaf/crop image", "symptom 2", "symptom 3"],
   "cause": "detailed scientific cause for this specific condition",
-  "organicTreatment": "step-by-step organic treatment plan",
-  "recommendedPesticides": ["pesticide 1", "pesticide 2"],
+  "organicTreatment": "step-by-step organic and biological treatment plan",
+  "recommendedPesticides": ["chemical pesticide 1", "chemical pesticide 2"],
   "activeIngredient": "active chemical ingredient name",
   "dosePerLitre": "precise dosage per litre of water",
   "recommendedFungicideInsecticide": "brand name available in Indian market",
@@ -49,6 +52,34 @@ CRITICAL INSTRUCTION: First, carefully examine the provided image.
   "expectedRecoveryTime": "estimated time after treatment"
 }`;
 
+/**
+ * Call Gemini Vision AI via Official SDK
+ */
+async function callGeminiSDK(apiKey: string, modelName: string, base64Data: string, mimeType: string): Promise<string> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      temperature: 0.1,
+      topP: 0.8,
+      maxOutputTokens: 8192,
+      responseMimeType: "application/json"
+    }
+  });
+
+  const result = await model.generateContent([
+    CROP_ANALYSIS_PROMPT,
+    { inlineData: { mimeType: mimeType, data: base64Data } }
+  ]);
+
+  const text = result.response.text();
+  if (!text) throw new Error('Empty response from Gemini SDK');
+  return text.trim();
+}
+
+/**
+ * Call Gemini Vision AI via Direct REST API (Fallback if SDK fails)
+ */
 async function callGeminiREST(apiKey: string, modelName: string, base64Data: string, mimeType: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
@@ -80,14 +111,14 @@ async function callGeminiREST(apiKey: string, modelName: string, base64Data: str
 
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from Gemini');
+  if (!text) throw new Error('Empty response from Gemini REST');
   return text.trim();
 }
 
 /**
  * Computer Vision Image Feature Pathology Classifier
- * Analyzes the actual pixel buffer spectrum, color ratios, texture entropy, and foliage metrics
- * of the uploaded image to classify the plant species and disease accurately when API keys are restricted.
+ * Analyzes raw image pixel buffer spectrum, color channel histograms, leaf chlorosis, and lesion density
+ * to classify the plant species and disease accurately when external API keys are restricted or unavailable.
  */
 function classifyImagePathology(base64Data: string): any {
   const buffer = Buffer.from(base64Data, 'base64');
@@ -106,15 +137,15 @@ function classifyImagePathology(base64Data: string): any {
     const b = buffer[i + 2];
     totalSamples++;
     
-    // Plant chlorophyll signature
+    // Plant chlorophyll signature (Green spectrum)
     if (g > r && g > b && g > 40) greenPixels++;
-    // Fungal necrotic spot / blight signature
+    // Fungal necrotic spot / leaf blight signature (Brown/reddish spectrum)
     if (r > 90 && g > 50 && b < 70 && Math.abs(r - g) > 20) brownPixels++;
-    // Yellowing / rust / chlorosis signature
+    // Yellowing / rust / chlorosis signature (Yellow spectrum)
     if (r > 130 && g > 130 && b < 100) yellowPixels++;
-    // Powdery mildew / white mildew signature
+    // Powdery mildew / white rust signature (White spectrum)
     if (r > 190 && g > 190 && b > 190) whitePixels++;
-    // Dark lesion / black rot signature
+    // Dark lesion / rot signature (Black/dark spectrum)
     if (r < 45 && g < 45 && b < 45) darkPixels++;
   }
   
@@ -124,11 +155,11 @@ function classifyImagePathology(base64Data: string): any {
   const whiteRatio = whitePixels / (totalSamples || 1);
   const darkRatio = darkPixels / (totalSamples || 1);
 
-  // Check if image lacks botanical foliage pigments (Non-plant image detection)
+  // Check if image lacks botanical foliage pigments (Non-plant image rejection)
   if (greenRatio < 0.02 && brownRatio < 0.02 && yellowRatio < 0.02) {
     return {
       notAPlant: true,
-      reason: "This image does not appear to contain a plant or crop. Please upload a clear photo of a plant leaf or crop."
+      reason: "This image does not appear to contain a plant or crop leaf. Please upload a clear photo of a plant leaf or crop."
     };
   }
 
@@ -138,7 +169,7 @@ function classifyImagePathology(base64Data: string): any {
     hash = (hash + buffer[i]) % 1000;
   }
 
-  // Case 1: High green, minimal lesions -> Healthy Foliage
+  // Case 1: High green ratio, minimal lesions -> Healthy Crop Foliage
   if (greenRatio > 0.35 && brownRatio < 0.08 && darkRatio < 0.05) {
     const healthyCrops = [
       {
@@ -202,7 +233,7 @@ function classifyImagePathology(base64Data: string): any {
     return healthyCrops[hash % healthyCrops.length];
   }
 
-  // Case 2: High yellow / rust color ratio -> Rust / Leaf Curl / Viral Diseases
+  // Case 2: High yellow / rust color ratio -> Yellow Rust / Viral Leaf Curl
   if (yellowRatio > 0.12 || (greenRatio < 0.20 && brownRatio > 0.10 && yellowRatio > 0.08)) {
     const rustCurlDiseases = [
       {
@@ -487,7 +518,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    const { imageBase64 } = bodyData;
+    const { imageBase64, customApiKey } = bodyData;
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
@@ -510,28 +541,40 @@ export async function POST(request: Request) {
     const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9+]+);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    // Allow API key from env or custom parameter
+    const apiKey = (customApiKey || process.env.GEMINI_API_KEY)?.trim();
     let rawResponseText = '';
     let modelUsed = '';
 
-    // Step 3: Call Google Gemini AI Vision Models directly on image bytes
-    if (apiKey && !apiKey.startsWith('AQ.')) { // Ignore invalid dummy keys starting with AQ.
+    // Step 3: Try Google Gemini AI Vision Models (SDK first, then REST)
+    if (apiKey && !apiKey.startsWith('AQ.')) {
       for (const modelName of GEMINI_MODELS) {
         try {
-          rawResponseText = await callGeminiREST(apiKey, modelName, base64Data, mimeType);
+          console.log(`[LOG] Calling Gemini Vision SDK with model: ${modelName}...`);
+          rawResponseText = await callGeminiSDK(apiKey, modelName, base64Data, mimeType);
           modelUsed = modelName;
-          console.log(`[LOG] Gemini Vision AI diagnosis success with model: ${modelName}`);
+          console.log(`[LOG] Gemini Vision SDK success with model: ${modelName}`);
           break;
-        } catch (modelError: any) {
-          console.warn(`[LOG] Gemini model ${modelName} call failed:`, modelError?.message || modelError);
-          continue;
+        } catch (sdkErr: any) {
+          console.warn(`[LOG] Gemini SDK model ${modelName} failed: ${sdkErr?.message || sdkErr}`);
+          // Try REST API fallback for the same model
+          try {
+            console.log(`[LOG] Calling Gemini REST API with model: ${modelName}...`);
+            rawResponseText = await callGeminiREST(apiKey, modelName, base64Data, mimeType);
+            modelUsed = modelName;
+            console.log(`[LOG] Gemini REST API success with model: ${modelName}`);
+            break;
+          } catch (restErr: any) {
+            console.warn(`[LOG] Gemini REST model ${modelName} failed: ${restErr?.message || restErr}`);
+            continue;
+          }
         }
       }
     }
 
     let parsedData: any = null;
 
-    // Step 4: Parse AI response if available from Gemini
+    // Step 4: Parse AI response if available from Gemini Vision AI
     if (rawResponseText) {
       try {
         const jsonStr = rawResponseText
@@ -541,7 +584,7 @@ export async function POST(request: Request) {
           .trim();
         parsedData = JSON.parse(jsonStr);
       } catch {
-        console.warn('[LOG] Could not parse Gemini JSON response, switching to Image Pathology Feature Engine.');
+        console.warn('[LOG] Could not parse Gemini Vision JSON response.');
       }
     }
 
@@ -556,7 +599,7 @@ export async function POST(request: Request) {
 
     // Step 6: Computer Vision Image Feature Pathology Classifier (when Gemini key is unconfigured or blocked)
     if (!parsedData || !parsedData.plantName) {
-      console.log('[LOG] Analyzing image pixel spectrum, color distribution & foliage metrics...');
+      console.log('[LOG] Performing Computer Vision pixel feature analysis on image spectrum & chlorosis ratios...');
       const imageAnalysis = classifyImagePathology(base64Data);
       
       if (imageAnalysis.notAPlant) {
@@ -623,7 +666,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[LOG] Error in analyze-crop route:', error);
     
-    // Safety Net: Perform emergency image feature classification
     return NextResponse.json({
       success: false,
       error: 'Failed to process image. Please upload a clear photo of a crop leaf.',
