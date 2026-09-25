@@ -32,6 +32,16 @@ async function translateValueFast(value: any, targetLang: string = 'gu'): Promis
     }
   } else if (Array.isArray(value)) {
     return Promise.all(value.map(item => translateValueFast(item, targetLang)));
+  } else if (typeof value === 'object' && value !== null) {
+    const resObj: Record<string, any> = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (k === 'sourceUrl' || k === 'sourceType') {
+        resObj[k] = v; // Keep URLs and type tags intact
+      } else {
+        resObj[k] = await translateValueFast(v, targetLang);
+      }
+    }
+    return resObj;
   }
   return value;
 }
@@ -45,9 +55,10 @@ async function translatePayload(sanitizedData: Record<string, any>, targetLangua
   // Try Engine 1: Gemini AI models if key is available
   if (apiKey && !apiKey.startsWith('AQ.')) {
     const prompt = `You are a world-class agricultural translator specializing in Indian languages.
-Translate all text values of the following JSON object into ${targetLanguage} accurately for farmers.
+Translate text values of the following JSON object into ${targetLanguage} accurately for farmers.
 Do NOT translate key names (keep English key names).
-Do NOT translate botanical scientific names in Latin script (e.g. keep "Solanum lycopersicum" in Latin script if present).
+Do NOT translate botanical scientific names in Latin script.
+Do NOT modify sourceUrl links.
 
 Return ONLY valid JSON.
 
@@ -93,7 +104,7 @@ ${JSON.stringify(sanitizedData, null, 2)}`;
   const entries = Object.entries(sanitizedData);
   const translatedEntries = await Promise.all(
     entries.map(async ([key, val]) => {
-      if (key === 'scientificName') return [key, val]; // Keep Latin scientific name
+      if (key === 'scientificName') return [key, val];
       const translatedVal = await translateValueFast(val, langCode);
       return [key, translatedVal];
     })
@@ -118,7 +129,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing textData or targetLanguage' }, { status: 400 });
     }
 
-    // Extract user-facing text fields to translate
     const sanitizedDataToTranslate: Record<string, any> = {};
     const textFields = [
       'plantName',
@@ -129,6 +139,7 @@ export async function POST(request: Request) {
       'cause',
       'organicTreatment',
       'recommendedPesticides',
+      'pesticideRecommendations',
       'activeIngredient',
       'dosePerLitre',
       'recommendedFungicideInsecticide',
@@ -144,10 +155,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Translate sanitized payload
     const translatedFields = await translatePayload(sanitizedDataToTranslate, targetLanguage);
 
-    // Merge translated text back with original metadata
     const finalTranslatedResult = {
       ...textData,
       ...translatedFields,

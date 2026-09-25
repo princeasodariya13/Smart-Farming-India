@@ -9,6 +9,18 @@ import { Leaf } from 'lucide-react';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Sidebar } from "@/components/layout/Sidebar";
 
+export interface PesticideRecommendationItem {
+  activeIngredient: string;
+  formulation?: string;
+  purpose?: string;
+  dose?: string;
+  applicationMethod?: string;
+  timing?: string;
+  sourceTitle: string;
+  sourceUrl: string;
+  sourceType: 'ICAR' | 'Government' | 'AgriculturalUniversity' | 'Research';
+}
+
 interface DynamicAnalysisResult {
   id?: string;
   imageUrl?: string;
@@ -27,6 +39,7 @@ interface DynamicAnalysisResult {
   cause: string;
   treatment: string[];
   pesticides: string[];
+  pesticideRecommendations?: PesticideRecommendationItem[];
   prevention: string[];
   analysis?: {
     plantId?: any;
@@ -273,7 +286,6 @@ function DiseaseDetectionContent() {
     setScanningStepIndex(0);
     setErrorMsg(null);
 
-    // Progress through step states during multi-API backend processing
     const stepInterval = setInterval(() => {
       setScanningStepIndex((prevIndex) => {
         if (prevIndex < SCANNING_STEPS.length - 1) {
@@ -361,7 +373,6 @@ function DiseaseDetectionContent() {
     document.getElementById('history-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Helper to check if pesticide information is unverified
   const isPesticideUnverified = (res: DynamicAnalysisResult | null) => {
     if (!res) return true;
     const p = res.pesticides || res.recommendedPesticides || [];
@@ -465,7 +476,6 @@ function DiseaseDetectionContent() {
                 <div className="bg-white rounded-[20px] shadow-sm p-6 border border-[#E0E5DF] relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
                   <div className="absolute inset-0 bg-[#f9f9ff] opacity-40"></div>
 
-                  {/* Hidden File Input */}
                   <input
                     type="file"
                     accept="image/*"
@@ -474,7 +484,6 @@ function DiseaseDetectionContent() {
                     onChange={handleFileUpload}
                   />
 
-                  {/* Error Message */}
                   {errorMsg && (
                     <div className="absolute top-4 left-4 right-4 z-50 bg-error/10 text-error p-3 rounded-lg text-sm border border-error/20 flex items-center justify-between shadow-sm">
                       <span className="font-medium">{errorMsg}</span>
@@ -482,7 +491,6 @@ function DiseaseDetectionContent() {
                     </div>
                   )}
 
-                  {/* Scanner State 1: Ready to Upload */}
                   {scannerState === 'upload' && (
                     <div className="relative z-20 flex flex-col items-center text-center w-full max-w-sm">
                       {isCameraActive ? (
@@ -519,7 +527,6 @@ function DiseaseDetectionContent() {
                     </div>
                   )}
 
-                  {/* Scanner State 2: Scanning Animation with Progress Steps */}
                   {scannerState === 'scanning' && (
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
@@ -537,7 +544,6 @@ function DiseaseDetectionContent() {
                     </div>
                   )}
 
-                  {/* Scanner State 3: Result Shown inline */}
                   {scannerState === 'results' && analysisResult && (
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-sm border-4 border-white">
@@ -752,7 +758,6 @@ function DiseaseDetectionContent() {
                             </div>
                           )}
 
-                          {/* Confidence Level (Only if valid probability score exists) */}
                           {analysisResult.diagnosis?.confidence !== null && (
                             <div className="mt-2">
                               <div className="flex justify-between items-center mb-1">
@@ -768,7 +773,7 @@ function DiseaseDetectionContent() {
                           )}
                         </div>
 
-                        {/* Uncertain Warning State (Requirement 3 & 7) */}
+                        {/* Uncertain Warning State */}
                         {(analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain') && (
                           <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[12px] space-y-1">
                             <div className="flex items-center gap-1.5 font-bold text-amber-800">
@@ -805,7 +810,7 @@ function DiseaseDetectionContent() {
                           </div>
                         )}
 
-                        {/* Treatment & Organic Management */}
+                        {/* Organic & Cultural Management */}
                         {((Array.isArray(analysisResult.treatment) && analysisResult.treatment.length > 0) || analysisResult.organicTreatment) && (
                           <div className="p-3 bg-success-soft rounded-xl border border-primary-fixed/20">
                             <h4 className="text-[13px] font-semibold text-primary mb-1.5 flex items-center gap-1.5">
@@ -823,20 +828,81 @@ function DiseaseDetectionContent() {
                           </div>
                         )}
 
-                        {/* Pesticide Section - Requirement 5 & 8 */}
-                        <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/40">
-                          <h4 className="text-[13px] font-semibold text-on-surface mb-1 flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">pest_control</span> Chemical Pesticide Information
-                          </h4>
-                          {isPesticideUnverified(analysisResult) ? (
-                            <p className="text-[12px] text-on-surface-variant italic mt-1">
-                              Treatment information could not be verified.
-                            </p>
+                        {/* NEW: Authoritative Dynamic Pesticide Recommendation Section */}
+                        <div className="p-4 bg-white rounded-xl border border-[#E0E5DF] shadow-sm space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-[13px] font-bold text-on-surface flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
+                              Pesticide Recommendation
+                            </h4>
+                            <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary">
+                              Authoritative ICAR / Govt Sources
+                            </span>
+                          </div>
+
+                          {analysisResult.pesticideRecommendations && analysisResult.pesticideRecommendations.length > 0 ? (
+                            <div className="space-y-3">
+                              {analysisResult.pesticideRecommendations.slice(0, 3).map((rec, rIdx) => (
+                                <div key={rIdx} className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-1.5 text-[12px] text-on-surface-variant">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="font-bold text-primary text-[13px]">
+                                        Recommended Pesticide: {rec.activeIngredient}
+                                      </p>
+                                      {rec.formulation && (
+                                        <p className="text-[11px] font-medium text-on-surface">
+                                          Formulation: {rec.formulation}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant border border-outline-variant">
+                                      {rec.sourceType}
+                                    </span>
+                                  </div>
+
+                                  {rec.purpose && (
+                                    <p><strong>Purpose:</strong> {rec.purpose}</p>
+                                  )}
+
+                                  {rec.dose && (
+                                    <p><strong>Recommended Dose:</strong> <span className="font-semibold text-on-surface">{rec.dose}</span></p>
+                                  )}
+
+                                  {rec.applicationMethod && (
+                                    <p><strong>Application Method:</strong> {rec.applicationMethod}</p>
+                                  )}
+
+                                  {rec.timing && (
+                                    <p><strong>Application Timing:</strong> {rec.timing}</p>
+                                  )}
+
+                                  {rec.sourceUrl && (
+                                    <div className="pt-1.5 border-t border-outline-variant/20 flex items-center justify-between text-[11px]">
+                                      <span className="font-semibold text-on-surface">Source:</span>
+                                      <a
+                                        href={rec.sourceUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary font-bold hover:underline flex items-center gap-1 line-clamp-1 max-w-[220px]"
+                                      >
+                                        <span>{rec.sourceTitle || rec.sourceUrl}</span>
+                                        <span className="material-symbols-outlined text-[14px] shrink-0">open_in_new</span>
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           ) : (
-                            <div className="space-y-1 text-[12px] text-on-surface-variant mt-1">
-                              <p><strong>Pesticides:</strong> {analysisResult.pesticides?.join(', ') || analysisResult.recommendedPesticides?.join(', ')}</p>
+                            <div className="p-3 bg-surface-container-low rounded-xl text-[12px] text-on-surface-variant leading-snug">
+                              No verified pesticide recommendation was found for this crop and disease from the available authoritative agricultural sources.
                             </div>
                           )}
+
+                          {/* Farmer Safety Disclaimer */}
+                          <div className="text-[10px] text-on-surface-variant/80 italic pt-1 border-t border-outline-variant/20">
+                            Pesticide recommendations are provided from available agricultural sources for informational purposes. Always follow the product label, locally applicable registration, crop restrictions, safety instructions, and advice from a qualified agricultural expert before spraying.
+                          </div>
                         </div>
 
                         {/* Irrigation & Fertilizer */}
@@ -859,7 +925,7 @@ function DiseaseDetectionContent() {
                           )}
                         </div>
 
-                        {/* Prevention */}
+                        {/* Prevention Strategy */}
                         {analysisResult.prevention && analysisResult.prevention.length > 0 && (
                           <div>
                             <h4 className="text-[13px] font-semibold text-on-surface mb-1.5 flex items-center gap-1.5">
