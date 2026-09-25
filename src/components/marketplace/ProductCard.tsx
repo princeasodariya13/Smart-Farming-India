@@ -5,55 +5,89 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Product } from "./types";
 import RatingStars from "./RatingStars";
+import { useToast } from "./MarketplaceToast";
 
 interface Props {
   product: Product;
   viewMode?: string;
   onQuickView?: (product: Product) => void;
+  wishlistIds?: Set<string>;
+  onWishlistUpdate?: (productId: string, wishlisted: boolean) => void;
+  onCartUpdate?: () => void;
 }
 
-export default function ProductCard({ product, viewMode = "grid", onQuickView }: Props) {
-  const [wishlisted, setWishlisted] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function ProductCard({
+  product,
+  viewMode = "grid",
+  onQuickView,
+  wishlistIds,
+  onWishlistUpdate,
+  onCartUpdate,
+}: Props) {
+  const { success, error, info } = useToast();
+  const wishlisted = wishlistIds?.has(product.id) ?? false;
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
   const isRental = product.type === "rental";
 
   const handleWishlist = async () => {
+    if (wishlistLoading) return;
     try {
-      setWishlisted(!wishlisted); // Optimistic UI
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id })
+      setWishlistLoading(true);
+      // Optimistic
+      onWishlistUpdate?.(product.id, !wishlisted);
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id }),
       });
       const data = await res.json();
       if (!data.success) {
-        setWishlisted(wishlisted); // Revert on failure
-        if (data.error === 'Unauthorized') alert('Please login to wishlist items');
+        onWishlistUpdate?.(product.id, wishlisted); // revert
+        if (data.error === "Unauthorized") {
+          info("Login required", "Please sign in to save items to your wishlist.");
+        } else {
+          error("Wishlist failed", data.error || "Could not update wishlist.");
+        }
+      } else {
+        if (data.wishlisted) {
+          success("Saved to wishlist", `${product.name} added to your wishlist.`);
+        } else {
+          info("Removed from wishlist", `${product.name} removed.`);
+        }
       }
-    } catch (err) {
-      setWishlisted(wishlisted);
+    } catch {
+      onWishlistUpdate?.(product.id, wishlisted); // revert
+      error("Network error", "Could not update wishlist.");
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
   const handleAddToCart = async () => {
+    if (cartLoading) return;
     try {
-      setLoading(true);
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id, quantity: 1 })
+      setCartLoading(true);
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
       const data = await res.json();
       if (data.success) {
-        alert('Added to cart successfully!');
+        success("Added to cart!", `${product.name} is now in your cart.`);
+        onCartUpdate?.();
       } else {
-        if (data.error === 'Unauthorized') alert('Please login to add items to cart');
-        else alert(data.error || 'Failed to add to cart');
+        if (data.error === "Unauthorized") {
+          info("Login required", "Please sign in to add items to your cart.");
+        } else {
+          error("Failed to add to cart", data.error || "Please try again.");
+        }
       }
-    } catch (err) {
-      alert('Network error');
+    } catch {
+      error("Network error", "Could not add to cart.");
     } finally {
-      setLoading(false);
+      setCartLoading(false);
     }
   };
 
@@ -70,9 +104,11 @@ export default function ProductCard({ product, viewMode = "grid", onQuickView }:
       }`}
     >
       {/* Image */}
-      <div className={`relative overflow-hidden rounded-lg bg-surface-container-high ${
-        viewMode === "list" ? "aspect-square w-32 shrink-0 mb-0" : "aspect-video mb-2.5"
-      }`}>
+      <div
+        className={`relative overflow-hidden rounded-lg bg-surface-container-high ${
+          viewMode === "list" ? "aspect-square w-32 shrink-0 mb-0" : "aspect-video mb-2.5"
+        }`}
+      >
         <Image
           src={product.image}
           alt={product.imageAlt}
@@ -95,11 +131,12 @@ export default function ProductCard({ product, viewMode = "grid", onQuickView }:
           type="button"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           onClick={handleWishlist}
+          disabled={wishlistLoading}
           className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-surface-glass text-on-surface-variant opacity-0 shadow backdrop-blur-md transition-all group-hover:opacity-100 hover:text-error"
         >
           <Heart
             size={11}
-            className={wishlisted ? "fill-error text-error" : ""}
+            className={`transition-colors ${wishlisted ? "fill-error text-error" : ""}`}
           />
         </button>
         {/* Quick View */}
@@ -115,9 +152,11 @@ export default function ProductCard({ product, viewMode = "grid", onQuickView }:
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-0.5">
-        <h3 className="line-clamp-1 text-[12px] font-semibold text-on-surface">{product.name}</h3>
+        <h3 className="line-clamp-1 text-[12px] font-semibold text-on-surface">
+          {product.name}
+        </h3>
         <p className="text-[10px] text-on-surface-variant">
-          {product.seller && `Sold by ${product.seller.split('||')[0]} • `}
+          {product.seller && `Sold by ${product.seller.split("||")[0]} • `}
           {product.stock ?? product.location}
         </p>
         {product.location && product.seller && (
@@ -136,15 +175,13 @@ export default function ProductCard({ product, viewMode = "grid", onQuickView }:
       {/* CTA */}
       <motion.button
         type="button"
-        onClick={isRental ? () => onQuickView?.(product) : handleAddToCart}
-        disabled={loading}
+        onClick={() => onQuickView?.(product)}
+        disabled={cartLoading}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
         className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
           viewMode === "list" ? "w-32 shrink-0 mt-0" : "w-full mt-3"
-        } ${
-          loading ? "opacity-70 cursor-not-allowed" : ""
-        } ${
+        } ${cartLoading ? "opacity-70 cursor-not-allowed" : ""} ${
           isRental
             ? "bg-gradient-to-r from-primary to-secondary text-white hover:shadow-md hover:shadow-primary/20"
             : "border border-primary text-primary hover:bg-primary/5"

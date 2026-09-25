@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, MapPin, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Calendar, MapPin, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useToast } from "./MarketplaceToast";
 
 interface Booking {
   id: string;
@@ -21,8 +22,10 @@ interface Booking {
 }
 
 export default function MyBookings() {
+  const { success, error: toastError, info } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     try {
@@ -40,7 +43,7 @@ export default function MyBookings() {
 
   const handleCancel = async (bookingId: string) => {
     if (!confirm("Are you sure you want to cancel this booking?")) return;
-    
+    setCancelingId(bookingId);
     try {
       const res = await fetch(`/api/marketplace/book/${bookingId}`, {
         method: "PATCH",
@@ -49,12 +52,15 @@ export default function MyBookings() {
       });
       const data = await res.json();
       if (data.success) {
-        setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: "cancelled" } : b));
+        setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: "cancelled" } : b));
+        success("Booking cancelled", "Your booking has been cancelled successfully.");
       } else {
-        alert("Failed to cancel booking.");
+        toastError("Failed to cancel", "Could not cancel your booking. Please try again.");
       }
-    } catch (err) {
-      alert("Network error.");
+    } catch {
+      toastError("Network error", "Could not cancel booking.");
+    } finally {
+      setCancelingId(null);
     }
   };
 
@@ -153,9 +159,11 @@ export default function MyBookings() {
                   {(booking.status === "pending" || booking.status === "approved") && (
                     <button
                       onClick={() => handleCancel(booking.id)}
-                      className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-100 hover:text-red-700"
+                      disabled={cancelingId === booking.id}
+                      className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 flex items-center justify-center gap-2 disabled:opacity-60"
                     >
-                      Cancel Booking
+                      <Trash2 size={14} />
+                      {cancelingId === booking.id ? "Cancelling..." : "Cancel Booking"}
                     </button>
                   )}
                   {booking.status === "cancelled" && (

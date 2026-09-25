@@ -6,6 +6,7 @@ interface BookingCalendarProps {
   startDate: string;
   endDate: string;
   onChange: (start: string, end: string) => void;
+  onError?: (msg: string) => void;
 }
 
 export default function BookingCalendar({
@@ -13,6 +14,7 @@ export default function BookingCalendar({
   startDate,
   endDate,
   onChange,
+  onError,
 }: BookingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -109,7 +111,7 @@ export default function BookingCalendar({
         }
 
         if (!valid) {
-          alert("Your selection includes already booked dates. Please choose another range.");
+          onError?.("Selected range includes already booked dates. Please choose another range.");
           onChange(dateStr, ""); // Reset to just this date
         } else {
           onChange(startDate, dateStr);

@@ -7,6 +7,10 @@ interface Props {
   products: Product[];
   viewMode: string;
   onQuickView: (product: Product) => void;
+  wishlistIds?: Set<string>;
+  onWishlistUpdate?: (productId: string, wishlisted: boolean) => void;
+  onCartUpdate?: () => void;
+  onClearFilters?: () => void;
 }
 
 const container = {
@@ -14,8 +18,16 @@ const container = {
   show: { transition: { staggerChildren: 0.07 } },
 };
 
-export default function ProductGrid({ products, viewMode, onQuickView }: Props) {
-  if (products.length === 0) return <EmptyState />;
+export default function ProductGrid({
+  products,
+  viewMode,
+  onQuickView,
+  wishlistIds,
+  onWishlistUpdate,
+  onCartUpdate,
+  onClearFilters,
+}: Props) {
+  if (products.length === 0) return <EmptyState onClearFilters={onClearFilters} />;
 
   return (
     <motion.div
@@ -30,14 +42,22 @@ export default function ProductGrid({ products, viewMode, onQuickView }: Props) 
     >
       <AnimatePresence mode="popLayout">
         {products.map((p) => (
-          <ProductCard key={p.id} product={p} viewMode={viewMode} onQuickView={onQuickView} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            viewMode={viewMode}
+            onQuickView={onQuickView}
+            wishlistIds={wishlistIds}
+            onWishlistUpdate={onWishlistUpdate}
+            onCartUpdate={onCartUpdate}
+          />
         ))}
       </AnimatePresence>
     </motion.div>
   );
 }
 
-function EmptyState() {
+function EmptyState({ onClearFilters }: { onClearFilters?: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -51,12 +71,15 @@ function EmptyState() {
       <p className="max-w-xs text-body-md text-on-surface-variant">
         Try adjusting your filters or search terms to find what you&apos;re looking for.
       </p>
-      <button
-        type="button"
-        className="mt-2 rounded-full border border-outline-variant px-6 py-2 text-label-md text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
-      >
-        Clear filters
-      </button>
+      {onClearFilters && (
+        <button
+          type="button"
+          onClick={onClearFilters}
+          className="mt-2 rounded-full bg-primary px-6 py-2 text-label-md text-white font-bold transition-all hover:brightness-110 shadow-sm"
+        >
+          Clear filters
+        </button>
+      )}
     </motion.div>
   );
 }
