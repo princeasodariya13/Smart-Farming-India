@@ -3,38 +3,66 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSession, signOut, SessionProvider } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Leaf } from 'lucide-react';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Sidebar } from "@/components/layout/Sidebar";
 
-interface AnalysisResult {
+interface DynamicAnalysisResult {
+  id?: string;
+  imageUrl?: string;
+  createdAt?: string;
+  plant?: {
+    name: string;
+    scientificName: string;
+    confidence: number | null;
+  };
+  diagnosis?: {
+    name: string;
+    confidence: number | null;
+    status: 'likely' | 'possible' | 'uncertain';
+  };
+  symptoms: string[];
+  cause: string;
+  treatment: string[];
+  pesticides: string[];
+  prevention: string[];
+  analysis?: {
+    plantId?: any;
+    gemini?: any;
+    huggingFace?: any;
+  };
+  sources?: string[];
+
+  // Backward compatibility properties
   plantName: string;
   scientificName: string;
   status: string;
   diseaseName: string;
   confidenceScore: number;
   severity: string;
-  symptoms: string[];
-  cause: string;
   organicTreatment: string;
   recommendedPesticides: string[];
   activeIngredient: string;
   dosePerLitre: string;
   recommendedFungicideInsecticide: string;
-  prevention: string[];
   irrigationAdvice: string;
   fertilizerAdvice: string;
   expectedRecoveryTime: string;
 }
 
-
+const SCANNING_STEPS = [
+  'Uploading image...',
+  'Identifying plant...',
+  'Checking plant health...',
+  'Running secondary AI analysis...',
+  'Comparing results...',
+  'Preparing diagnosis...'
+];
 
 function DiseaseDetectionContent() {
   const { data: session } = useSession();
-
-
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'F';
@@ -46,7 +74,6 @@ function DiseaseDetectionContent() {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const router = useRouter();
 
   const { addNotification } = useNotification();
@@ -61,7 +88,6 @@ function DiseaseDetectionContent() {
     if (isBookingExpert) return;
     setIsBookingExpert(true);
     
-    // Simulate API call for booking
     setTimeout(() => {
       setIsBookingExpert(false);
       setExpertBooked(true);
@@ -76,28 +102,29 @@ function DiseaseDetectionContent() {
         type: 'booking'
       });
 
-      // Automatically redirect to the consult page after confirming
       router.push('/consult');
     }, 1500);
   };
 
   // Scanner state management
   const [scannerState, setScannerState] = useState<'upload' | 'scanning' | 'results'>('upload');
+  const [scanningStepIndex, setScanningStepIndex] = useState(0);
 
-  // Real implementation states
+  // File, Camera & Analysis States
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [originalEnglishResult, setOriginalEnglishResult] = useState<AnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<DynamicAnalysisResult | null>(null);
+  const [originalEnglishResult, setOriginalEnglishResult] = useState<DynamicAnalysisResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
-  // Real history state
+  // History State
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
   
+  // Translation State
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatedLang, setTranslatedLang] = useState<'English' | 'Translating...' | 'Gujarati'>('English');
 
@@ -105,7 +132,6 @@ function DiseaseDetectionContent() {
     if (!analysisResult || isTranslating) return;
 
     if (translatedLang === 'Gujarati') {
-      // Toggle back to English
       if (originalEnglishResult) {
         setAnalysisResult(originalEnglishResult);
       }
@@ -113,7 +139,6 @@ function DiseaseDetectionContent() {
       return;
     }
 
-    // Translate to Gujarati
     setIsTranslating(true);
     setTranslatedLang('Translating...');
     try {
@@ -127,7 +152,7 @@ function DiseaseDetectionContent() {
         setAnalysisResult(data.result);
         setTranslatedLang('Gujarati');
       } else {
-        setTranslatedLang('English'); // Revert on fail
+        setTranslatedLang('English');
       }
     } catch {
       setTranslatedLang('English');
@@ -245,7 +270,19 @@ function DiseaseDetectionContent() {
 
   const analyzeImage = async (base64: string) => {
     setScannerState('scanning');
+    setScanningStepIndex(0);
     setErrorMsg(null);
+
+    // Progress through step states during multi-API backend processing
+    const stepInterval = setInterval(() => {
+      setScanningStepIndex((prevIndex) => {
+        if (prevIndex < SCANNING_STEPS.length - 1) {
+          return prevIndex + 1;
+        }
+        return prevIndex;
+      });
+    }, 1200);
+
     try {
       const res = await fetch('/api/analyze-crop', {
         method: 'POST',
@@ -253,28 +290,26 @@ function DiseaseDetectionContent() {
         body: JSON.stringify({ imageBase64: base64 })
       });
       const data = await res.json();
-      if (data.success) {
+      clearInterval(stepInterval);
+
+      if (data.success && data.result) {
         setAnalysisResult(data.result);
         setOriginalEnglishResult(data.result);
         setTranslatedLang('English');
         setScannerState('results');
         
-        // Instantly add the new scan to the top of the Recent Diagnostics history list
         if (data.result && data.result.id) {
           setHistoryData(prev => [data.result, ...prev]);
         }
       } else if (data.notAPlant) {
-        // Not a plant/crop image — show clear rejection message
         setErrorMsg("🌿 " + (data.error || 'This does not appear to be a plant image. Please upload a clear photo of a crop or leaf.'));
         resetScanner();
-      } else if (data.needsNewKey) {
-        setErrorMsg("🔑 Gemini API key is expired or banned. Get a new key at aistudio.google.com/apikey and update your .env file.");
-        resetScanner();
       } else {
-        setErrorMsg("Analysis failed: " + (data.error || 'Unknown error'));
+        setErrorMsg(data.error || 'Unable to analyze this image. Please upload a clearer plant image.');
         resetScanner();
       }
     } catch {
+      clearInterval(stepInterval);
       setErrorMsg("Error connecting to analysis server.");
       resetScanner();
     }
@@ -326,7 +361,12 @@ function DiseaseDetectionContent() {
     document.getElementById('history-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-
+  // Helper to check if pesticide information is unverified
+  const isPesticideUnverified = (res: DynamicAnalysisResult | null) => {
+    if (!res) return true;
+    const p = res.pesticides || res.recommendedPesticides || [];
+    return p.length === 0 || p.some(item => item.toLowerCase().includes('could not be verified') || item.toLowerCase().includes('no verified'));
+  };
 
   return (
     <div className="flex h-screen overflow-hidden text-on-surface bg-background-sage font-sans">
@@ -402,8 +442,8 @@ function DiseaseDetectionContent() {
             {/* Header Section */}
             <header className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-4 shrink-0">
               <div className="flex-1 min-w-[280px]">
-                <h1 className="text-2xl md:text-[32px] leading-tight font-bold text-primary tracking-tight font-body-lg">AI Crop Disease Detection &amp; Plant Doctor</h1>
-                <p className="text-sm text-on-surface-variant">Instant leaf diagnosis, organic treatment advice, and pesticide guidance for 200+ crop varieties across India.</p>
+                <h1 className="text-2xl md:text-[32px] leading-tight font-bold text-primary tracking-tight font-body-lg">AI Crop Disease Scanner</h1>
+                <p className="text-sm text-on-surface-variant">Dynamic multi-engine analysis powered by Plant.id, Gemini AI, and Hugging Face models.</p>
               </div>
               <div className="flex flex-wrap gap-3 shrink-0">
                 <button onClick={scrollToHistory} className="flex items-center shrink-0 whitespace-nowrap gap-2 px-4 py-2 bg-white border border-outline-variant rounded-full text-[13px] text-on-surface hover:bg-surface-container transition-all">
@@ -436,8 +476,8 @@ function DiseaseDetectionContent() {
 
                   {/* Error Message */}
                   {errorMsg && (
-                    <div className="absolute top-4 left-4 right-4 z-50 bg-error/10 text-error p-3 rounded-lg text-sm border border-error/20 flex items-center justify-between">
-                      <span>{errorMsg}</span>
+                    <div className="absolute top-4 left-4 right-4 z-50 bg-error/10 text-error p-3 rounded-lg text-sm border border-error/20 flex items-center justify-between shadow-sm">
+                      <span className="font-medium">{errorMsg}</span>
                       <button onClick={() => setErrorMsg(null)}><span className="material-symbols-outlined text-sm">close</span></button>
                     </div>
                   )}
@@ -465,7 +505,7 @@ function DiseaseDetectionContent() {
                             <span className="material-symbols-outlined text-3xl">cloud_upload</span>
                           </div>
                           <h3 className="text-lg font-semibold text-on-surface mb-1.5">Upload Crop Image</h3>
-                          <p className="text-[13px] text-on-surface-variant mb-6">Drag and drop a clear photo of the infected area or leaf. For best results, use natural lighting.</p>
+                          <p className="text-[13px] text-on-surface-variant mb-6">Upload a photo of the infected crop leaf for live API diagnosis across Plant.id, Gemini, and Hugging Face.</p>
                           <div className="flex gap-3 w-full">
                             <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-2.5 px-4 bg-primary text-on-primary rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-medium hover:brightness-110 shadow-sm shrink-0">
                               <span className="material-symbols-outlined text-[18px] shrink-0">upload_file</span> <span>Choose Files</span>
@@ -479,17 +519,20 @@ function DiseaseDetectionContent() {
                     </div>
                   )}
 
-                  {/* Scanner State 2: Scanning Animation */}
+                  {/* Scanner State 2: Scanning Animation with Progress Steps */}
                   {scannerState === 'scanning' && (
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                        <img className="w-full h-full object-cover" alt="Selected crop leaf sample undergoing AI disease diagnostic scan" loading="lazy" decoding="async" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
+                        <img className="w-full h-full object-cover" alt="Selected crop leaf sample undergoing multi-API diagnostic scan" loading="lazy" decoding="async" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
                         <div className="scanning-line"></div>
                         <div className="absolute inset-0 border-[20px] border-black/10"></div>
                       </div>
-                      <div className="mt-6 flex items-center gap-3 text-primary">
-                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-base font-semibold animate-pulse">Analyzing Patterns...</p>
+                      <div className="mt-6 flex flex-col items-center gap-2 text-primary">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                          <p className="text-base font-semibold animate-pulse">{SCANNING_STEPS[scanningStepIndex]}</p>
+                        </div>
+                        <span className="text-[11px] text-on-surface-variant">Connecting to Plant.id • Gemini AI • Hugging Face</span>
                       </div>
                     </div>
                   )}
@@ -499,15 +542,17 @@ function DiseaseDetectionContent() {
                     <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                       <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden shadow-sm border-4 border-white">
                         <img className="w-full h-full object-cover" alt="Selected crop leaf sample undergoing AI disease diagnostic scan" loading="lazy" decoding="async" src={capturedImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuCd3SU41ImiSa9HB96wa3XiG_Osrt9ymIDfNZJE3Rg3Xv2zO0S1AcLtuNGe_uXDulUVjLksGZcA7d2y7TFO9L-aREIlbolbHFx7Rf-2j5S3PQN6MCH1gHkU1O5RmXc5gLkGix3DZSs4m1VdWOsl4kBZfaUuBZJlksjLAbm5eVDkgXuhHoKe9iE7ZMdLfbFdtzpVstFl77QN1WxbHF_CPo6PV5x91c5L1ucvKV4ORSM9WH0GIuFRvEdq0QAXIJ4WYHvEhtN6wt0Jdw"} />
-                        <div className="absolute top-4 left-4 border-2 border-primary-fixed bg-primary-fixed/60 rounded-lg flex flex-col items-start p-2 backdrop-blur-md">
-                          <span className="text-on-primary-fixed text-xs font-bold">{analysisResult.diseaseName}</span>
-                          <span className="text-on-primary-fixed text-[10px] opacity-80">{analysisResult.confidenceScore}% Match</span>
+                        <div className="absolute top-4 left-4 border-2 border-primary-fixed bg-primary-fixed/80 rounded-lg flex flex-col items-start p-2 backdrop-blur-md">
+                          <span className="text-on-primary-fixed text-xs font-bold">{analysisResult.diagnosis?.name || analysisResult.diseaseName}</span>
+                          <span className="text-on-primary-fixed text-[10px] opacity-90">
+                            {analysisResult.diagnosis?.confidence ? `${Math.round(analysisResult.diagnosis.confidence * 100)}% Probability` : `${analysisResult.confidenceScore}% Score`}
+                          </span>
                         </div>
                       </div>
                       <div className="mt-4 flex flex-col items-center gap-3">
                         <div className="flex items-center gap-1.5 text-success">
                           <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                          <p className="text-sm font-semibold text-primary">Analysis Complete</p>
+                          <p className="text-sm font-semibold text-primary">Multi-API Analysis Complete</p>
                         </div>
                         <button onClick={resetScanner} className="px-5 py-2 bg-primary text-on-primary rounded-xl text-[13px] font-bold shadow-md hover:brightness-110 flex items-center justify-center gap-2 shrink-0">
                           <span className="material-symbols-outlined text-[18px] shrink-0">add_a_photo</span> <span>Scan Another Leaf</span>
@@ -611,7 +656,7 @@ function DiseaseDetectionContent() {
                 )}
               </div>
 
-              {/* Right: Analysis & Consultation (5 Columns) */}
+              {/* Right: Dynamic Analysis Results & Expert Consultation (5 Columns) */}
               <div className="lg:col-span-5 flex flex-col gap-6">
                 {/* Diagnostic Result Card */}
                 <div className={`bg-white rounded-[16px] shadow-sm p-5 border border-[#E0E5DF] relative overflow-hidden transition-all duration-500 ${scannerState === 'results' ? 'opacity-100 translate-y-0' : 'opacity-50 blur-sm pointer-events-none grayscale'}`}>
@@ -619,18 +664,43 @@ function DiseaseDetectionContent() {
 
                   {analysisResult ? (
                     <>
+                      {/* Header & Translation */}
                       <div className="flex justify-between items-start mb-5 relative z-10">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${analysisResult.diseaseName.toLowerCase().includes('healthy') ? 'bg-success-soft text-success' : 'bg-error-container text-error'}`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            (analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain')
+                              ? 'bg-amber-100 text-amber-700'
+                              : (analysisResult.diseaseName?.toLowerCase().includes('healthy') || analysisResult.status === 'Healthy')
+                                ? 'bg-success-soft text-success'
+                                : 'bg-error-container text-error'
+                          }`}>
                             <span className="material-symbols-outlined text-xl">
-                              {analysisResult.diseaseName.toLowerCase().includes('healthy') ? 'eco' : 'warning'}
+                              {(analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain')
+                                ? 'help_outline'
+                                : (analysisResult.diseaseName?.toLowerCase().includes('healthy') || analysisResult.status === 'Healthy')
+                                  ? 'eco'
+                                  : 'warning'}
                             </span>
                           </div>
                           <div>
-                            <p className={`text-[10px] font-bold uppercase tracking-wider ${analysisResult.diseaseName.toLowerCase().includes('healthy') ? 'text-success' : 'text-error'}`}>
-                              {analysisResult.plantName} • {analysisResult.diseaseName.toLowerCase().includes('healthy') ? 'Healthy' : 'Infection Detected'}
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${
+                              (analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain')
+                                ? 'text-amber-700'
+                                : (analysisResult.diseaseName?.toLowerCase().includes('healthy') || analysisResult.status === 'Healthy')
+                                  ? 'text-success'
+                                  : 'text-error'
+                            }`}>
+                              {analysisResult.plant?.name || analysisResult.plantName} • {
+                                (analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain')
+                                  ? 'Uncertain Prediction'
+                                  : (analysisResult.diseaseName?.toLowerCase().includes('healthy') || analysisResult.status === 'Healthy')
+                                    ? 'Healthy Crop'
+                                    : 'Infection Detected'
+                              }
                             </p>
-                            <h2 className="text-lg font-semibold text-on-surface leading-tight">{analysisResult.diseaseName}</h2>
+                            <h2 className="text-lg font-semibold text-on-surface leading-tight">
+                              {analysisResult.diagnosis?.name || analysisResult.diseaseName}
+                            </h2>
                           </div>
                         </div>
                         
@@ -657,37 +727,67 @@ function DiseaseDetectionContent() {
                         </button>
                       </div>
 
-                      <div className="space-y-6">
-                        <div>
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-[13px] font-medium text-on-surface-variant">Confidence Level</span>
-                            <span className="text-[13px] font-bold text-primary">{analysisResult.confidenceScore}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full" style={{ width: `${analysisResult.confidenceScore}%` }}></div>
+                      <div className="space-y-5">
+                        {/* Status & Confidence Information */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded-xl">
+                            <span className="text-[12px] font-medium text-on-surface">Diagnosis Status</span>
+                            <span className={`text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                              (analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain')
+                                ? 'bg-amber-100 text-amber-800'
+                                : (analysisResult.diagnosis?.status === 'possible' || analysisResult.status === 'Possible')
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {analysisResult.diagnosis?.status || analysisResult.status}
+                            </span>
                           </div>
 
-                          {analysisResult.severity && analysisResult.status !== 'Healthy' && (
-                            <div className="mt-3 flex justify-between items-center bg-error-container/30 px-3 py-1.5 rounded-lg border border-error-container">
-                              <span className="text-[12px] font-medium text-on-surface">Severity</span>
-                              <span className="text-[12px] font-bold text-error">{analysisResult.severity}</span>
+                          {(analysisResult.plant?.scientificName || analysisResult.scientificName) && (
+                            <div className="flex justify-between items-center bg-surface-container px-3 py-1.5 rounded-lg">
+                              <span className="text-[12px] font-medium text-on-surface">Scientific Binomial</span>
+                              <span className="text-[12px] font-bold italic text-on-surface-variant">
+                                {analysisResult.plant?.scientificName || analysisResult.scientificName}
+                              </span>
                             </div>
                           )}
 
-                          {analysisResult.scientificName && (
-                            <div className="mt-2 flex justify-between items-center bg-surface-container px-3 py-1.5 rounded-lg">
-                              <span className="text-[12px] font-medium text-on-surface">Scientific Name</span>
-                              <span className="text-[12px] font-bold italic text-on-surface-variant">{analysisResult.scientificName}</span>
+                          {/* Confidence Level (Only if valid probability score exists) */}
+                          {analysisResult.diagnosis?.confidence !== null && (
+                            <div className="mt-2">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-[12px] font-medium text-on-surface-variant">API Probability Score</span>
+                                <span className="text-[12px] font-bold text-primary">
+                                  {Math.round((analysisResult.diagnosis?.confidence || 0) * 100)}%
+                                </span>
+                              </div>
+                              <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round((analysisResult.diagnosis?.confidence || 0) * 100)}%` }}></div>
+                              </div>
                             </div>
                           )}
                         </div>
 
+                        {/* Uncertain Warning State (Requirement 3 & 7) */}
+                        {(analysisResult.diagnosis?.status === 'uncertain' || analysisResult.status === 'Uncertain') && (
+                          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[12px] space-y-1">
+                            <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                              <span className="material-symbols-outlined text-[16px]">info</span>
+                              <span>Uncertain AI Prediction</span>
+                            </div>
+                            <p className="leading-snug">
+                              The AI engines detected conflicting visual indicators or low probability. Please have this plant leaf manually inspected by an agricultural extension specialist or local agronomist.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Symptoms */}
                         {analysisResult.symptoms && analysisResult.symptoms.length > 0 && (
                           <div>
                             <h4 className="text-[13px] font-semibold text-on-surface mb-1.5 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-primary text-[16px]">list_alt</span> Symptoms / Indicators
+                              <span className="material-symbols-outlined text-primary text-[16px]">list_alt</span> Visible Symptoms / Indicators
                             </h4>
-                            <ul className="space-y-1.5 text-on-surface-variant text-[12px]">
+                            <ul className="space-y-1 text-on-surface-variant text-[12px]">
                               {analysisResult.symptoms.map((symptom, idx) => (
                                 <li key={idx} className="flex gap-2"><span>•</span> {symptom}</li>
                               ))}
@@ -695,37 +795,51 @@ function DiseaseDetectionContent() {
                           </div>
                         )}
 
+                        {/* Disease Cause Explanation */}
                         {analysisResult.cause && (
                           <div>
                             <h4 className="text-[13px] font-semibold text-on-surface mb-1.5 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-primary text-[16px]">microbiology</span> Cause
+                              <span className="material-symbols-outlined text-primary text-[16px]">microbiology</span> Disease Explanation &amp; Cause
                             </h4>
-                            <p className="text-[12px] text-on-surface-variant">{analysisResult.cause}</p>
+                            <p className="text-[12px] text-on-surface-variant leading-relaxed">{analysisResult.cause}</p>
                           </div>
                         )}
 
-                        {analysisResult.status !== 'Healthy' && (
-                          <div className="p-3 bg-error-container/20 rounded-xl border border-error/20">
-                            <h4 className="text-[13px] font-semibold text-error mb-2 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-[16px]">pest_control</span> Chemical Treatment
-                            </h4>
-                            <div className="space-y-2 text-[12px] text-on-surface-variant">
-                              <p><strong>Recommended:</strong> {analysisResult.recommendedFungicideInsecticide || analysisResult.recommendedPesticides?.join(', ')}</p>
-                              <p><strong>Active Ingredient:</strong> {analysisResult.activeIngredient}</p>
-                              <p><strong>Dose:</strong> {analysisResult.dosePerLitre}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {analysisResult.organicTreatment && (
+                        {/* Treatment & Organic Management */}
+                        {((Array.isArray(analysisResult.treatment) && analysisResult.treatment.length > 0) || analysisResult.organicTreatment) && (
                           <div className="p-3 bg-success-soft rounded-xl border border-primary-fixed/20">
-                            <h4 className="text-[13px] font-semibold text-primary mb-2 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-[16px]">eco</span> Organic Treatment
+                            <h4 className="text-[13px] font-semibold text-primary mb-1.5 flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[16px]">eco</span> Organic &amp; Cultural Management
                             </h4>
-                            <p className="text-[12px] text-on-surface-variant">{analysisResult.organicTreatment}</p>
+                            <ul className="space-y-1 text-[12px] text-on-surface-variant">
+                              {Array.isArray(analysisResult.treatment) && analysisResult.treatment.length > 0 ? (
+                                analysisResult.treatment.map((tItem, tIdx) => (
+                                  <li key={tIdx} className="flex gap-2"><span>•</span> {tItem}</li>
+                                ))
+                              ) : (
+                                <li className="whitespace-pre-line">{analysisResult.organicTreatment}</li>
+                              )}
+                            </ul>
                           </div>
                         )}
 
+                        {/* Pesticide Section - Requirement 5 & 8 */}
+                        <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/40">
+                          <h4 className="text-[13px] font-semibold text-on-surface mb-1 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">pest_control</span> Chemical Pesticide Information
+                          </h4>
+                          {isPesticideUnverified(analysisResult) ? (
+                            <p className="text-[12px] text-on-surface-variant italic mt-1">
+                              Treatment information could not be verified.
+                            </p>
+                          ) : (
+                            <div className="space-y-1 text-[12px] text-on-surface-variant mt-1">
+                              <p><strong>Pesticides:</strong> {analysisResult.pesticides?.join(', ') || analysisResult.recommendedPesticides?.join(', ')}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Irrigation & Fertilizer */}
                         <div className="grid grid-cols-2 gap-3">
                           {analysisResult.irrigationAdvice && (
                             <div className="bg-surface-container-low p-3 rounded-xl">
@@ -745,12 +859,13 @@ function DiseaseDetectionContent() {
                           )}
                         </div>
 
+                        {/* Prevention */}
                         {analysisResult.prevention && analysisResult.prevention.length > 0 && (
                           <div>
                             <h4 className="text-[13px] font-semibold text-on-surface mb-1.5 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-primary text-[16px]">shield</span> Prevention
+                              <span className="material-symbols-outlined text-primary text-[16px]">shield</span> Prevention Strategy
                             </h4>
-                            <ul className="space-y-1.5 text-on-surface-variant text-[12px]">
+                            <ul className="space-y-1 text-on-surface-variant text-[12px]">
                               {analysisResult.prevention.map((item, idx) => (
                                 <li key={idx} className="flex gap-2"><span>•</span> {item}</li>
                               ))}
@@ -758,18 +873,30 @@ function DiseaseDetectionContent() {
                           </div>
                         )}
 
-                        {analysisResult.expectedRecoveryTime && (
-                          <div className="flex items-center gap-2 text-[12px] font-medium text-on-surface bg-surface-container-high px-3 py-2 rounded-lg">
-                            <span className="material-symbols-outlined text-[16px] text-primary">update</span>
-                            Expected Recovery: {analysisResult.expectedRecoveryTime}
+                        {/* Analysis Engines / Sources Breakdown */}
+                        {analysisResult.sources && analysisResult.sources.length > 0 && (
+                          <div className="pt-2 border-t border-[#E0E5DF]">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">Active AI Analysis Engines</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {analysisResult.sources.map((src, sIdx) => (
+                                <span key={sIdx} className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-semibold">
+                                  {src}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
+
+                        {/* Disclaimer */}
+                        <div className="text-[10px] text-on-surface-variant/70 italic border-t border-[#E0E5DF] pt-2">
+                          * Note: AI diagnostic assessments are provided for preliminary decision support. Always consult a certified agricultural extension officer prior to chemical application.
+                        </div>
                       </div>
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-10 opacity-50">
                       <span className="material-symbols-outlined text-4xl mb-2">science</span>
-                      <p>Awaiting analysis data...</p>
+                      <p>Awaiting scan upload...</p>
                     </div>
                   )}
                 </div>
@@ -799,54 +926,26 @@ function DiseaseDetectionContent() {
                       disabled={isBookingExpert}
                       className={`w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-[13px] shrink-0 ${
                         expertBooked 
-                          ? 'bg-success text-on-success hover:scale-[1.02] active:scale-95 cursor-pointer'
-                          : isBookingExpert
-                            ? 'bg-primary/80 text-white cursor-wait'
-                            : 'bg-primary text-on-primary hover:scale-[1.02] active:scale-95'
+                          ? 'bg-success text-white hover:bg-success/90' 
+                          : 'bg-primary text-on-primary hover:brightness-110'
                       }`}
                     >
-                      {expertBooked ? (
-                        <>
-                          <span className="material-symbols-outlined text-[18px] shrink-0">check_circle</span> 
-                          <span>Consultation Booked - View</span>
-                        </>
-                      ) : isBookingExpert ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span>Confirming...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined text-[18px] shrink-0">video_call</span> 
-                          <span>Start Video Consultation</span>
-                        </>
-                      )}
+                      <span className="material-symbols-outlined text-[18px] shrink-0">
+                        {expertBooked ? 'check_circle' : 'videocam'}
+                      </span>
+                      <span>
+                        {isBookingExpert 
+                          ? 'Booking Consultation...' 
+                          : expertBooked 
+                            ? 'Consultation Scheduled — Go to Consult' 
+                            : 'Book Consultation (₹199)'}
+                      </span>
                     </button>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
-
-          {/* Footer (Standard Shared) */}
-          <footer className="w-full py-8 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center bg-surface-container-lowest border-t border-outline-variant mt-12">
-            <div className="mb-6 md:mb-0 flex flex-col items-center md:items-start text-center md:text-left">
-              <h4 className="text-lg font-bold text-primary">Smart Farming India</h4>
-              <p className="text-sm text-on-surface-variant mt-1 max-w-sm">© 2026 Smart Farming India. Empowering the roots of our nation.</p>
-            </div>
-            <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy Policy</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms of Service</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/weather">Weather Radar</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/consult">Expert Consultation</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/support">Help & Support</Link></li>
-              <li><Link className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="/about">About Us</Link></li>
-            </ul>
-          </footer>
         </main>
       </div>
     </div>
@@ -854,24 +953,5 @@ function DiseaseDetectionContent() {
 }
 
 export default function DiseaseDetectionPage() {
-
-  // Loading is handled by content component
-
-  return (
-    <SessionProvider>
-      <DiseaseDetectionContent />
-    </SessionProvider>
-  );
+  return <DiseaseDetectionContent />;
 }
-
-
-
-
-
-
-
-
-
-
-
-
