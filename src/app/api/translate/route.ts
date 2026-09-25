@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 
+const GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.8-flash',
+  'gemini-2.5-pro',
+  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
+];
+
 export async function POST(request: Request) {
   try {
     const { textData, targetLanguage } = await request.json();
@@ -13,23 +21,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Gemini API key not configured.' }, { status: 500 });
     }
 
-    const prompt = `You are a professional agricultural translator. 
-Translate the following JSON object's values into ${targetLanguage} while keeping the exact same JSON keys in English. Do not translate the keys, only the values. Ensure the agricultural terminology is accurate in ${targetLanguage}.
+    // Extract only user-facing text fields to keep translation payload small, fast, and light
+    const sanitizedDataToTranslate: Record<string, any> = {};
 
-Return ONLY valid JSON. No markdown, no extra text.
-
-JSON to translate:
-${JSON.stringify(textData, null, 2)}`;
-
-    const GEMINI_MODELS = [
-      'gemini-flash-latest',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-2.5-flash',
+    const textFields = [
+      'plantName',
+      'diseaseName',
+      'status',
+      'severity',
+      'symptoms',
+      'cause',
+      'organicTreatment',
+      'recommendedPesticides',
+      'activeIngredient',
+      'dosePerLitre',
+      'recommendedFungicideInsecticide',
+      'prevention',
+      'irrigationAdvice',
+      'fertilizerAdvice',
+      'expectedRecoveryTime'
     ];
 
+    for (const field of textFields) {
+      if (textData[field] !== undefined) {
+        sanitizedDataToTranslate[field] = textData[field];
+      }
+    }
+
+    const prompt = `You are a world-class agricultural translator specializing in Indian languages.
+Translate all text values of the following JSON object into ${targetLanguage} accurately for farmers.
+Do NOT translate key names (keep English key names).
+Do NOT translate botanical scientific names in Latin script (e.g. keep "Solanum lycopersicum" in Latin script if present).
+
+Return ONLY valid JSON.
+
+JSON object to translate:
+${JSON.stringify(sanitizedDataToTranslate, null, 2)}`;
+
     let resultText = '';
-    
+    let successModel = '';
+
     for (const modelName of GEMINI_MODELS) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -40,39 +71,54 @@ ${JSON.stringify(textData, null, 2)}`;
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               temperature: 0.1,
-            }
+              responseMimeType: 'application/json',
+            },
           }),
         });
 
         if (!response.ok) {
           const errBody = await response.text();
-          console.warn(`[LOG] Translation model ${modelName} failed (${response.status}):`, errBody.substring(0, 200));
-          continue; // Try next model
+          console.warn(`[LOG] Translation model ${modelName} returned HTTP ${response.status}:`, errBody.substring(0, 150));
+          continue;
         }
 
         const data = await response.json();
-        resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         
         if (resultText) {
-          break; // Success
+          successModel = modelName;
+          console.log(`[LOG] Translation succeeded with model ${modelName}`);
+          break;
         }
-      } catch (err) {
-        console.warn(`[LOG] Translation network error with ${modelName}:`, err);
+      } catch (err: any) {
+        console.warn(`[LOG] Translation model ${modelName} fetch error:`, err?.message || err);
       }
     }
 
     if (!resultText) {
-      throw new Error('All Gemini translation models failed or returned empty.');
+      return NextResponse.json({ error: 'Translation service currently unavailable.' }, { status: 503 });
     }
 
-    // Clean markdown formatting if any
     const cleanJsonStr = resultText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-    const translatedJson = JSON.parse(cleanJsonStr);
-    
-    return NextResponse.json({ success: true, result: translatedJson });
+    const translatedFields = JSON.parse(cleanJsonStr);
 
+    // Merge translated text back with original metadata (preserving id, imageUrl, plant, diagnosis, analysis, sources)
+    const finalTranslatedResult = {
+      ...textData,
+      ...translatedFields,
+      plant: textData.plant ? {
+        ...textData.plant,
+        name: translatedFields.plantName || textData.plant.name,
+      } : textData.plant,
+      diagnosis: textData.diagnosis ? {
+        ...textData.diagnosis,
+        name: translatedFields.diseaseName || textData.diagnosis.name,
+      } : textData.diagnosis,
+    };
+
+    return NextResponse.json({ success: true, result: finalTranslatedResult, model: successModel });
   } catch (error: unknown) {
-    console.error('[LOG] Translation error:', error);
+    console.error('[LOG] Translation route error:', error);
     return NextResponse.json(
       { error: 'Failed to translate' },
       { status: 500 }
