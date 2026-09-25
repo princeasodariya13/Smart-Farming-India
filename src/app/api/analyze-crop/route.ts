@@ -399,9 +399,9 @@ async function callHuggingFaceAPI(base64Data: string, mimeType: string) {
  */
 function synthesizeResults(plantIdRes: any, geminiRes: any, hfRes: any) {
   const sources: string[] = [];
-  if (plantIdRes?.success) sources.push('Plant.id API');
-  if (geminiRes?.success) sources.push(`Google Gemini AI (${geminiRes.model || 'Vision'})`);
-  if (hfRes?.success) sources.push('Hugging Face Model');
+  if (plantIdRes?.success) sources.push('Botanical Identification Engine');
+  if (geminiRes?.success) sources.push('Pathology Vision System');
+  if (hfRes?.success) sources.push('Crop Disease Classifier');
 
   const plantName = plantIdRes?.data?.plantName
     || geminiRes?.data?.plantName

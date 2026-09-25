@@ -454,7 +454,7 @@ function DiseaseDetectionContent() {
             <header className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-4 shrink-0">
               <div className="flex-1 min-w-[280px]">
                 <h1 className="text-2xl md:text-[32px] leading-tight font-bold text-primary tracking-tight font-body-lg">AI Crop Disease Scanner</h1>
-                <p className="text-sm text-on-surface-variant">Dynamic multi-engine analysis powered by Plant.id, Gemini AI, and Hugging Face models.</p>
+                <p className="text-sm text-on-surface-variant">Advanced AI-powered crop leaf disease diagnosis and treatment guidance.</p>
               </div>
               <div className="flex flex-wrap gap-3 shrink-0">
                 <button onClick={scrollToHistory} className="flex items-center shrink-0 whitespace-nowrap gap-2 px-4 py-2 bg-white border border-outline-variant rounded-full text-[13px] text-on-surface hover:bg-surface-container transition-all">
@@ -513,7 +513,7 @@ function DiseaseDetectionContent() {
                             <span className="material-symbols-outlined text-3xl">cloud_upload</span>
                           </div>
                           <h3 className="text-lg font-semibold text-on-surface mb-1.5">Upload Crop Image</h3>
-                          <p className="text-[13px] text-on-surface-variant mb-6">Upload a photo of the infected crop leaf for live API diagnosis across Plant.id, Gemini, and Hugging Face.</p>
+                          <p className="text-[13px] text-on-surface-variant mb-6">Upload a photo of the infected crop leaf for instant AI disease analysis.</p>
                           <div className="flex gap-3 w-full">
                             <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-2.5 px-4 bg-primary text-on-primary rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-medium hover:brightness-110 shadow-sm shrink-0">
                               <span className="material-symbols-outlined text-[18px] shrink-0">upload_file</span> <span>Choose Files</span>
@@ -539,7 +539,7 @@ function DiseaseDetectionContent() {
                           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                           <p className="text-base font-semibold animate-pulse">{SCANNING_STEPS[scanningStepIndex]}</p>
                         </div>
-                        <span className="text-[11px] text-on-surface-variant">Connecting to Plant.id • Gemini AI • Hugging Face</span>
+                        <span className="text-[11px] text-on-surface-variant">Connecting to Smart Farming AI Diagnostic Network...</span>
                       </div>
                     </div>
                   )}
@@ -942,7 +942,7 @@ function DiseaseDetectionContent() {
                         {/* Analysis Engines / Sources Breakdown */}
                         {analysisResult.sources && analysisResult.sources.length > 0 && (
                           <div className="pt-2 border-t border-[#E0E5DF]">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">Active AI Analysis Engines</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">AI Diagnostic Models</p>
                             <div className="flex flex-wrap gap-1.5">
                               {analysisResult.sources.map((src, sIdx) => (
                                 <span key={sIdx} className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-semibold">
