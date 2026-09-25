@@ -6,6 +6,7 @@ import GoogleTranslate from "@/components/GoogleTranslate";
 import { Providers } from "@/components/Providers";
 import { auth } from "@/auth";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -153,6 +154,7 @@ export default async function RootLayout({
           <GoogleTranslate />
           <SmoothScrolling>{children}</SmoothScrolling>
           <PWAInstallBanner />
+          <Analytics />
         </Providers>
       </body>
     </html>
