@@ -48,11 +48,11 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: "/logo.png?v=3", type: "image/png" },
-      { url: "/favicon.ico?v=3", sizes: "any" },
+      { url: "/logo.png?v=5", type: "image/png" },
+      { url: "/favicon.ico?v=5", sizes: "any" },
     ],
-    shortcut: "/logo.png?v=3",
-    apple: "/apple-touch-icon.png?v=3",
+    shortcut: "/logo.png?v=5",
+    apple: "/apple-touch-icon.png?v=5",
   },
   alternates: {
     canonical: "./",
@@ -152,10 +152,10 @@ export default async function RootLayout({
       className={`${inter.variable} ${hindVadodara.variable} antialiased`}
     >
       <head>
-        <link rel="icon" href="/logo.png?v=3" type="image/png" />
-        <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
-        <link rel="shortcut icon" href="/logo.png?v=3" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+        <link rel="icon" href="/logo.png?v=5" type="image/png" />
+        <link rel="icon" href="/favicon.ico?v=5" sizes="any" />
+        <link rel="shortcut icon" href="/logo.png?v=5" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=5" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
